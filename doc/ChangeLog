@@ -1,5 +1,11 @@
 2006-01-21  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
+	* Added README.txt 
+	* Changed package name to pyreadline, changed setup.py to 
+	  reflect this.
+
+2006-01-21  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
 	* Added clipboard functionality. ctypes clipboard code 
 	  borrowed from example code posted to ctypes-users. See
 	  http://aspn.activestate.com/ASPN/Mail/Message/ctypes-users/1771866
