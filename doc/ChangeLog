@@ -1,5 +1,13 @@
 2006-01-21  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
+	* Patch to get swedish characters working when python 
+	  is executed in a cmd window with codepage set to 1252.
+	  Example: issue command chcp 1252. Then change the font to
+	  lucida terminal, this is done in the properties dialog of 
+	  the terminal.
+	
+2006-01-21  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
 	* Changed all python files to conform to 4 space indent.
 	* Added changelog
 	* Added os.path.expanduser to expand out ~/.history paths

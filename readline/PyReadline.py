@@ -13,10 +13,12 @@ import win32con as c32
 
 import Console
 from Console import log
-from keysyms import key_text_to_keyinfo
+from keysyms import key_text_to_keyinfo,printable_chars_in_codepage
 
 def quote_char(c):
-    if ' ' <= c <= '~':
+    if c in printable_chars_in_codepage:
+        return c
+    elif ' ' <= c <= '~':
         return c
     else:
         return repr(c)[1:-1]
@@ -622,8 +624,9 @@ class Readline:
 
     def self_insert(self, e): # (a, b, A, 1, !, ...)
         '''Insert yourself. '''
-        self.line_buffer.insert(self.line_cursor, e.char)
-        self.line_cursor += 1
+        if ord(e.char)!=0: #don't insert null character in buffer, can happen with dead keys.
+            self.line_buffer.insert(self.line_cursor, e.char)
+            self.line_cursor += 1
 
     def transpose_chars(self, e): # (C-t)
         '''Drag the character before the cursor forward over the character
@@ -1003,6 +1006,10 @@ class Readline:
     def emacs_editing_mode(self, e): # (C-e)
         '''When in vi command mode, this causes a switch to emacs editing
         mode.'''
+        #insert printable chars available from codepage
+        for char in printable_chars_in_codepage:
+                self._bind_key(char, self.self_insert)
+
         # make ' ' to ~ self insert
         for c in range(ord(' '), 127):
             self._bind_key('"%s"' % chr(c), self.self_insert)
