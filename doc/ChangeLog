@@ -1,5 +1,29 @@
 2006-01-21  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
+	* Added clipboard functionality. ctypes clipboard code 
+	  borrowed from example code posted to ctypes-users. See
+	  http://aspn.activestate.com/ASPN/Mail/Message/ctypes-users/1771866
+	* Control-Shift-v moved quoted insert from Control-v
+	* Control-v straight paste from clipboard
+	* Alt-v ipython_paste. Does some preprocessing of data. If 
+	  clipboard text is shorter than 300 characters and has no 
+	  newlines and tabs, then assume it is a path and change all 
+	  \ to / and then add \ before all spaces. This means you can 
+	  paste paths and use them in magic command %cd. If text is 
+	  multiline it assumes tabseparated data should be list of 
+	  list, if all is numeric assume it should be an array.
+	* Control-y yank, alias for Control-v.
+	* Control-k kill line, move text from cursor to end of line 
+	  into clipboard. Should be move to kill buffer but the kill 
+	  buffer is not implemented.
+	* Added kill line and yank functionality. As well as mark and 
+	  copy-region-to-clipboard.
+	* Control-m set-mark sets the copy region mark
+	* Control-q copies region between mark and cursor to clipboard
+	* Changed version in setup.py to 1.13-svn
+	
+2006-01-21  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
 	* Patch to get swedish characters working when python 
 	  is executed in a cmd window with codepage set to 1252.
 	  Example: issue command chcp 1252. Then change the font to
@@ -11,4 +35,3 @@
 	* Changed all python files to conform to 4 space indent.
 	* Added changelog
 	* Added os.path.expanduser to expand out ~/.history paths
-	

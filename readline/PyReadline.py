@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 ''' an attempt to implement readline for Python in Python using ctypes'''
 
 import string
@@ -14,6 +15,19 @@ import win32con as c32
 import Console
 from Console import log
 from keysyms import key_text_to_keyinfo,printable_chars_in_codepage
+
+import clipboard
+import ctypes
+
+enable_win32_clipboard=True
+
+#assumes data on clipboard is path if shorter than 300 characters and doesn't contain \t or \n
+#and replace \ with / for easier use in ipython
+enable_ipython_paste_for_paths=True
+
+#automatically convert tabseparated data to list of lists or array constructors
+enable_ipython_paste_list_of_lists=True
+
 
 def quote_char(c):
     if c in printable_chars_in_codepage:
@@ -53,6 +67,7 @@ class Readline:
         self.show_all_if_ambiguous = 'off'
         self.mark_directories = 'on'
         self.bell_style = 'none'
+        self.mark=-1
 
     def _bell(self):
         '''ring the bell if requested.'''
@@ -669,6 +684,9 @@ class Readline:
 
     def kill_line(self, e): # (C-k)
         '''Kill the text from point to the end of the line. '''
+        if enable_win32_clipboard:
+                toclipboard="".join(self.line_buffer[self.line_cursor:])
+                clipboard.set_clipboard_text(toclipboard)
         self.line_buffer[self.line_cursor:] = []
 
     def backward_kill_line(self, e): # (C-x Rubout)
@@ -726,6 +744,18 @@ class Readline:
         yanked right away. By default, this command is unbound.'''
         pass
 
+    def copy_region_to_clipboard(self, e): # ()
+        '''Copy the text in the region to the windows clipboard.'''
+        if enable_win32_clipboard:
+                mark=min(self.mark,len(self.line_buffer))
+                cursor=min(self.line_cursor,len(self.line_buffer))
+                if self.mark==-1:
+                        return
+                begin=min(cursor,mark)
+                end=max(cursor,mark)
+                toclipboard="".join(self.line_buffer[begin:end])
+                clipboard.SetClipboardText(str(toclipboard))
+
     def copy_backward_word(self, e): # ()
         '''Copy the word before point to the kill buffer. The word
         boundaries are the same as backward-word. By default, this command
@@ -737,6 +767,24 @@ class Readline:
         boundaries are the same as forward-word. By default, this command is
         unbound.'''
         pass
+
+    def paste(self,e):
+        '''Paste windows clipboard'''
+        if enable_win32_clipboard:
+                txt=clipboard.get_clipboard_text_and_convert(False)
+                self.insert_text(txt)
+
+    def ipython_paste(self,e):
+        '''Paste windows clipboard. If enable_ipython_paste_list_of_lists is 
+        True then try to convert tabseparated data to repr of list of lists or 
+        repr of array'''
+        if enable_win32_clipboard:
+                txt=clipboard.get_clipboard_text_and_convert(
+                                                                        enable_ipython_paste_list_of_lists)
+                if enable_ipython_paste_for_paths:
+                        if len(txt)<300 and ("\t" not in txt) and ("\n" not in txt):
+                                txt=txt.replace("\\","/").replace(" ",r"\ ")
+                self.insert_text(txt)
 
     def yank(self, e): # (C-y)
         '''Yank the top of the kill ring into the buffer at point. '''
@@ -948,7 +996,7 @@ class Readline:
     def set_mark(self, e): # (C-@)
         '''Set the mark to the point. If a numeric argument is supplied, the
         mark is set to that position.'''
-        pass
+        self.mark=self.line_cursor
 
     def exchange_point_and_mark(self, e): # (C-x C-x)
         '''Swap the point with the mark. The current cursor position is set
@@ -1048,7 +1096,13 @@ class Readline:
         self._bind_key('Meta-d', self.kill_word)
         self._bind_key('Meta-Delete', self.backward_kill_word)
         self._bind_key('Control-w', self.unix_word_rubout)
-        self._bind_key('Control-v', self.quoted_insert)
+        self._bind_key('Control-Shift-v', self.quoted_insert)
+        self._bind_key('Control-v', self.paste)
+        self._bind_key('Alt-v', self.ipython_paste)
+        self._bind_key('Control-y', self.paste)
+        self._bind_key('Control-k', self.kill_line)
+        self._bind_key('Control-m', self.set_mark)
+        self._bind_key('Control-q', self.copy_region_to_clipboard)
 
         # Add keybindings for numpad
         # first the number keys
