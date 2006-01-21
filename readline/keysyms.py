@@ -81,93 +81,93 @@ code2sym_map = {c32.VK_CANCEL: 'Cancel',
                 c32.VK_ADD: 'Add',
                 c32.VK_SUBTRACT: 'Subtract',
                 c32.VK_DECIMAL: 'VK_DECIMAL'
-                }
+               }
 
 # function to handle the mapping
 def make_keysym(keycode):
-  try:
-    sym = code2sym_map[keycode]
-  except KeyError:
-    sym = ''
-  return sym
+    try:
+        sym = code2sym_map[keycode]
+    except KeyError:
+        sym = ''
+    return sym
 
 sym2code_map = {}
 for code,sym in code2sym_map.iteritems():
-  sym2code_map[sym.lower()] = code
-  
+    sym2code_map[sym.lower()] = code
+
 def key_text_to_keyinfo(keytext):
-  '''Convert a GNU readline style textual description of a key to keycode with modifiers'''
-  if keytext.startswith('"'): # "
-    return keyseq_to_keyinfo(keytext[1:-1])
-  else:
-    return keyname_to_keyinfo(keytext)
+    '''Convert a GNU readline style textual description of a key to keycode with modifiers'''
+    if keytext.startswith('"'): # "
+        return keyseq_to_keyinfo(keytext[1:-1])
+    else:
+        return keyname_to_keyinfo(keytext)
 
 VkKeyScan = windll.user32.VkKeyScanA
 
 def char_to_keyinfo(char, control=False, meta=False, shift=False):
-  vk = VkKeyScan(ord(char))
-  if vk & 0xffff == 0xffff:
-    print 'VkKeyScan("%s") = %x' % (char, vk)
-    raise ValueError, 'bad key'
-  if vk & 0x100:
-    shift = True
-  if vk & 0x200:
-    control = True
-  if vk & 0x400:
-    meta = True
-  return (control, meta, shift, vk & 0xff)
+    vk = VkKeyScan(ord(char))
+    if vk & 0xffff == 0xffff:
+        print 'VkKeyScan("%s") = %x' % (char, vk)
+        raise ValueError, 'bad key'
+    if vk & 0x100:
+        shift = True
+    if vk & 0x200:
+        control = True
+    if vk & 0x400:
+        meta = True
+    return (control, meta, shift, vk & 0xff)
 
 def keyname_to_keyinfo(keyname):
-  control = False
-  meta = False
-  shift = False
+    control = False
+    meta = False
+    shift = False
 
-  while 1:
-    lkeyname = keyname.lower()
-    if lkeyname.startswith('control-'):
-      control = True
-      keyname = keyname[8:]
-    elif lkeyname.startswith('meta-'):
-      meta = True
-      keyname = keyname[5:]
-    elif lkeyname.startswith('alt-'):
-      meta = True
-      keyname = keyname[4:]
-    elif lkeyname.startswith('shift-'):
-      shift = True
-      keyname = keyname[6:]
-    else:
-      if len(keyname) > 1:
-        return (control, meta, shift, sym2code_map[keyname.lower()])
-      else:
-        return char_to_keyinfo(keyname, control, meta, shift)
-  
+    while 1:
+        lkeyname = keyname.lower()
+        if lkeyname.startswith('control-'):
+            control = True
+            keyname = keyname[8:]
+        elif lkeyname.startswith('meta-'):
+            meta = True
+            keyname = keyname[5:]
+        elif lkeyname.startswith('alt-'):
+            meta = True
+            keyname = keyname[4:]
+        elif lkeyname.startswith('shift-'):
+            shift = True
+            keyname = keyname[6:]
+        else:
+            if len(keyname) > 1:
+                return (control, meta, shift, sym2code_map[keyname.lower()])
+            else:
+                return char_to_keyinfo(keyname, control, meta, shift)
+
 def keyseq_to_keyinfo(keyseq):
-  res = []
-  control = False
-  meta = False
-  shift = False
+    res = []
+    control = False
+    meta = False
+    shift = False
 
-  while 1:
-    if keyseq.startswith('\\C-'):
-      control = True
-      keyseq = keyseq[3:]
-    elif keyseq.startswith('\\M-'):
-      meta = True
-      keyseq = keyseq[3:]
-    elif keyseq.startswith('\\e'):
-      res.append(char_to_keyinfo('\033', control, meta, shift))
-      control = meta = shift = False
-      keyseq = keyseq[2:]
-    elif len(keyseq) >= 1:
-      res.append(char_to_keyinfo(keyseq[0], control, meta, shift))
-      control = meta = shift = False
-      keyseq = keyseq[1:]
-    else:
-      return res[0]
+    while 1:
+        if keyseq.startswith('\\C-'):
+            control = True
+            keyseq = keyseq[3:]
+        elif keyseq.startswith('\\M-'):
+            meta = True
+            keyseq = keyseq[3:]
+        elif keyseq.startswith('\\e'):
+            res.append(char_to_keyinfo('\033', control, meta, shift))
+            control = meta = shift = False
+            keyseq = keyseq[2:]
+        elif len(keyseq) >= 1:
+            res.append(char_to_keyinfo(keyseq[0], control, meta, shift))
+            control = meta = shift = False
+            keyseq = keyseq[1:]
+        else:
+            return res[0]
 
 def make_keyinfo(keycode, state):
-  control = (state & (4+8)) != 0
-  meta = (state & (1+2)) != 0
-  shift = (state & 0x10) != 0
-  return (control, meta, shift, keycode)
+    control = (state & (4+8)) != 0
+    meta = (state & (1+2)) != 0
+    shift = (state & 0x10) != 0
+    return (control, meta, shift, keycode)

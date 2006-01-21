@@ -1,0 +1,6 @@
+2006-01-21  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
+	* Changed all python files to conform to 4 space indent.
+	* Added changelog
+	* Added os.path.expanduser to expand out ~/.history paths
+	
