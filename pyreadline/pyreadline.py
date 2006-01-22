@@ -8,6 +8,7 @@ import os
 import re
 import traceback
 import operator
+import exceptions
 
 import win32con as c32
 
@@ -29,12 +30,11 @@ enable_ipython_paste_list_of_lists=True
 
 
 def quote_char(c):
-    if c in printable_chars_in_codepage:
+    if ord(c)>0:
         return c
-    elif ' ' <= c <= '~':
-        return c
-    else:
-        return repr(c)[1:-1]
+
+class ReadlineError(exceptions.Exception):
+    pass
 
 class Readline:
     def __init__(self):
@@ -65,13 +65,20 @@ class Readline:
         # variables you can control with parse_and_bind
         self.show_all_if_ambiguous = 'off'
         self.mark_directories = 'on'
-        self.bell_style = 'none'
+        self.bell_style = 'audible'
         self.mark=-1
+        self.read_inputrc()
 
     def _bell(self):
         '''ring the bell if requested.'''
         if self.bell_style == 'none':
+            pass
+        elif self.bell_style == 'visible':
+            raise exceptions.NotImplementedError("Bellstyle visible is not implemented yet.")
+        elif self.bell_style == 'audible':
             self.console.bell()
+        else:
+            raise ReadlineError("Bellstyle %s unknown."%self.bell_style)
 
     def _quoted_text(self):
         quoted = [ quote_char(c) for c in self.line_buffer ]
@@ -169,7 +176,10 @@ class Readline:
             try:
                 dispatch_func = self.key_dispatch[event.keyinfo]
             except KeyError:
-                c.bell()
+                # unknown? try printing it anyway
+                if event.keyinfo[0]!=True:
+                    self.self_insert(event)   #insert only if ctrl is not pressed
+                #c.bell()
                 continue
             r = None
             if dispatch_func:
@@ -467,7 +477,7 @@ class Readline:
                     query = query[:-1]
                     hc = hc_start
                 else:
-                    c.bell()
+                    self._bell()
             elif event.char in string.letters + string.digits + string.punctuation + ' ':
                 query += event.char
                 hc = hc_start
@@ -475,7 +485,7 @@ class Readline:
                 hc += direction
             else:
                 if event.keysym != 'Return':
-                    c.bell()
+                    self._bell()
                 break
 
             while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
@@ -483,7 +493,7 @@ class Readline:
                     break
                 hc += direction
             else:
-                c.bell()
+                self._bell()
                 continue
             line = self.history[hc]
 
@@ -523,7 +533,7 @@ class Readline:
             elif event.keysym == 'Return':
                 break
             else:
-                c.bell()
+                self._bell()
 
         if query:
             hc = self.history_cursor - 1
@@ -534,7 +544,7 @@ class Readline:
                     return
                 hc += direction
             else:
-                c.bell()
+                self._bell()
 
 
     def non_incremental_reverse_search_history(self, e): # (M-p)
@@ -569,7 +579,7 @@ class Readline:
             hc += direction
         else:
             self._set_line(self.query)
-            c.bell()
+            self._bell()
 
     def history_search_forward(self, e): # ()
         '''Search forward through the history for the string of characters
@@ -702,7 +712,8 @@ class Readline:
     def kill_whole_line(self, e): # ()
         '''Kill all characters on the current line, no matter where point
         is. By default, this is unbound.'''
-        pass
+        self.line_buffer=self.line_buffer[:0]
+        self.line_cursor=0
 
     def kill_word(self, e): # (M-d)
         '''Kill from point to the end of the current word, or if between
@@ -1103,6 +1114,7 @@ class Readline:
         self._bind_key('Control-m', self.set_mark)
         self._bind_key('Control-q', self.copy_region_to_clipboard)
 
+#        self._bind_key('Control-shift-k', self.kill_whole_line)
         # Add keybindings for numpad
         # first the number keys
         self._bind_key('NUMPAD0', self.self_insert)
@@ -1128,6 +1140,29 @@ class Readline:
         '''When in emacs editing mode, this causes a switch to vi editing
         mode.'''
         pass
+
+    def read_inputrc(self,inputrcpath=os.path.expanduser("~/.pyinputrc")):
+        def pb(key,name):
+            if hasattr(self,name):
+                self._bind_key(key,getattr(self,name))
+        def setbellstyle(mode):
+            self.bell_style=mode
+        def setbellstyle(mode):
+            self.bell_style=mode
+        def show_all_if_ambiguous(mode):
+            self.show_all_if_ambiguous=mode
+        def mark_directories(mode):
+            self.mark_directories=mode
+        def completer_delims(mode):
+            self.completer_delims=mode
+        loc={"parse_and_bind":pb,
+             "bell_style":setbellstyle,
+             "mark_directories":mark_directories,
+             "show_all_if_ambiguous":show_all_if_ambiguous,
+             "completer_delims":completer_delims,}
+        if os.path.isfile(inputrcpath):             
+            execfile(inputrcpath,loc,loc)
+
 
 def CTRL(c):
     '''make a control character'''

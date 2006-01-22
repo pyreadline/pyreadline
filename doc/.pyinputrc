@@ -1,0 +1,56 @@
+#Commands for moving
+parse_and_bind("Home",            "beginning_of_line")
+parse_and_bind("End",             "end_of_line")
+parse_and_bind("Left", 		  "backward_char")
+parse_and_bind("Control-b",       "backward_char")
+parse_and_bind("Right",           "forward_char")
+parse_and_bind("Control-f",       "forward_char")
+parse_and_bind("Alt-f",           "forward_word")
+parse_and_bind("Alt-b",           "backward_word")
+parse_and_bind("Clear",           "clear_screen")
+parse_and_bind("Control-l",       "clear_screen")
+parse_and_bind("Control-a",       "beginning_of_line")
+parse_and_bind("Control-e",       "end_of_line")
+#parse_and_bind("Control-l",       "redraw_current_line")
+
+#Commands for Manipulating the History
+parse_and_bind("Return", 	  "accept_line")
+parse_and_bind("Control-p",       "previous_history")
+parse_and_bind("Control-n",       "next_history")
+parse_and_bind("Up",              "history_search_backward")
+parse_and_bind("Down",            "history_search_forward")
+parse_and_bind("Alt-<",           "beginning_of_history")
+parse_and_bind("Alt->",           "end_of_history")
+parse_and_bind("Control-r",       "reverse_search_history")
+parse_and_bind("Control-s",       "forward_search_history")
+parse_and_bind("Alt-p",           "non_incremental_reverse_search_history")
+parse_and_bind("Alt-n",           "non_incremental_forward_search_history")
+
+#Commands for Changing Text
+parse_and_bind("Delete",          "delete_char")
+parse_and_bind("Control-d",       "delete_char")
+parse_and_bind("BackSpace",       "backward_delete_char")
+parse_and_bind("Control-Shift-v", "quoted_insert")
+parse_and_bind("Control-space",   "self_insert")
+
+#Killing and Yanking
+parse_and_bind("Control-k",       "kill_line")
+parse_and_bind("Control-shift-k", "kill_whole_line")
+parse_and_bind("Meta-d",          "kill_word")
+parse_and_bind("Control-w",       "unix_word_rubout")
+parse_and_bind("Meta-Delete",     "backward_kill_word")
+
+#Copy paste
+parse_and_bind("Control-m",       "set_mark")
+parse_and_bind("Control-q",       "copy_region_to_clipboard")
+parse_and_bind("Control-v",       "paste")
+parse_and_bind("Alt-v",           "ipython_paste")
+parse_and_bind("Control-y",       "paste")
+parse_and_bind("Control-z",       "undo")
+parse_and_bind("Control-_",       "undo")
+
+#Other
+bell_style("none") #modes: none, audible, visible(not implemented)
+show_all_if_ambiguous("on")
+mark_directories("on")
+completer_delims(" \t\n\"\\'`@$><=;|&{(")

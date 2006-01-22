@@ -1,5 +1,15 @@
 2006-01-22  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
+	* Cleaned up bell handling to make sure you can disable bell with the 
+	  bell_style command
+	* Implemented rudimentary config file. Example in doc/.pyinputrc copy to
+	  ~/.pyinputrc and edit to your taste.
+	* Added patch from Ville to improve handling of international characters, 
+	  though changed so that ctrl-character is not inserted.There are probably 
+	  more weirdness to take into account than we do now...
+
+2006-01-22  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
 	* Renames of Console and PyReadline complete.
 	
 2006-01-22  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
