@@ -1,5 +1,9 @@
 2006-01-22  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
+	* Renames of Console and PyReadline complete.
+	
+2006-01-22  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
 	* This revision will not compile. Due to limitations in case 
 	  insensitivethe filesystems subversion can not do casechanging
 	  file renames in reliably. This version contains temporary 

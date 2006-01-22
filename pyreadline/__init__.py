@@ -1,4 +1,4 @@
-from PyReadline import *
+from pyreadline import *
 
 __all__ = [ 'parse_and_bind',
             'get_line_buffer',

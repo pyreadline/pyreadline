@@ -1,4 +1,3 @@
-# -*- coding: ISO-8859-1 -*-
 ''' an attempt to implement readline for Python in Python using ctypes'''
 
 import string
@@ -12,11 +11,11 @@ import operator
 
 import win32con as c32
 
-import Console
-from Console import log
+import console as console
+from console import log
 from keysyms import key_text_to_keyinfo,printable_chars_in_codepage
 
-import clipboard
+import clipboard as clipboard
 import ctypes
 
 enable_win32_clipboard=True
@@ -49,7 +48,7 @@ class Readline:
         self.undo_stack = [] # each entry is a tuple with cursor_position and line_text
         self.line_buffer = []
         self.line_cursor = 0
-        self.console = Console.Console()
+        self.console = console.Console()
         self.size = self.console.size()
         self.prompt_color = None
         self.command_color = None
@@ -1179,5 +1178,5 @@ if __name__ == '__main__':
     print res
 else:
     #import wingdbstub
-    Console.install_readline(rl.readline)
+    console.install_readline(rl.readline)
 
