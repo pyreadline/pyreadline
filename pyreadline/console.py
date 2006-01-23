@@ -182,7 +182,8 @@ class Console(object):
         self.SetConsoleMode(self.hin, 0xf)
         info = CONSOLE_SCREEN_BUFFER_INFO()
         self.GetConsoleScreenBufferInfo(self.hout, byref(info))
-        self.attr = info.wAttributes # remember the initial colors
+        self.attr = info.wAttributes
+        self.saveattr = info.wAttributes # remember the initial colors
         background = self.attr & 0xf0
         for escape in self.escape_to_color:
             if self.escape_to_color[escape] is not None:
@@ -687,7 +688,7 @@ def install_readline(hook):
     readline_hook = hook
     # get the address of PyOS_ReadlineFunctionPointer so we can update it
     PyOS_RFP = c_int.from_address(Console.GetProcAddress(sys.dllhandle,
-                                                                                                             "PyOS_ReadlineFunctionPointer"))
+                                                 "PyOS_ReadlineFunctionPointer"))
     # save a reference to the generated C-callable so it doesn't go away
     if sys.version < '2.3':
         readline_ref = HOOKFUNC22(hook_wrapper)

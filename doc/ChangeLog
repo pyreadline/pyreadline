@@ -1,3 +1,21 @@
+2006-01-23  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
+	* Default is now to insert non bound characters. 
+	* rename pyreadline.py to rlmain.py
+	* rename of config file to pyreadlineconfig.ini
+	* Change to config file syntax
+	* bell is now silent as deafult
+	* removed specific keybinding code for keypad
+	
+2006-01-22  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
+	* Default is now to insert non bound characters unless they are 
+	  pressed together with control.
+	* Added try except to read_inputrc
+	* Fixed cleanup bug in keysyms, missing saveattr on console
+	* Removed specific codepage code from keysyms
+	
+
 2006-01-22  Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
 	* Cleaned up bell handling to make sure you can disable bell with the 

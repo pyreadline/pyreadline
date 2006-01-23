@@ -104,14 +104,6 @@ def key_text_to_keyinfo(keytext):
 
 VkKeyScan = windll.user32.VkKeyScanA
 
-codepage=windll.kernel32.GetConsoleCP()
-outputcodepage=windll.kernel32.GetConsoleOutputCP()
-
-#This method does not seem to work for use of swedish characters on codepage 850
-#VkKeyScan results in -1 for those keys
-printable_chars_in_codepage={1252:"\xe5\xe4\xf6\xc5\xc4\xd6\xa8\xb4\xa7\xbd\xa4\xa3",
-                                                         }.get(codepage,"")
-
 def char_to_keyinfo(char, control=False, meta=False, shift=False):
     vk = VkKeyScan(ord(char))
     if vk & 0xffff == 0xffff:

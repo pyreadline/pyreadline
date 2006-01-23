@@ -12,12 +12,10 @@ import exceptions
 
 import win32con as c32
 
-import console as console
-from console import log
-from keysyms import key_text_to_keyinfo,printable_chars_in_codepage
-
-import clipboard as clipboard
-import ctypes
+import console
+import clipboard
+from   console import log
+from   keysyms import key_text_to_keyinfo
 
 enable_win32_clipboard=True
 
@@ -65,10 +63,24 @@ class Readline:
         # variables you can control with parse_and_bind
         self.show_all_if_ambiguous = 'off'
         self.mark_directories = 'on'
-        self.bell_style = 'audible'
+        self.bell_style = 'none'
         self.mark=-1
         self.read_inputrc()
+        log("\n".join(self.rl_settings_to_string()))
 
+    def rl_settings_to_string(self):
+        out=["%-20s: %s"%("show all if ambigous",self.show_all_if_ambiguous)]
+        out.append("%-20s: %s"%("mark_directories",self.mark_directories))
+        out.append("%-20s: %s"%("bell_style",self.bell_style))
+        out.append("%-20s: %s"%("mark_directories",self.mark_directories))
+        out.append("------------- key bindings ------------")
+        out.append("%7s %7s %7s %7s %7s %7s"%("Control","Meta","Shift","Keycode","Character","Function"))
+        bindings=[(k[0],k[1],k[2],k[3],repr(chr(k[3])),v.__name__)for k,v in self.key_dispatch.iteritems()]
+        bindings.sort()
+        for key in bindings:
+            out.append("%7s %7s %7s %7d %7s %7s"%(key))
+        return out
+    
     def _bell(self):
         '''ring the bell if requested.'''
         if self.bell_style == 'none':
@@ -177,8 +189,8 @@ class Readline:
                 dispatch_func = self.key_dispatch[event.keyinfo]
             except KeyError:
                 # unknown? try printing it anyway
-                if event.keyinfo[0]!=True:
-                    self.self_insert(event)   #insert only if ctrl is not pressed
+                #if event.keyinfo[0]!=True:
+                self.self_insert(event)   #insert only if ctrl is not pressed
                 #c.bell()
                 continue
             r = None
@@ -790,7 +802,7 @@ class Readline:
         repr of array'''
         if enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(
-                                                                        enable_ipython_paste_list_of_lists)
+                                                enable_ipython_paste_list_of_lists)
                 if enable_ipython_paste_for_paths:
                         if len(txt)<300 and ("\t" not in txt) and ("\n" not in txt):
                                 txt=txt.replace("\\","/").replace(" ",r"\ ")
@@ -1059,18 +1071,13 @@ class Readline:
     def _bind_key(self, key, func):
         '''setup the mapping from key to call the function.'''
         keyinfo = key_text_to_keyinfo(key)
+#        print key,keyinfo,func.__name__
         self.key_dispatch[keyinfo] = func
 
     def emacs_editing_mode(self, e): # (C-e)
         '''When in vi command mode, this causes a switch to emacs editing
         mode.'''
-        #insert printable chars available from codepage
-        for char in printable_chars_in_codepage:
-                self._bind_key(char, self.self_insert)
 
-        # make ' ' to ~ self insert
-        for c in range(ord(' '), 127):
-            self._bind_key('"%s"' % chr(c), self.self_insert)
         # I often accidentally hold the shift or control while typing space
         self._bind_key('Shift-space', self.self_insert)
         self._bind_key('Control-space', self.self_insert)
@@ -1113,27 +1120,7 @@ class Readline:
         self._bind_key('Control-k', self.kill_line)
         self._bind_key('Control-m', self.set_mark)
         self._bind_key('Control-q', self.copy_region_to_clipboard)
-
 #        self._bind_key('Control-shift-k', self.kill_whole_line)
-        # Add keybindings for numpad
-        # first the number keys
-        self._bind_key('NUMPAD0', self.self_insert)
-        self._bind_key('NUMPAD1', self.self_insert)
-        self._bind_key('NUMPAD2', self.self_insert)
-        self._bind_key('NUMPAD3', self.self_insert)
-        self._bind_key('NUMPAD4', self.self_insert)
-        self._bind_key('NUMPAD5', self.self_insert)
-        self._bind_key('NUMPAD6', self.self_insert)
-        self._bind_key('NUMPAD7', self.self_insert)
-        self._bind_key('NUMPAD8', self.self_insert)
-        self._bind_key('NUMPAD9', self.self_insert)
-        # then the others: / * - + 
-        self._bind_key('Divide', self.self_insert)
-        self._bind_key('Multiply', self.self_insert)
-        self._bind_key('Add', self.self_insert)
-        self._bind_key('Subtract', self.self_insert)
-        # the decimal separator: '.' on US keyboards, ',' on DE one's
-        self._bind_key('VK_DECIMAL', self.self_insert)
 
 
     def vi_editing_mode(self, e): # (M-C-j)
@@ -1141,7 +1128,7 @@ class Readline:
         mode.'''
         pass
 
-    def read_inputrc(self,inputrcpath=os.path.expanduser("~/.pyinputrc")):
+    def read_inputrc(self,inputrcpath=os.path.expanduser("~/pyreadlineconfig.ini")):
         def pb(key,name):
             if hasattr(self,name):
                 self._bind_key(key,getattr(self,name))
@@ -1155,13 +1142,19 @@ class Readline:
             self.mark_directories=mode
         def completer_delims(mode):
             self.completer_delims=mode
-        loc={"parse_and_bind":pb,
+        loc={"bind_key":pb,
              "bell_style":setbellstyle,
              "mark_directories":mark_directories,
              "show_all_if_ambiguous":show_all_if_ambiguous,
              "completer_delims":completer_delims,}
-        if os.path.isfile(inputrcpath):             
-            execfile(inputrcpath,loc,loc)
+        if os.path.isfile(inputrcpath): 
+            try:
+                execfile(inputrcpath,loc,loc)
+            except:
+                #Or should we force output otherwise python -v is necessary?
+                #print >>sys.stderr, "Error reading .pyinputrc" 
+                raise ReadlineError("Error reading .pyinputrc")
+
 
 
 def CTRL(c):

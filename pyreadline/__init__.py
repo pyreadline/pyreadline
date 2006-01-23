@@ -1,5 +1,4 @@
-from pyreadline import *
-
+from rlmain import *
 __all__ = [ 'parse_and_bind',
             'get_line_buffer',
             'insert_text',
@@ -16,4 +15,5 @@ __all__ = [ 'parse_and_bind',
             'get_endidx',
             'set_completer_delims',
             'get_completer_delims',
-            'add_history' ]
+            'add_history',
+            'GetOutputFile']
