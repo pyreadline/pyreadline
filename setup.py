@@ -8,9 +8,10 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
+import glob
 from distutils.core import setup
-
 execfile('pyreadline/release.py')
+
 setup(name=name,
       version          = version,
       description      = description,
@@ -23,5 +24,7 @@ setup(name=name,
       platforms        = platforms,
       keywords         = keywords,
       packages         = ['pyreadline'],
+      data_files       = [('share/doc/pyreadline', glob.glob("doc/*")),
+                         ]
       )
 

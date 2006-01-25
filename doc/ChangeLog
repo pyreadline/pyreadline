@@ -1,5 +1,9 @@
 2006-01-25 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
+	* Added doc directory to setup scripts
+
+2006-01-25 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
 	* Added copyright notices to all files
 	* Created release.py file to contain relesase related information
 	* Started egg_setup.py

@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-
+import glob
 from setuptools import setup,find_packages
 execfile('pyreadline/release.py')
 
@@ -22,5 +22,8 @@ setup(name=name,
       platforms        = platforms,
       keywords         = keywords,
       packages         = ['pyreadline'],
+      data_files       = [('doc', glob.glob("doc/*")),
+                         ],
+      zip_safe         = False,
       )
 
