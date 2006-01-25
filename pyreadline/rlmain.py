@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+#*****************************************************************************
+#       Copyright (C) 2003-2006 Gary Bishop.
+#       Copyright (C) 2006  Jorgen Stenarson. <jorgen.stenarson@bostream.nu>
+#
+#  Distributed under the terms of the BSD License.  The full license is in
+#  the file COPYING, distributed as part of this software.
+#*****************************************************************************
 ''' an attempt to implement readline for Python in Python using ctypes'''
 
 import string
@@ -33,6 +41,10 @@ def quote_char(c):
 
 class ReadlineError(exceptions.Exception):
     pass
+
+def inword(buffer,point):
+    return buffer[point:point+1] in [A-Za-z0-9]
+
 
 class Readline:
     def __init__(self):
@@ -1079,48 +1091,48 @@ class Readline:
         mode.'''
 
         # I often accidentally hold the shift or control while typing space
-        self._bind_key('Shift-space', self.self_insert)
-        self._bind_key('Control-space', self.self_insert)
-        self._bind_key('Return', self.accept_line)
-        self._bind_key('Left', self.backward_char)
-        self._bind_key('Control-b', self.backward_char)
-        self._bind_key('Right', self.forward_char)
-        self._bind_key('Control-f', self.forward_char)
-        self._bind_key('BackSpace', self.backward_delete_char)
-        self._bind_key('Home', self.beginning_of_line)
-        self._bind_key('End', self.end_of_line)
-        self._bind_key('Delete', self.delete_char)
-        self._bind_key('Control-d', self.delete_char)
-        self._bind_key('Clear', self.clear_screen)
-        self._bind_key('Alt-f', self.forward_word)
-        self._bind_key('Alt-b', self.backward_word)
-        self._bind_key('Control-l', self.clear_screen)
-        self._bind_key('Control-p', self.previous_history)
-        self._bind_key('Up', self.history_search_backward)
-        self._bind_key('Control-n', self.next_history)
-        self._bind_key('Down', self.history_search_forward)
-        self._bind_key('Control-a', self.beginning_of_line)
-        self._bind_key('Control-e', self.end_of_line)
-        self._bind_key('Alt-<', self.beginning_of_history)
-        self._bind_key('Alt->', self.end_of_history)
-        self._bind_key('Control-r', self.reverse_search_history)
-        self._bind_key('Control-s', self.forward_search_history)
-        self._bind_key('Alt-p', self.non_incremental_reverse_search_history)
-        self._bind_key('Alt-n', self.non_incremental_forward_search_history)
-        self._bind_key('Control-z', self.undo)
-        self._bind_key('Control-_', self.undo)
-        self._bind_key('Escape', self.prefix_meta)
-        self._bind_key('Meta-d', self.kill_word)
-        self._bind_key('Meta-Delete', self.backward_kill_word)
-        self._bind_key('Control-w', self.unix_word_rubout)
-        self._bind_key('Control-Shift-v', self.quoted_insert)
-        self._bind_key('Control-v', self.paste)
-        self._bind_key('Alt-v', self.ipython_paste)
-        self._bind_key('Control-y', self.paste)
-        self._bind_key('Control-k', self.kill_line)
-        self._bind_key('Control-m', self.set_mark)
-        self._bind_key('Control-q', self.copy_region_to_clipboard)
-#        self._bind_key('Control-shift-k', self.kill_whole_line)
+        self._bind_key('Shift-space',       self.self_insert)
+        self._bind_key('Control-space',     self.self_insert)
+        self._bind_key('Return',            self.accept_line)
+        self._bind_key('Left',              self.backward_char)
+        self._bind_key('Control-b',         self.backward_char)
+        self._bind_key('Right',             self.forward_char)
+        self._bind_key('Control-f',         self.forward_char)
+        self._bind_key('BackSpace',         self.backward_delete_char)
+        self._bind_key('Home',              self.beginning_of_line)
+        self._bind_key('End',               self.end_of_line)
+        self._bind_key('Delete',            self.delete_char)
+        self._bind_key('Control-d',         self.delete_char)
+        self._bind_key('Clear',             self.clear_screen)
+        self._bind_key('Alt-f',             self.forward_word)
+        self._bind_key('Alt-b',             self.backward_word)
+        self._bind_key('Control-l',         self.clear_screen)
+        self._bind_key('Control-p',         self.previous_history)
+        self._bind_key('Up',                self.history_search_backward)
+        self._bind_key('Control-n',         self.next_history)
+        self._bind_key('Down',              self.history_search_forward)
+        self._bind_key('Control-a',         self.beginning_of_line)
+        self._bind_key('Control-e',         self.end_of_line)
+        self._bind_key('Alt-<',             self.beginning_of_history)
+        self._bind_key('Alt->',             self.end_of_history)
+        self._bind_key('Control-r',         self.reverse_search_history)
+        self._bind_key('Control-s',         self.forward_search_history)
+        self._bind_key('Alt-p',             self.non_incremental_reverse_search_history)
+        self._bind_key('Alt-n',             self.non_incremental_forward_search_history)
+        self._bind_key('Control-z',         self.undo)
+        self._bind_key('Control-_',         self.undo)
+        self._bind_key('Escape',            self.prefix_meta)
+        self._bind_key('Meta-d',            self.kill_word)
+        self._bind_key('Meta-Delete',       self.backward_kill_word)
+        self._bind_key('Control-w',         self.unix_word_rubout)
+        self._bind_key('Control-Shift-v',   self.quoted_insert)
+        self._bind_key('Control-v',         self.paste)
+        self._bind_key('Alt-v',             self.ipython_paste)
+        self._bind_key('Control-y',         self.paste)
+        self._bind_key('Control-k',         self.kill_line)
+        self._bind_key('Control-m',         self.set_mark)
+        self._bind_key('Control-q',         self.copy_region_to_clipboard)
+#        self._bind_key('Control-shift-k',  self.kill_whole_line)
 
 
     def vi_editing_mode(self, e): # (M-C-j)
