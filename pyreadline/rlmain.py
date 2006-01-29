@@ -63,6 +63,7 @@ class Readline:
         self.prompt_color = None
         self.command_color = None
         self.key_dispatch = {}
+        self.exit_dispatch = {}
         self.previous_func = None
         self.first_prompt = True
         self.next_meta = False # True to force meta on next character
@@ -197,6 +198,10 @@ class Readline:
                 control, meta, shift, code = event.keyinfo
                 event.keyinfo = (control, True, shift, code)
 
+            #Process exit keys. Only exit on empty line
+            if event.keyinfo in self.exit_dispatch:
+                if len(self.line_buffer) == 0:
+                    raise EOFError
             try:
                 dispatch_func = self.key_dispatch[event.keyinfo]
             except KeyError:
@@ -636,10 +641,6 @@ class Readline:
         '''Delete the character at point. If point is at the beginning of
         the line, there are no characters in the line, and the last
         character typed was not bound to delete-char, then return EOF.'''
-        if len(self.line_buffer) == 0:
-            if self.previous_func != self.delete_char:
-                raise EOFError
-            self._bell()
         if self.line_cursor < len(self.line_buffer):
             del self.line_buffer[self.line_cursor]
         else:
@@ -1086,9 +1087,17 @@ class Readline:
 #        print key,keyinfo,func.__name__
         self.key_dispatch[keyinfo] = func
 
+    def _bind_exit_key(self, key):
+        '''setup the mapping from key to call the function.'''
+        keyinfo = key_text_to_keyinfo(key)
+        self.exit_dispatch[keyinfo] = None
+
     def emacs_editing_mode(self, e): # (C-e)
         '''When in vi command mode, this causes a switch to emacs editing
         mode.'''
+
+        self._bind_exit_key('Control-d')
+        self._bind_exit_key('Control-z')
 
         # I often accidentally hold the shift or control while typing space
         self._bind_key('Shift-space',       self.self_insert)
@@ -1141,9 +1150,21 @@ class Readline:
         pass
 
     def read_inputrc(self,inputrcpath=os.path.expanduser("~/pyreadlineconfig.ini")):
-        def pb(key,name):
+        def bind_key(key,name):
             if hasattr(self,name):
                 self._bind_key(key,getattr(self,name))
+        def un_bind_key(key):
+            keyinfo = key_text_to_keyinfo(key)
+            if keyinfo in self.key_dispatch:
+                del self.key_dispatch[keyinfo]
+
+        def bind_exit_key(key):
+            self._bind_exit_key(key)
+        def un_bind_exit_key(key):
+            keyinfo = key_text_to_keyinfo(key)
+            if keyinfo in self.exit_dispatch:
+                del self.exit_dispatch[keyinfo]
+
         def setbellstyle(mode):
             self.bell_style=mode
         def setbellstyle(mode):
@@ -1154,7 +1175,10 @@ class Readline:
             self.mark_directories=mode
         def completer_delims(mode):
             self.completer_delims=mode
-        loc={"bind_key":pb,
+        loc={"bind_key":bind_key,
+             "bind_exit_key":bind_exit_key,
+             "un_bind_key":un_bind_key,
+             "un_bind_exit_key":un_bind_exit_key,
              "bell_style":setbellstyle,
              "mark_directories":mark_directories,
              "show_all_if_ambiguous":show_all_if_ambiguous,

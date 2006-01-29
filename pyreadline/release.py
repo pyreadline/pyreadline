@@ -39,6 +39,7 @@ features:
 - Smart paste for convenient use with ipython. Converting tab separated data to 
   python list or numpy array. Converting file paths to use / and escaping any 
   spaces using \ .
+- Configuration file
 """
 
 license = 'BSD'

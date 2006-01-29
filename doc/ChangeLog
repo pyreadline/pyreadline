@@ -1,3 +1,10 @@
+2006-01-29 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+
+	* Moved exit key (control-D) logic to separate key dispatch handler
+	* Added bind_exit_key to config file
+	* Added un_bind_key command to configfile
+	* Added un_bind_exit_key command to configfile
+
 2006-01-25 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
 	* Added doc directory to setup scripts
