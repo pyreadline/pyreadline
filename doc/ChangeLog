@@ -1,3 +1,11 @@
+2006-01-31 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	
+	* Added experimental mulitline paste. Thís version ALWAYS adds 
+	  a final newline so there is what you paste is always executed!!!
+	* Moved win32paste config parameters from module level into 
+	  readline class (in preparation for adding config file parameter)
+	* Added svn url to long description
+	
 2006-01-29 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
 	* Moved exit key (control-D) logic to separate key dispatch handler

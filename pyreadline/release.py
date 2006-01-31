@@ -40,6 +40,11 @@ features:
   python list or numpy array. Converting file paths to use / and escaping any 
   spaces using \ .
 - Configuration file
+
+ The latest development version is always available at the IPython subversion
+ repository_.
+
+.. _repository: http://ipython.scipy.org/svn/ipython/pyreadline/trunk#egg=ipython-dev
 """
 
 license = 'BSD'

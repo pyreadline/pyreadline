@@ -25,14 +25,7 @@ import clipboard
 from   console import log
 from   keysyms import key_text_to_keyinfo
 
-enable_win32_clipboard=True
 
-#assumes data on clipboard is path if shorter than 300 characters and doesn't contain \t or \n
-#and replace \ with / for easier use in ipython
-enable_ipython_paste_for_paths=True
-
-#automatically convert tabseparated data to list of lists or array constructors
-enable_ipython_paste_list_of_lists=True
 
 
 def quote_char(c):
@@ -80,6 +73,18 @@ class Readline:
         self.mark=-1
         self.read_inputrc()
         log("\n".join(self.rl_settings_to_string()))
+
+        #Paste settings    
+        #assumes data on clipboard is path if shorter than 300 characters and doesn't contain \t or \n
+        #and replace \ with / for easier use in ipython
+        self.enable_ipython_paste_for_paths=True
+
+        #automatically convert tabseparated data to list of lists or array constructors
+        self.enable_ipython_paste_list_of_lists=True
+        self.enable_win32_clipboard=True
+
+        self.paste_line_buffer=[]
+
 
     def rl_settings_to_string(self):
         out=["%-20s: %s"%("show all if ambigous",self.show_all_if_ambiguous)]
@@ -158,40 +163,20 @@ class Readline:
             self.prompt_begin_pos = (bx, by - n)
             self.prompt_end_pos = (ex, ey - n)
 
-    def readline(self, prompt=''):
-        '''Try to act like GNU readline.'''
+    def _update_line(self):
+        c=self.console
+        c.pos(*self.prompt_end_pos)
+        ltext = self._quoted_text()
+        n = c.write_scrolling(ltext, self.command_color)
+        self._update_prompt_pos(n)
+        self._clear_after()
+        self._set_cursor()
+        
 
-        # handle startup_hook
-        if self.first_prompt:
-            self.first_prompt = False
-            if self.startup_hook:
-                try:
-                    self.startup_hook()
-                except:
-                    print 'startup hook failed'
-                    traceback.print_exc()
-
-        c = self.console
-        self._reset_line()
-        self.prompt = prompt
-        self._print_prompt()
-
-        if self.pre_input_hook:
-            try:
-                self.pre_input_hook()
-            except:
-                print 'pre_input_hook failed'
-                traceback.print_exc()
-                self.pre_input_hook = None
-
+    def _readline_from_keyboard(self):
+        c=self.console
         while 1:
-            c.pos(*self.prompt_end_pos)
-            ltext = self._quoted_text()
-            n = c.write_scrolling(ltext, self.command_color)
-            self._update_prompt_pos(n)
-            self._clear_after()
-            self._set_cursor()
-
+            self._update_line()
             event = c.getkeypress()
             if self.next_meta:
                 self.next_meta = False
@@ -221,9 +206,52 @@ class Readline:
 
             self.previous_func = dispatch_func
             if r:
+                self._update_line()
                 break
+    
 
-        c.write('\r\n')
+
+    def readline(self, prompt=''):
+        '''Try to act like GNU readline.'''
+
+        # handle startup_hook
+        if self.first_prompt:
+            self.first_prompt = False
+            if self.startup_hook:
+                try:
+                    self.startup_hook()
+                except:
+                    print 'startup hook failed'
+                    traceback.print_exc()
+
+        c = self.console
+        self._reset_line()
+        self.prompt = prompt
+        self._print_prompt()
+
+        if self.pre_input_hook:
+            try:
+                self.pre_input_hook()
+            except:
+                print 'pre_input_hook failed'
+                traceback.print_exc()
+                self.pre_input_hook = None
+
+        log("in readline: %s"%self.paste_line_buffer)
+        if len(self.paste_line_buffer)>0:
+            #self.console.bell()
+            self._set_line(self.paste_line_buffer[0])
+            c.pos(*self.prompt_end_pos)
+            ltext = self._quoted_text()
+            n = c.write_scrolling(ltext, self.command_color)
+            self._update_prompt_pos(n)
+            self._clear_after()
+            self._set_cursor()
+            self.paste_line_buffer=self.paste_line_buffer[1:]
+            c.write('\r\n')
+        else:
+            self._readline_from_keyboard()
+            c.write('\r\n')
 
         rtext = self._line_text()
         self.add_history(rtext)
@@ -249,9 +277,7 @@ class Readline:
                 else:
                     log('bad set "%s"' % string)
                 return
-            log('before')
             m = re.compile(r'\s*(.+)\s*:\s*([-a-zA-Z]+)\s*$').match(string)
-            log('here')
             if m:
                 key = m.group(1)
                 func_name = m.group(2)
@@ -266,7 +292,6 @@ class Readline:
             log('error')
             traceback.print_exc()
             raise
-        log('return')
 
     def get_line_buffer(self):
         '''Return the current contents of the line buffer.'''
@@ -718,7 +743,7 @@ class Readline:
 
     def kill_line(self, e): # (C-k)
         '''Kill the text from point to the end of the line. '''
-        if enable_win32_clipboard:
+        if self.enable_win32_clipboard:
                 toclipboard="".join(self.line_buffer[self.line_cursor:])
                 clipboard.set_clipboard_text(toclipboard)
         self.line_buffer[self.line_cursor:] = []
@@ -781,7 +806,7 @@ class Readline:
 
     def copy_region_to_clipboard(self, e): # ()
         '''Copy the text in the region to the windows clipboard.'''
-        if enable_win32_clipboard:
+        if self.enable_win32_clipboard:
                 mark=min(self.mark,len(self.line_buffer))
                 cursor=min(self.line_cursor,len(self.line_buffer))
                 if self.mark==-1:
@@ -805,18 +830,33 @@ class Readline:
 
     def paste(self,e):
         '''Paste windows clipboard'''
-        if enable_win32_clipboard:
+        if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(False)
                 self.insert_text(txt)
 
+    def paste_mulitline_code(self,e):
+        '''Paste windows clipboard'''
+        reg=re.compile("\r?\n")
+        if self.enable_win32_clipboard:
+                txt=clipboard.get_clipboard_text_and_convert(False)
+                t=reg.split(txt)
+                t=[row for row in t if row.strip()!=""] #remove empty lines
+                if t!=[""]:
+                    self.insert_text(t[0])
+                    self.paste_line_buffer=t[1:]
+                    log("multi: %s"%self.paste_line_buffer)
+                    return True
+                else:
+                    return False
+        
     def ipython_paste(self,e):
         '''Paste windows clipboard. If enable_ipython_paste_list_of_lists is 
         True then try to convert tabseparated data to repr of list of lists or 
         repr of array'''
-        if enable_win32_clipboard:
+        if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(
-                                                enable_ipython_paste_list_of_lists)
-                if enable_ipython_paste_for_paths:
+                                                self.enable_ipython_paste_list_of_lists)
+                if self.enable_ipython_paste_for_paths:
                         if len(txt)<300 and ("\t" not in txt) and ("\n" not in txt):
                                 txt=txt.replace("\\","/").replace(" ",r"\ ")
                 self.insert_text(txt)
@@ -1134,7 +1174,7 @@ class Readline:
         self._bind_key('Meta-d',            self.kill_word)
         self._bind_key('Meta-Delete',       self.backward_kill_word)
         self._bind_key('Control-w',         self.unix_word_rubout)
-        self._bind_key('Control-Shift-v',   self.quoted_insert)
+        #self._bind_key('Control-Shift-v',   self.quoted_insert)
         self._bind_key('Control-v',         self.paste)
         self._bind_key('Alt-v',             self.ipython_paste)
         self._bind_key('Control-y',         self.paste)
@@ -1142,6 +1182,7 @@ class Readline:
         self._bind_key('Control-m',         self.set_mark)
         self._bind_key('Control-q',         self.copy_region_to_clipboard)
 #        self._bind_key('Control-shift-k',  self.kill_whole_line)
+        self._bind_key('Control-Shift-v',   self.paste_mulitline_code)
 
 
     def vi_editing_mode(self, e): # (M-C-j)
