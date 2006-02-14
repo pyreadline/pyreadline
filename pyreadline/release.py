@@ -34,6 +34,9 @@ It is not complete and does not necessarily strive for complete
 compatibilty but rather convenience in use on the windows platform. It has been
 tested for use with windows 2000 and windows xp.
 
+There are currently no released version, only subversion access is possible.
+use: easy_install pyreadline==dev
+
 features:
 - Copy and paste using the clipboard
 - Smart paste for convenient use with ipython. Converting tab separated data to 
@@ -44,7 +47,7 @@ features:
  The latest development version is always available at the IPython subversion
  repository_.
 
-.. _repository: http://ipython.scipy.org/svn/ipython/pyreadline/trunk#egg=ipython-dev
+.. _repository: http://ipython.scipy.org/svn/ipython/pyreadline/trunk#egg=pyreadline-dev
 """
 
 license = 'BSD'

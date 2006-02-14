@@ -12,7 +12,7 @@ This was modeled after the C extension of the same name by Fredrik Lundh.
 '''
 
 # primitive debug printing that won't interfere with the screen
-if 0:
+if 1:
     fp = open('debug.txt', 'w')
     def log(s):
         print >>fp, s
@@ -468,6 +468,7 @@ class Console(object):
         '''Return next key press event from the queue, ignoring others.'''
         while 1:
             e = self.get()
+            log("getKeypress:%s,%s,%s"%(e.keyinfo,e.keycode,e.type))
             if e.type == 'KeyPress' and e.keycode not in key_modifiers:
                 log(e)
                 if e.keysym == 'Next':
@@ -476,7 +477,9 @@ class Console(object):
                     self.scroll_window(-12)
                 else:
                     return e
-
+            elif e.type == 'KeyRelease' and e.keyinfo==(True, False, False, 83):
+                return e
+                
     def getchar(self):
         '''Get next character from queue.'''
 

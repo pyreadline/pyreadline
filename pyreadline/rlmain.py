@@ -25,7 +25,8 @@ import clipboard
 from   console import log
 from   keysyms import key_text_to_keyinfo
 
-
+import lineeditor.lineobj as lineobj
+import lineeditor.history as history
 
 
 def quote_char(c):
@@ -38,19 +39,16 @@ class ReadlineError(exceptions.Exception):
 def inword(buffer,point):
     return buffer[point:point+1] in [A-Za-z0-9]
 
+class GetSetError(ReadlineError):
+    pass
 
-class Readline:
+class Readline(object):
     def __init__(self):
         self.startup_hook = None
         self.pre_input_hook = None
         self.completer = None
         self.completer_delims = " \t\n\"\\'`@$><=;|&{("
-        self.history_length = -1
-        self.history = [] # strings for previous commands
-        self.history_cursor = 0
-        self.undo_stack = [] # each entry is a tuple with cursor_position and line_text
-        self.line_buffer = []
-        self.line_cursor = 0
+
         self.console = console.Console()
         self.size = self.console.size()
         self.prompt_color = None
@@ -85,6 +83,24 @@ class Readline:
 
         self.paste_line_buffer=[]
 
+#        self.line_buffer = []
+#        self.line_cursor = 0
+        self.l_buffer=lineobj.ReadLineTextBuffer("")
+        self._history=history.LineHistory()
+
+    def _g(x):
+        def g(self):
+            raise GetSetError("GET %s"%x)
+        def s(self,q):
+            raise GetSetError("SET %s"%x)
+        return g,s
+    line_buffer=property(*_g("line_buffer"))
+    line_cursor=property(*_g("line_buffer"))
+    undo_stack =property(*_g("undo_stack")) # each entry is a tuple with cursor_position and line_text
+    history_length =property(*_g("history_length")) # each entry is a tuple with cursor_position and line_text
+    history =property(*_g("history")) # each entry is a tuple with cursor_position and line_text
+    history_cursor =property(*_g("history_cursor")) # each entry is a tuple with cursor_position and line_text
+
 
     def rl_settings_to_string(self):
         out=["%-20s: %s"%("show all if ambigous",self.show_all_if_ambiguous)]
@@ -110,26 +126,6 @@ class Readline:
         else:
             raise ReadlineError("Bellstyle %s unknown."%self.bell_style)
 
-    def _quoted_text(self):
-        quoted = [ quote_char(c) for c in self.line_buffer ]
-        self.line_char_width = [ len(c) for c in quoted ]
-        return ''.join(quoted)
-
-    def _line_text(self):
-        return ''.join(self.line_buffer)
-
-    def _set_line(self, text, cursor=None):
-        self.line_buffer = [ c for c in str(text) ]
-        if cursor is None:
-            self.line_cursor = len(self.line_buffer)
-        else:
-            self.line_cursor = cursor
-
-    def _reset_line(self):
-        self.line_buffer = []
-        self.line_cursor = 0
-        self.undo_stack = []
-
     def _clear_after(self):
         c = self.console
         x, y = c.pos()
@@ -141,7 +137,7 @@ class Readline:
         c = self.console
         xc, yc = self.prompt_end_pos
         w, h = c.size()
-        xc += reduce(operator.add, self.line_char_width[0:self.line_cursor], 0)
+        xc += self.l_buffer.visible_line_width()
         while(xc > w):
             xc -= w
             yc += 1
@@ -166,7 +162,7 @@ class Readline:
     def _update_line(self):
         c=self.console
         c.pos(*self.prompt_end_pos)
-        ltext = self._quoted_text()
+        ltext = self.l_buffer.quoted_text()
         n = c.write_scrolling(ltext, self.command_color)
         self._update_prompt_pos(n)
         self._clear_after()
@@ -185,35 +181,23 @@ class Readline:
 
             #Process exit keys. Only exit on empty line
             if event.keyinfo in self.exit_dispatch:
-                if len(self.line_buffer) == 0:
+                if lineobj.EndOfLine(self.l_buffer) == 0:
                     raise EOFError
-            try:
-                dispatch_func = self.key_dispatch[event.keyinfo]
-            except KeyError:
-                # unknown? try printing it anyway
-                #if event.keyinfo[0]!=True:
-                self.self_insert(event)   #insert only if ctrl is not pressed
-                #c.bell()
-                continue
+
+            dispatch_func = self.key_dispatch.get(event.keyinfo,self.self_insert)
+            log("readline from keyboard:%s"%(event.keyinfo,))
             r = None
             if dispatch_func:
                 r = dispatch_func(event)
-                ltext = self._line_text()
-                if self.undo_stack and ltext == self.undo_stack[-1][1]:
-                    self.undo_stack[-1][0] = self.line_cursor
-                else:
-                    self.undo_stack.append([self.line_cursor, ltext])
+                self.l_buffer.push_undo()
 
             self.previous_func = dispatch_func
             if r:
                 self._update_line()
                 break
-    
-
 
     def readline(self, prompt=''):
         '''Try to act like GNU readline.'''
-
         # handle startup_hook
         if self.first_prompt:
             self.first_prompt = False
@@ -225,7 +209,7 @@ class Readline:
                     traceback.print_exc()
 
         c = self.console
-        self._reset_line()
+        self.l_buffer.reset_line()
         self.prompt = prompt
         self._print_prompt()
 
@@ -239,25 +223,18 @@ class Readline:
 
         log("in readline: %s"%self.paste_line_buffer)
         if len(self.paste_line_buffer)>0:
-            #self.console.bell()
-            self._set_line(self.paste_line_buffer[0])
-            c.pos(*self.prompt_end_pos)
-            ltext = self._quoted_text()
-            n = c.write_scrolling(ltext, self.command_color)
-            self._update_prompt_pos(n)
-            self._clear_after()
-            self._set_cursor()
+            self.l_buffer=lineobj.ReadlineTextBuffer(self.paste_line_buffer[0])
+            self._update_line()
             self.paste_line_buffer=self.paste_line_buffer[1:]
             c.write('\r\n')
         else:
             self._readline_from_keyboard()
             c.write('\r\n')
 
-        rtext = self._line_text()
-        self.add_history(rtext)
+        self.add_history(self.l_buffer.copy())
 
-        log('returning(%s)' % rtext)
-        return rtext + '\n'
+        log('returning(%s)' % self.l_buffer.get_line_text())
+        return self.l_buffer.get_line_text() + '\n'
 
     def parse_and_bind(self, string):
         '''Parse and execute single line of a readline init file.'''
@@ -295,41 +272,29 @@ class Readline:
 
     def get_line_buffer(self):
         '''Return the current contents of the line buffer.'''
-        return "".join(self.line_buffer)
+        return self.l_buffer.get_line_text()
 
     def insert_text(self, string):
         '''Insert text into the command line.'''
-        for c in string:
-            self.line_buffer.insert(self.line_cursor, c)
-            self.line_cursor += 1
-
+        self.l_buffer.insert_text(string)
+        
     def read_init_file(self, filename=None): 
         '''Parse a readline initialization file. The default filename is the last filename used.'''
         log('read_init_file("%s")' % filename)
 
     def read_history_file(self, filename=os.path.expanduser('~/.history')): 
         '''Load a readline history file. The default filename is ~/.history.'''
-        try:
-            for line in open(filename, 'rt'):
-                self.add_history(line.rstrip())
-        except IOError:
-            self.history = []
-            self.history_cursor = 0
-            raise IOError
+        self._history.read_history_file(filename)
 
     def write_history_file(self, filename=os.path.expanduser('~/.history')): 
         '''Save a readline history file. The default filename is ~/.history.'''
-        fp = open(filename, 'wb')
-        for line in self.history:
-            fp.write(line)
-            fp.write('\n')
-        fp.close()
+        self._history.write_history_file(filename)
 
     def get_history_length(self, ):
         '''Return the desired length of the history file.
 
         Negative values imply unlimited history file size.'''
-        return self.history_length
+        return self._history.get_history_length()
 
     def set_history_length(self, length): 
         '''Set the number of lines to save in the history file.
@@ -337,7 +302,7 @@ class Readline:
         write_history_file() uses this value to truncate the history file
         when saving. Negative values imply unlimited history file size.
         '''
-        self.history_length = length
+        self._history.set_history_length(length)
 
     def set_startup_hook(self, function=None): 
         '''Set or remove the startup_hook function.
@@ -400,58 +365,35 @@ class Readline:
 
     def add_history(self, line):
         '''Append a line to the history buffer, as if it was the last line typed.'''
-        if not line:
-            pass
-        elif len(self.history) > 0 and self.history[-1] == line:
-            pass
-        else:
-            self.history.append(line)
-            if self.history_length > 0 and len(self.history) > self.history_length:
-                self.history = self.history[-self.history_length:]
-        self.history_cursor = len(self.history)
+        self._history.add_history(line)
 
     ### Methods below here are bindable functions
 
     def beginning_of_line(self, e): # (C-a)
         '''Move to the start of the current line. '''
-        self.line_cursor = 0
+        self.l_buffer.beginning_of_line()
 
     def end_of_line(self, e): # (C-e)
         '''Move to the end of the line. '''
-        self.line_cursor = len(self.line_buffer)
+        self.l_buffer.end_of_line()
 
     def forward_char(self, e): # (C-f)
         '''Move forward a character. '''
-        if self.line_cursor < len(self.line_buffer):
-            self.line_cursor += 1
-        else:
-            self._bell()
+        self.l_buffer.forward_char()
 
     def backward_char(self, e): # (C-b)
         '''Move back a character. '''
-        if self.line_cursor > 0:
-            self.line_cursor -= 1
-        else:
-            self._bell()
+        self.l_buffer.backward_char()
 
     def forward_word(self, e): # (M-f)
         '''Move forward to the end of the next word. Words are composed of
         letters and digits.'''
-        L = len(self.line_buffer)
-        while self.line_cursor < L:
-            self.line_cursor += 1
-            if self.line_cursor == L:
-                break
-            if self.line_buffer[self.line_cursor] not in string.letters + string.digits:
-                break
+        self.l_buffer.forward_word()
 
     def backward_word(self, e): # (M-b)
         '''Move back to the start of the current or previous word. Words are
         composed of letters and digits.'''
-        while self.line_cursor > 0:
-            self.line_cursor -= 1
-            if self.line_buffer[self.line_cursor] not in string.letters + string.digits:
-                break
+        self.l_buffer.backward_word()
 
     def clear_screen(self, e): # (C-l)
         '''Clear the screen and redraw the current line, leaving the current
@@ -468,51 +410,29 @@ class Readline:
         with add_history(). If this line is a modified history line, the
         history line is restored to its original state.'''
         return True
-
+#########  History commands
     def previous_history(self, e): # (C-p)
         '''Move back through the history list, fetching the previous command. '''
-        if self.history_cursor > 0:
-            self.history_cursor -= 1
-            line = self.history[self.history_cursor]
-            self._set_line(line)
-        else:
-            self._bell()
+        self._history.previous_history(self.l_buffer)
 
     def next_history(self, e): # (C-n)
         '''Move forward through the history list, fetching the next command. '''
-        if self.history_cursor < len(self.history) - 1:
-            self.history_cursor += 1
-            line = self.history[self.history_cursor]
-            self._set_line(line)
-        elif self.undo_stack:
-            cursor, text = self.undo_stack[-1]
-            self._set_line(text, cursor)
-        else:
-            self._bell()
+        self._history.next_history(self.l_buffer)
 
     def beginning_of_history(self, e): # (M-<)
         '''Move to the first line in the history.'''
-        self.history_cursor = 0
-        if len(self.history) > 0:
-            self._set_line(self.history[0])
-        else:
-            self._bell()
+        self._history.beginning_of_history()
 
     def end_of_history(self, e): # (M->)
         '''Move to the end of the input history, i.e., the line currently
         being entered.'''
-        if self.undo_stack:
-            cursor, text = self.undo_stack[-1]
-            self._set_line(text, cursor)
-        else:
-            self._bell()
+        self._history.end_of_history(self.l_buffer)
 
-    def _i_search(self, direction, init_event):
+    def _i_search(self, searchfun, direction, init_event):
         c = self.console
-        line = self._line_text()
+        line = self.get_line_buffer()
         query = ''
-        hc_start = self.history_cursor + direction
-        hc = hc_start
+        hc_start = self._history.history_cursor #+ direction
         while 1:
             x, y = self.prompt_end_pos
             c.pos(0, y)
@@ -529,123 +449,66 @@ class Readline:
             if event.keysym == 'BackSpace':
                 if len(query) > 0:
                     query = query[:-1]
-                    hc = hc_start
+                    self._history.history_cursor = hc_start
                 else:
                     self._bell()
             elif event.char in string.letters + string.digits + string.punctuation + ' ':
+                self._history.history_cursor = hc_start
                 query += event.char
-                hc = hc_start
             elif event.keyinfo == init_event.keyinfo:
-                hc += direction
+                self._history.history_cursor += direction
+                line=searchfun(query)                
+                pass
             else:
                 if event.keysym != 'Return':
                     self._bell()
                 break
-
-            while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
-                if self.history[hc].find(query) >= 0:
-                    break
-                hc += direction
-            else:
-                self._bell()
-                continue
-            line = self.history[hc]
+            line=searchfun(query)
 
         px, py = self.prompt_begin_pos
         c.pos(0, py)
-        self._set_line(line)
+        self.l_buffer.set_line(line)
         self._print_prompt()
+        self._history.history_cursor=len(self._history.history)
 
     def reverse_search_history(self, e): # (C-r)
         '''Search backward starting at the current line and moving up
         through the history as necessary. This is an incremental search.'''
-        self._i_search(-1, e)
+#        print "HEJ"
+#        self.console.bell()
+        self._i_search(self._history.reverse_search_history, -1, e)
 
     def forward_search_history(self, e): # (C-s)
         '''Search forward starting at the current line and moving down
         through the the history as necessary. This is an incremental search.'''
-        self._i_search(1, e)
-
-    def _non_i_search(self, direction):
-        c = self.console
-        line = self._line_text()
-        query = ''
-        while 1:
-            c.pos(*self.prompt_end_pos)
-            scroll = c.write_scrolling(":%s" % query)
-            self._update_prompt_pos(scroll)
-            self._clear_after()
-
-            event = c.getkeypress()
-            if event.keysym == 'BackSpace':
-                if len(query) > 0:
-                    query = query[:-1]
-                else:
-                    break
-            elif event.char in string.letters + string.digits + string.punctuation + ' ':
-                query += event.char
-            elif event.keysym == 'Return':
-                break
-            else:
-                self._bell()
-
-        if query:
-            hc = self.history_cursor - 1
-            while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
-                if self.history[hc].find(query) >= 0:
-                    self._set_line(self.history[hc])
-                    self.history_cursor = hc
-                    return
-                hc += direction
-            else:
-                self._bell()
+#        print "HEJ"
+#        self.console.bell()
+        self._i_search(self._history.forward_search_history, 1, e)
 
 
     def non_incremental_reverse_search_history(self, e): # (M-p)
         '''Search backward starting at the current line and moving up
         through the history as necessary using a non-incremental search for
         a string supplied by the user.'''
-        self._non_i_search(-1)
+        self._history.non_incremental_reverse_search_history(self.l_buffer)
 
     def non_incremental_forward_search_history(self, e): # (M-n)
         '''Search forward starting at the current line and moving down
         through the the history as necessary using a non-incremental search
         for a string supplied by the user.'''
-        self._non_i_search(1)
-
-    def _search(self, direction):
-        c = self.console
-
-        if (self.previous_func != self.history_search_forward and
-                self.previous_func != self.history_search_backward):
-            self.query = ''.join(self.line_buffer[0:self.line_cursor])
-        hc = self.history_cursor + direction
-        while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
-            h = self.history[hc]
-            if not self.query:
-                self._set_line(h)
-                self.history_cursor = hc
-                return
-            elif h.startswith(self.query) and h != self._line_text:
-                self._set_line(h, len(self.query))
-                self.history_cursor = hc
-                return
-            hc += direction
-        else:
-            self._set_line(self.query)
-            self._bell()
+        self._history.non_incremental_reverse_search_history(self.l_buffer)
 
     def history_search_forward(self, e): # ()
         '''Search forward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
-        self._search(1)
+        self.l_buffer=self._history.history_search_forward(self.l_buffer)
 
     def history_search_backward(self, e): # ()
         '''Search backward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
-        self._search(-1)
+        self.l_buffer=self._history.history_search_backward(self.l_buffer)
 
     def yank_nth_arg(self, e): # (M-C-y)
         '''Insert the first argument to the previous command (usually the
@@ -666,17 +529,12 @@ class Readline:
         '''Delete the character at point. If point is at the beginning of
         the line, there are no characters in the line, and the last
         character typed was not bound to delete-char, then return EOF.'''
-        if self.line_cursor < len(self.line_buffer):
-            del self.line_buffer[self.line_cursor]
-        else:
-            self._bell()
+        self.l_buffer.delete_char()
 
     def backward_delete_char(self, e): # (Rubout)
         '''Delete the character behind the cursor. A numeric argument means
         to kill the characters instead of deleting them.'''
-        if self.line_cursor > 0:
-            del self.line_buffer[self.line_cursor-1]
-            self.line_cursor -= 1
+        self.l_buffer.backward_delete_char()
 
     def forward_backward_delete_char(self, e): # ()
         '''Delete the character under the cursor, unless the cursor is at
@@ -688,8 +546,7 @@ class Readline:
         '''Add the next character typed to the line verbatim. This is how to
         insert key sequences like C-q, for example.'''
         e = self.console.getkeypress()
-        self.line_buffer.insert(self.line_cursor, e.char)
-        self.line_cursor += 1
+        self.insert_text(e.char)
 
     def tab_insert(self, e): # (M-TAB)
         '''Insert a tab character. '''
@@ -699,36 +556,35 @@ class Readline:
     def self_insert(self, e): # (a, b, A, 1, !, ...)
         '''Insert yourself. '''
         if ord(e.char)!=0: #don't insert null character in buffer, can happen with dead keys.
-            self.line_buffer.insert(self.line_cursor, e.char)
-            self.line_cursor += 1
+            self.insert_text(e.char)
 
     def transpose_chars(self, e): # (C-t)
         '''Drag the character before the cursor forward over the character
         at the cursor, moving the cursor forward as well. If the insertion
         point is at the end of the line, then this transposes the last two
         characters of the line. Negative arguments have no effect.'''
-        pass
+        self.l_buffer.transpose_chars()
 
     def transpose_words(self, e): # (M-t)
         '''Drag the word before point past the word after point, moving
         point past that word as well. If the insertion point is at the end
         of the line, this transposes the last two words on the line.'''
-        pass
+        self.l_buffer.transpose_words()
 
     def upcase_word(self, e): # (M-u)
         '''Uppercase the current (or following) word. With a negative
         argument, uppercase the previous word, but do not move the cursor.'''
-        pass
+        self.l_buffer.upcase_word()
 
     def downcase_word(self, e): # (M-l)
         '''Lowercase the current (or following) word. With a negative
         argument, lowercase the previous word, but do not move the cursor.'''
-        pass
+        self.l_buffer.downcase_word()
 
     def capitalize_word(self, e): # (M-c)
         '''Capitalize the current (or following) word. With a negative
         argument, capitalize the previous word, but do not move the cursor.'''
-        pass
+        self.l_buffer.capitalize_word()
 
     def overwrite_mode(self, e): # ()
         '''Toggle overwrite mode. With an explicit positive numeric
@@ -740,56 +596,40 @@ class Readline:
         the text to the right. Characters bound to backward-delete-char
         replace the character before point with a space.'''
         pass
-
+        
     def kill_line(self, e): # (C-k)
         '''Kill the text from point to the end of the line. '''
-        if self.enable_win32_clipboard:
-                toclipboard="".join(self.line_buffer[self.line_cursor:])
-                clipboard.set_clipboard_text(toclipboard)
-        self.line_buffer[self.line_cursor:] = []
-
+        self.l_buffer.kill_line()
+        
     def backward_kill_line(self, e): # (C-x Rubout)
         '''Kill backward to the beginning of the line. '''
-        self.line_buffer[:self.line_cursor] = []
-        self.line_cursor = 0
+        self.l_buffer.backward_kill_line()
 
     def unix_line_discard(self, e): # (C-u)
         '''Kill backward from the cursor to the beginning of the current line. '''
         # how is this different from backward_kill_line?
-        self.line_buffer[:self.line_cursor] = []
-        self.line_cursor = 0
+        self.l_buffer.unix_line_discard()
 
     def kill_whole_line(self, e): # ()
         '''Kill all characters on the current line, no matter where point
         is. By default, this is unbound.'''
-        self.line_buffer=self.line_buffer[:0]
-        self.line_cursor=0
+        self.l_buffer.kill_whole_line()
 
     def kill_word(self, e): # (M-d)
         '''Kill from point to the end of the current word, or if between
         words, to the end of the next word. Word boundaries are the same as
         forward-word.'''
-        begin = self.line_cursor
-        self.forward_word(e)
-        self.line_buffer[begin:self.line_cursor] = []
-        self.line_cursor = begin
+        self.l_buffer.kill_word()
 
     def backward_kill_word(self, e): # (M-DEL)
         '''Kill the word behind point. Word boundaries are the same as
         backward-word. '''
-        begin = self.line_cursor
-        self.backward_word(e)
-        self.line_buffer[self.line_cursor:begin] = []
+        self.l_buffer.backward_kill_word()
 
     def unix_word_rubout(self, e): # (C-w)
         '''Kill the word behind point, using white space as a word
         boundary. The killed text is saved on the kill-ring.'''
-        begin = self.line_cursor
-        while self.line_cursor > 0:
-            self.line_cursor -= 1
-            if self.line_buffer[self.line_cursor] == ' ':
-                break
-        self.line_buffer[self.line_cursor:begin] = []
+        self.l_buffer.unix_word_rubout()
 
     def delete_horizontal_space(self, e): # ()
         '''Delete all spaces and tabs around point. By default, this is unbound. '''
@@ -807,13 +647,13 @@ class Readline:
     def copy_region_to_clipboard(self, e): # ()
         '''Copy the text in the region to the windows clipboard.'''
         if self.enable_win32_clipboard:
-                mark=min(self.mark,len(self.line_buffer))
-                cursor=min(self.line_cursor,len(self.line_buffer))
-                if self.mark==-1:
+                mark=min(self.l_buffer.mark,len(self.l_buffer.line_buffer))
+                cursor=min(self.l_buffer.point,len(self.l_buffer.line_buffer))
+                if self.l_buffer.mark==-1:
                         return
                 begin=min(cursor,mark)
                 end=max(cursor,mark)
-                toclipboard="".join(self.line_buffer[begin:end])
+                toclipboard="".join(self.l_buffer.line_buffer[begin:end])
                 clipboard.SetClipboardText(str(toclipboard))
 
     def copy_backward_word(self, e): # ()
@@ -843,6 +683,7 @@ class Readline:
                 t=[row for row in t if row.strip()!=""] #remove empty lines
                 if t!=[""]:
                     self.insert_text(t[0])
+                    self.add_history(self.l_buffer.copy())
                     self.paste_line_buffer=t[1:]
                     log("multi: %s"%self.paste_line_buffer)
                     return True
@@ -896,16 +737,17 @@ class Readline:
 
         Also set begidx and endidx in the process.'''
         completions = []
-        self.begidx = self.line_cursor
-        self.endidx = self.line_cursor
+        self.begidx = self.l_buffer.point
+        self.endidx = self.l_buffer.point
+        buf=self.l_buffer.line_buffer
         if self.completer:
             # get the string to complete
             while self.begidx > 0:
                 self.begidx -= 1
-                if self.line_buffer[self.begidx] in self.completer_delims:
+                if buf[self.begidx] in self.completer_delims:
                     self.begidx += 1
                     break
-            text = ''.join(self.line_buffer[self.begidx:self.endidx])
+            text = ''.join(buf[self.begidx:self.endidx])
             log('complete text="%s"' % text)
             i = 0
             while 1:
@@ -923,10 +765,10 @@ class Readline:
             # get the filename to complete
             while self.begidx > 0:
                 self.begidx -= 1
-                if self.line_buffer[self.begidx] in ' \t\n':
+                if buf[self.begidx] in ' \t\n':
                     self.begidx += 1
                     break
-            text = ''.join(self.line_buffer[self.begidx:self.endidx])
+            text = ''.join(buf[self.begidx:self.endidx])
             log('file complete text="%s"' % text)
             completions = glob(os.path.expanduser(text) + '*')
             if self.mark_directories == 'on':
@@ -965,8 +807,8 @@ class Readline:
         if completions:
             cprefix = commonprefix(completions)
             rep = [ c for c in cprefix ]
-            self.line_buffer[self.begidx:self.endidx] = rep
-            self.line_cursor += len(rep) - (self.endidx - self.begidx)
+            self.l_buffer[self.begidx:self.endidx] = rep
+            self.l_buffer.point += len(rep) - (self.endidx - self.begidx)
             if len(completions) > 1:
                 if self.show_all_if_ambiguous == 'on':
                     self._display_completions(completions)
@@ -989,10 +831,10 @@ class Readline:
         for comp in completions:
             rep = [ c for c in comp ]
             rep.append(' ')
-            self.line_buffer[b:e] = rep
+            self.l_buffer[b:e] = rep
             b += len(rep)
             e = b
-        self.line_cursor = b      
+        self.line_cursor = b    
 
     def menu_complete(self, e): # ()
         '''Similar to complete, but replaces the word to be completed with a
@@ -1049,15 +891,7 @@ class Readline:
 
     def undo(self, e): # (C-_ or C-x C-u)
         '''Incremental undo, separately remembered for each line.'''
-        log(self.undo_stack)
-        if len(self.undo_stack) >= 2:
-            self.undo_stack.pop()
-            cursor, text = self.undo_stack.pop()
-        else:
-            cursor = 0
-            text = ''
-            self.undo_stack = []
-        self._set_line(text, cursor)
+        self.l_buffer.pop_undo()
 
     def revert_line(self, e): # (M-r)
         '''Undo all changes made to this line. This is like executing the
@@ -1071,7 +905,7 @@ class Readline:
     def set_mark(self, e): # (C-@)
         '''Set the mark to the point. If a numeric argument is supplied, the
         mark is set to that position.'''
-        self.mark=self.line_cursor
+        self.l_buffer.set_mark()
 
     def exchange_point_and_mark(self, e): # (C-x C-x)
         '''Swap the point with the mark. The current cursor position is set
@@ -1284,4 +1118,4 @@ if __name__ == '__main__':
 else:
     #import wingdbstub
     console.install_readline(rl.readline)
-
+    pass

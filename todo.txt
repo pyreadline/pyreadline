@@ -1,0 +1,24 @@
+This is the refactor branch of pyreadline.
+
+Goals:
+ - Decouple console from readline. In order to simplify future handling of terminals onother platforms than win32
+ - Decouple keyboard shortcut logic from lineditor functions
+ - Add unittests
+ - Improve cut paste logic to be more like other windows apps
+ - Make all subfunctionality like console, clipboard etc pluggable to simplify moving to other platforms. 
+ 
+pyreadline
+  clipboard.py  -  clipboard functions
+  console.py    -  terminal functions, read keyboard write to screen
+  keysyms.py    -  translate descriptions of keypresses to actual keyinfo
+  release.py    -  release info, description, copyright
+  rlmain.py     -  contains readline class, this is the entry point to readline functionality
+  lineditor
+    history.py	-  history buffer
+    lineobj.py  -  Contains linebuffer object, contains all editing functionality
+    wordmatcher -  Contains functions that match word and non-words
+    
+  
+  
+  
+  
