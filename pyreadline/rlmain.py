@@ -20,9 +20,8 @@ import exceptions
 
 import win32con as c32
 
-import console
-import clipboard
-from   console import log
+import clipboard,logger,console
+from   logger import log
 from   keysyms import key_text_to_keyinfo
 
 import lineeditor.lineobj as lineobj
@@ -48,7 +47,6 @@ class Readline(object):
         self.pre_input_hook = None
         self.completer = None
         self.completer_delims = " \t\n\"\\'`@$><=;|&{("
-
         self.console = console.Console()
         self.size = self.console.size()
         self.prompt_color = None
@@ -69,6 +67,8 @@ class Readline(object):
         self.mark_directories = 'on'
         self.bell_style = 'none'
         self.mark=-1
+        self.l_buffer=lineobj.ReadLineTextBuffer("")
+        self._history=history.LineHistory()
         self.read_inputrc()
         log("\n".join(self.rl_settings_to_string()))
 
@@ -83,11 +83,8 @@ class Readline(object):
 
         self.paste_line_buffer=[]
 
-#        self.line_buffer = []
-#        self.line_cursor = 0
-        self.l_buffer=lineobj.ReadLineTextBuffer("")
-        self._history=history.LineHistory()
-
+    #Below is for refactoring, raise errors when using old style attributes 
+    #that should be refactored out
     def _g(x):
         def g(self):
             raise GetSetError("GET %s"%x)
@@ -236,6 +233,29 @@ class Readline(object):
         log('returning(%s)' % self.l_buffer.get_line_text())
         return self.l_buffer.get_line_text() + '\n'
 
+    def set_startup_hook(self, function=None): 
+        '''Set or remove the startup_hook function.
+
+        If function is specified, it will be used as the new startup_hook
+        function; if omitted or None, any hook function already installed is
+        removed. The startup_hook function is called with no arguments just
+        before readline prints the first prompt.
+
+        '''
+        self.startup_hook = function
+
+    def set_pre_input_hook(self, function=None):
+        '''Set or remove the pre_input_hook function.
+
+        If function is specified, it will be used as the new pre_input_hook
+        function; if omitted or None, any hook function already installed is
+        removed. The pre_input_hook function is called with no arguments
+        after the first prompt has been printed and just before readline
+        starts reading input characters.
+
+        '''
+        self.pre_input_hook = function
+
     def parse_and_bind(self, string):
         '''Parse and execute single line of a readline init file.'''
         try:
@@ -282,15 +302,13 @@ class Readline(object):
         '''Parse a readline initialization file. The default filename is the last filename used.'''
         log('read_init_file("%s")' % filename)
 
-    def read_history_file(self, filename=os.path.expanduser('~/.history')): 
-        '''Load a readline history file. The default filename is ~/.history.'''
-        self._history.read_history_file(filename)
+    #History file book keeping methods (non-bindable)
+    
+    def add_history(self, line):
+        '''Append a line to the history buffer, as if it was the last line typed.'''
+        self._history.add_history(line)
 
-    def write_history_file(self, filename=os.path.expanduser('~/.history')): 
-        '''Save a readline history file. The default filename is ~/.history.'''
-        self._history.write_history_file(filename)
-
-    def get_history_length(self, ):
+    def get_history_length(self ):
         '''Return the desired length of the history file.
 
         Negative values imply unlimited history file size.'''
@@ -304,28 +322,15 @@ class Readline(object):
         '''
         self._history.set_history_length(length)
 
-    def set_startup_hook(self, function=None): 
-        '''Set or remove the startup_hook function.
+    def read_history_file(self, filename=None): 
+        '''Load a readline history file. The default filename is ~/.history.'''
+        self._history.read_history_file(filename)
 
-        If function is specified, it will be used as the new startup_hook
-        function; if omitted or None, any hook function already installed is
-        removed. The startup_hook function is called with no arguments just
-        before readline prints the first prompt.
+    def write_history_file(self, filename=None): 
+        '''Save a readline history file. The default filename is ~/.history.'''
+        self._history.write_history_file(filename)
 
-        '''
-        self.startup_hook = function
-
-    def set_pre_input_hook(self, function=None):
-        '''Set or remove the pre_input_hook function.
-
-        If function is specified, it will be used as the new pre_input_hook
-        function; if omitted or None, any hook function already installed is
-        removed. The pre_input_hook function is called with no arguments
-        after the first prompt has been printed and just before readline
-        starts reading input characters.
-
-        '''
-        self.pre_input_hook = function
+    #Completer functions
 
     def set_completer(self, function=None): 
         '''Set or remove the completer function.
@@ -362,10 +367,6 @@ class Readline(object):
     def get_completer_delims(self):
         '''Get the readline word delimiters for tab-completion.'''
         return self.completer_delims
-
-    def add_history(self, line):
-        '''Append a line to the history buffer, as if it was the last line typed.'''
-        self._history.add_history(line)
 
     ### Methods below here are bindable functions
 
@@ -410,6 +411,7 @@ class Readline(object):
         with add_history(). If this line is a modified history line, the
         history line is restored to its original state.'''
         return True
+
 #########  History commands
     def previous_history(self, e): # (C-p)
         '''Move back through the history list, fetching the previous command. '''
@@ -955,6 +957,9 @@ class Readline(object):
         file. This command is unbound by default.'''
         pass
 
+
+    #Create key bindings:
+
     def _bind_key(self, key, func):
         '''setup the mapping from key to call the function.'''
         keyinfo = key_text_to_keyinfo(key)
@@ -1040,8 +1045,13 @@ class Readline(object):
             if keyinfo in self.exit_dispatch:
                 del self.exit_dispatch[keyinfo]
 
+        def sethistoryfilename(filename):
+            self._history.history_filename=os.path.expanduser(filename)
         def setbellstyle(mode):
             self.bell_style=mode
+        def sethistorylength(length):
+            self._history.history_length=int(length)
+            
         def setbellstyle(mode):
             self.bell_style=mode
         def show_all_if_ambiguous(mode):
@@ -1050,6 +1060,9 @@ class Readline(object):
             self.mark_directories=mode
         def completer_delims(mode):
             self.completer_delims=mode
+        def debug_output(on,filename="pyreadline_debug_log.txt"):  #Not implemented yet
+            logger.start_log(on,filename)
+            logger.log("STARTING LOG")
         loc={"bind_key":bind_key,
              "bind_exit_key":bind_exit_key,
              "un_bind_key":un_bind_key,
@@ -1057,13 +1070,19 @@ class Readline(object):
              "bell_style":setbellstyle,
              "mark_directories":mark_directories,
              "show_all_if_ambiguous":show_all_if_ambiguous,
-             "completer_delims":completer_delims,}
+             "completer_delims":completer_delims,
+             "debug_output":debug_output,
+             "history_filename":sethistoryfilename,
+             "history_length":sethistorylength}
         if os.path.isfile(inputrcpath): 
             try:
                 execfile(inputrcpath,loc,loc)
-            except:
-                #Or should we force output otherwise python -v is necessary?
-                #print >>sys.stderr, "Error reading .pyinputrc" 
+            except Exception,x:
+                import traceback
+                print >>sys.stderr, "Error reading .pyinputrc"
+                filepath,lineno=traceback.extract_tb(sys.exc_traceback)[1][:2]
+                print >>sys.stderr, "Line: %s in file %s"%(lineno,filepath)
+                print >>sys.stderr, x
                 raise ReadlineError("Error reading .pyinputrc")
 
 
@@ -1116,6 +1135,5 @@ if __name__ == '__main__':
     res = [ rl.readline('In[%d] ' % i) for i in range(3) ]
     print res
 else:
-    #import wingdbstub
     console.install_readline(rl.readline)
     pass

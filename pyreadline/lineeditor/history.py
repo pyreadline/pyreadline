@@ -5,7 +5,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import re,operator,string,sys
+import re,operator,string,sys,os
 
 #import wordmatcher
 #import pyreadline.clipboard as clipboard
@@ -24,8 +24,9 @@ class EscapeHistory(exceptions.Exception):
 class LineHistory(object):
     def __init__(self):
         self.history=[]
-        self.history_length=-1
+        self.history_length=100
         self.history_cursor=0
+        self.history_filename=os.path.expanduser('~/.history')
 
     def get_history_length(self):
         return self.history_length
@@ -33,20 +34,23 @@ class LineHistory(object):
     def set_history_length(self,value):
         self.history_length=value
 
-    def read_history_file(self, filename): 
+    def read_history_file(self, filename=None): 
         '''Load a readline history file.'''
+        if filename is None:
+            filename=self.history_filename
         try:
             for line in open(filename, 'rt'):
                 self.add_history(lineobj.ReadLineTextBuffer(line.rstrip()))
         except IOError:
             self.history = []
             self.history_cursor = 0
-            raise IOError
 
-    def write_history_file(self, filename): 
+    def write_history_file(self, filename=None): 
         '''Save a readline history file.'''
+        if filename is None:
+            filename=self.history_filename
         fp = open(filename, 'wb')
-        for line in self.history:
+        for line in self.history[-self.history_length:]:
             fp.write(line.get_line_text())
             fp.write('\n')
         fp.close()
@@ -60,8 +64,6 @@ class LineHistory(object):
             pass
         else:
             self.history.append(line)
-            if self.history_length > 0 and len(self.history) > self.history_length:
-                self.history = self.history[-self.history_length:]
         self.history_cursor = len(self.history)
 
     def previous_history(self,current): # (C-p)

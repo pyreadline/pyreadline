@@ -91,12 +91,18 @@ The pyreadline package is a python implementation of GNU readline. At the moment
 	\item win32all
 \end{itemize}
 
+\subsection{Conflicts}
+Unfortunately the module rlcompleter, the module that provides tab completion, imports readline which means there must be an alias from readline to pyreadline for things to work properly. This means pyreadline install a file under the name readline.py in site-packages containing:
+\lstinputlisting{../readline.py}
+
 \section{Installation}
+There are a few things that are not autmatically installed. For instance the configuration file and the startup code that makes sure pyreadline is activated when running python in interactive mode.
+
 \subsection{Development version}
-Use {\ttfamily easy\_install pyreadline==dev} to get development version.
+Use {\ttfamily easy\_install pyreadline==dev} to get development version. Copy pyreadlineconfig.ini from pyreadline/configuration to your HOME directory (usually c:/documents and settings/YOURNAME)
 
 \subsection{Current release version}
-Currently no release version available but will be:
+\emph{Currently no release version available.}
 Use {\ttfamily easy\_install pyreadline} to get development version. 
 
 \section{Usage}
@@ -116,11 +122,11 @@ The configuration file is read from the users home directory and is named pyread
 \end{description}
 
 Here is the example config file shipped with pyreadline:
-\lstinputlisting{pyreadlineconfig.ini}
+\lstinputlisting{../pyreadline/configuration/pyreadlineconfig.ini}
 
 \subsection{pyreadline with python interpreter}
-In your startup file add:
-\lstinputlisting{startup.py}
+In your startup file (pointed to by environment variable PYTHONSTARTUP) add:
+\lstinputlisting{../pyreadline/configuration/startup.py}
 
 This file is included in the doc directory of the distribution.
 
@@ -163,7 +169,7 @@ The pyreadline package now supports international characters. However using inte
 \appendix
 
 \section{Bindable commands}
-This appendix will contain descriptions of all bindable commands. For now you have to look in the sourcecode check the readline class of the file rlmain.py
+This appendix will contain descriptions of all bindable commands. For now you have to look in the sourcecode. Check the readline class of the file rlmain.py
 
 
 \end{document}

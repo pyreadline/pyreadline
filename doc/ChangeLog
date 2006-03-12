@@ -1,3 +1,7 @@
+2006-03-12 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Merged changes from trunk 1158:1201
+	* Did some rearranging of method order in Readline 
+
 2006-02-14 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 
 	* Started Refactor branch

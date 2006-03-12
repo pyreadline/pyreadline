@@ -12,18 +12,11 @@ This was modeled after the C extension of the same name by Fredrik Lundh.
 '''
 
 # primitive debug printing that won't interfere with the screen
-if 1:
-    fp = open('debug.txt', 'w')
-    def log(s):
-        print >>fp, s
-        fp.flush()
-else:
-    def log(s):
-        pass
 
 import sys
 import traceback
 import re
+from logger import log
 
 try:
     # I developed this with ctypes 0.6
