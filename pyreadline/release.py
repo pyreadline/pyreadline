@@ -21,7 +21,7 @@ name = 'pyreadline'
 # bdist_deb does not accept underscores (a Debian convention).
 
 
-version = '1.3.svn'
+version = 'refactor'
 
 revision = '$Revision$'
 

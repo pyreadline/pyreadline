@@ -27,3 +27,5 @@ __all__ = [ 'parse_and_bind',
             'get_completer_delims',
             'add_history',
             'GetOutputFile']
+
+import release 
