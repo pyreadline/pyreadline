@@ -1,3 +1,4 @@
+__all__=["emacs","notemacs"]
 import emacs,notemacs
 editingmodes=[emacs.EmacsMode,notemacs.NotEmacsMode]
 

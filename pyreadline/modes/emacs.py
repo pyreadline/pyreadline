@@ -7,9 +7,9 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 import os
-import clipboard,logger,console
-from   logger import log
-from   keysyms import key_text_to_keyinfo
+import pyreadline.logger as logger
+from   pyreadline.logger import log
+from   pyreadline.keysyms import key_text_to_keyinfo
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 

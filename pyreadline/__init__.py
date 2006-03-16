@@ -7,7 +7,7 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
-
+import lineeditor,modes
 from rlmain import *
 __all__ = [ 'parse_and_bind',
             'get_line_buffer',
