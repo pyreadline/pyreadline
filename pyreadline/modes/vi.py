@@ -95,7 +95,6 @@ class ViMode(basemode.BaseMode):
 
     def init_editing_mode(self, e): # (M-C-j)
         '''Initialize vi editingmode'''
-        print "initing vi"
         self.show_all_if_ambiguous = 'on'
         self.key_dispatch = {}
         self.__vi_insert_mode = None

@@ -53,6 +53,7 @@ class Readline(object):
         self.size = self.console.size()
         self.prompt_color = None
         self.command_color = None
+        self.selection_color =0x00f0
         self.key_dispatch = {}
         self.previous_func = None
         self.first_prompt = True
@@ -87,7 +88,6 @@ class Readline(object):
         self.enable_win32_clipboard=True
 
         self.paste_line_buffer=[]
-
 
 
     #Below is for refactoring, raise errors when using old style attributes 
@@ -306,7 +306,17 @@ class Readline(object):
         c=self.console
         c.pos(*self.prompt_end_pos)
         ltext = self.l_buffer.quoted_text()
-        n = c.write_scrolling(ltext, self.command_color)
+        if self.l_buffer.enable_selection and self.l_buffer.selection_mark>0:
+            start=len(self.l_buffer[:self.l_buffer.selection_mark].quoted_text())
+            stop=len(self.l_buffer[:self.l_buffer.point].quoted_text())
+            if start>stop:
+                stop,start=start,stop
+            n = c.write_scrolling(ltext[:start], self.command_color)
+            n = c.write_scrolling(ltext[start:stop], self.selection_color)
+            n = c.write_scrolling(ltext[stop:], self.command_color)
+        else:
+            n = c.write_scrolling(ltext, self.command_color)
+            
         self._update_prompt_pos(n)
         self._clear_after()
         self._set_cursor()
@@ -321,8 +331,9 @@ class Readline(object):
         def setmode(name):
             self.mode=modes[name]
         def bind_key(key,name):
-            if hasattr(self,name):
-                modes[mode]._bind_key(key,getattr(self,name))
+            if hasattr(modes[mode],name):
+                #print key,name
+                modes[mode]._bind_key(key,getattr(modes[mode],name))
         def un_bind_key(key):
             keyinfo = key_text_to_keyinfo(key)
             if keyinfo in modes[mode].key_dispatch:

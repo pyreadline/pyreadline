@@ -17,8 +17,6 @@ def quote_char(c):
     if ord(c)>0:
         return c
 
-
-
 ############## Line positioner ########################
 
 class LinePositioner(object):
@@ -358,44 +356,109 @@ class ReadLineTextBuffer(TextLine):
     def __init__(self,txtstr,point=None,mark=None):
         super(ReadLineTextBuffer,self).__init__(txtstr,point,mark)
         self.enable_win32_clipboard=True
+        self.selection_mark=-1
+        self.enable_selection=True
 
     def insert_text(self,char):
+        self.delete_selection()
+        self.selection_mark=-1
         self._insert_text(char)
-
+    
 ######### Movement
 
     def beginning_of_line(self):
+        self.selection_mark=-1
         self.point=StartOfLine
         
     def end_of_line(self):
+        self.selection_mark=-1
         self.point=EndOfLine
         
     def forward_char(self):
+        self.selection_mark=-1
         self.point=NextChar
         
     def backward_char(self):
+        self.selection_mark=-1
         self.point=PrevChar
         
     def forward_word(self):
+        self.selection_mark=-1
         self.point=NextWordStart
        
     def backward_word(self):
+        self.selection_mark=-1
+        self.point=PrevWordStart
+
+######### Movement select
+    def beginning_of_line_extend_selection(self):
+        if self.enable_selection and self.selection_mark<0:
+            self.selection_mark=self.point
+        self.point=StartOfLine
+        
+    def end_of_line_extend_selection(self):
+        if self.enable_selection and self.selection_mark<0:
+            self.selection_mark=self.point
+        self.point=EndOfLine
+        
+    def forward_char_extend_selection(self):
+        if self.enable_selection and self.selection_mark<0:
+            self.selection_mark=self.point
+        self.point=NextChar
+        
+    def backward_char_extend_selection(self):
+        if self.enable_selection and self.selection_mark<0:
+            self.selection_mark=self.point
+        self.point=PrevChar
+        
+    def forward_word_extend_selection(self):
+        if self.enable_selection and self.selection_mark<0:
+            self.selection_mark=self.point
+        self.point=NextWordStart
+       
+    def backward_word_extend_selection(self):
+        if self.enable_selection and self.selection_mark<0:
+            self.selection_mark=self.point
         self.point=PrevWordStart
 
 ######### delete       
 
+    def delete_selection(self):
+        if self.enable_selection and self.selection_mark>0:
+            if self.selection_mark<self.point:
+                del self[self.selection_mark:self.point]
+            else:                
+                del self[self.point:self.selection_mark]
+            return True
+        else:
+            return False
+
     def delete_char(self):
-        del self[Point]
+        if not self.delete_selection():
+            del self[Point]
+        self.selection_mark=-1
         
     def backward_delete_char(self):
-        self.backward_char()
-        self.delete_char()
+        if not self.delete_selection():
+            if self.point>0:
+                self.backward_char()
+                self.delete_char()
+        self.selection_mark=-1
+
+    def backward_delete_word(self):
+        if not self.delete_selection():
+            del self[PrevWordEnd:Point]
+        self.selection_mark=-1
 
     def delete_current_word(self):
-        del self[CurrentWord]
+        if not self.delete_selection():
+            del self[CurrentWord]
+        self.selection_mark=-1
         
     def delete_horizontal_space(self):
-        pass
+        if not self.delete_selection():
+            pass
+        self.selection_mark=-1
 ######### Case
 
     def upcase_word(self):
@@ -488,6 +551,22 @@ class ReadLineTextBuffer(TextLine):
                 toclipboard="".join(self.line_buffer[begin:end])
                 clipboard.SetClipboardText(str(toclipboard))
 
+    def copy_selection_to_clipboard(self): # ()
+        '''Copy the text in the region to the windows clipboard.'''
+        if self.enable_win32_clipboard and self.enable_selection and self.selection_mark>0:
+                selection_mark=min(self.selection_mark,len(self.line_buffer))
+                cursor=min(self.point,len(self.line_buffer))
+                if self.selection_mark==-1:
+                        return
+                begin=min(cursor,selection_mark)
+                end=max(cursor,selection_mark)
+                toclipboard="".join(self.line_buffer[begin:end])
+                clipboard.SetClipboardText(str(toclipboard))
+
+
+    def cut_selection_to_clipboard(self): # ()
+        self.copy_selection_to_clipboard()
+        self.delete_selection()
 ##############  Paste
 
 

@@ -52,6 +52,7 @@ class EmacsMode(basemode.BaseMode):
     def readline(self, prompt=''):
         '''Try to act like GNU readline.'''
         # handle startup_hook
+        self.l_buffer.selection_mark=-1
         if self.first_prompt:
             self.first_prompt = False
             if self.startup_hook:
@@ -76,7 +77,7 @@ class EmacsMode(basemode.BaseMode):
 
         log("in readline: %s"%self.paste_line_buffer)
         if len(self.paste_line_buffer)>0:
-            self.l_buffer=lineobj.ReadlineTextBuffer(self.paste_line_buffer[0])
+            self.l_buffer=lineobj.ReadLineTextBuffer(self.paste_line_buffer[0])
             self._update_line()
             self.paste_line_buffer=self.paste_line_buffer[1:]
             c.write('\r\n')
@@ -307,18 +308,6 @@ class EmacsMode(basemode.BaseMode):
         yanked right away. By default, this command is unbound.'''
         pass
 
-    def copy_region_to_clipboard(self, e): # ()
-        '''Copy the text in the region to the windows clipboard.'''
-        if self.enable_win32_clipboard:
-                mark=min(self.l_buffer.mark,len(self.l_buffer.line_buffer))
-                cursor=min(self.l_buffer.point,len(self.l_buffer.line_buffer))
-                if self.l_buffer.mark==-1:
-                        return
-                begin=min(cursor,mark)
-                end=max(cursor,mark)
-                toclipboard="".join(self.l_buffer.line_buffer[begin:end])
-                clipboard.SetClipboardText(str(toclipboard))
-
     def copy_backward_word(self, e): # ()
         '''Copy the word before point to the kill buffer. The word
         boundaries are the same as backward-word. By default, this command
@@ -331,39 +320,6 @@ class EmacsMode(basemode.BaseMode):
         unbound.'''
         pass
 
-    def paste(self,e):
-        '''Paste windows clipboard'''
-        if self.enable_win32_clipboard:
-                txt=clipboard.get_clipboard_text_and_convert(False)
-                self.insert_text(txt)
-
-    def paste_mulitline_code(self,e):
-        '''Paste windows clipboard'''
-        reg=re.compile("\r?\n")
-        if self.enable_win32_clipboard:
-                txt=clipboard.get_clipboard_text_and_convert(False)
-                t=reg.split(txt)
-                t=[row for row in t if row.strip()!=""] #remove empty lines
-                if t!=[""]:
-                    self.insert_text(t[0])
-                    self.add_history(self.l_buffer.copy())
-                    self.paste_line_buffer=t[1:]
-                    log("multi: %s"%self.paste_line_buffer)
-                    return True
-                else:
-                    return False
-        
-    def ipython_paste(self,e):
-        '''Paste windows clipboard. If enable_ipython_paste_list_of_lists is 
-        True then try to convert tabseparated data to repr of list of lists or 
-        repr of array'''
-        if self.enable_win32_clipboard:
-                txt=clipboard.get_clipboard_text_and_convert(
-                                                self.enable_ipython_paste_list_of_lists)
-                if self.enable_ipython_paste_for_paths:
-                        if len(txt)<300 and ("\t" not in txt) and ("\n" not in txt):
-                                txt=txt.replace("\\","/").replace(" ",r"\ ")
-                self.insert_text(txt)
 
     def yank(self, e): # (C-y)
         '''Yank the top of the kill ring into the buffer at point. '''
@@ -506,6 +462,7 @@ class EmacsMode(basemode.BaseMode):
 
     def _bind_key(self, key, func):
         '''setup the mapping from key to call the function.'''
+#        print key,func
         keyinfo = key_text_to_keyinfo(key)
 #        print key,keyinfo,func.__name__
         self.key_dispatch[keyinfo] = func
@@ -518,7 +475,6 @@ class EmacsMode(basemode.BaseMode):
     def init_editing_mode(self, e): # (C-e)
         '''When in vi command mode, this causes a switch to emacs editing
         mode.'''
-
         self._bind_exit_key('Control-d')
         self._bind_exit_key('Control-z')
 
