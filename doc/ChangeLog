@@ -1,4 +1,7 @@
 2006-03-16 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Added vi patch
+
+2006-03-16 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Refactored emacs mode
 
 2006-03-12 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>

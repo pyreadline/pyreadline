@@ -151,6 +151,7 @@ class TextLine(object):
         self._point=0
         self.mark=-1
         self.undo_stack=[]
+        self.overwrite=False
         if isinstance(txtstr,TextLine): #copy 
             if point is None:
                 self.point=txtstr.point
@@ -243,9 +244,15 @@ class TextLine(object):
         self.point = 0
 
     def _insert_text(self, text):
-        for c in text:
-            self.line_buffer.insert(self.point, c)
-            self.point += 1
+        if self.overwrite:
+            for c in text:
+                #if self.point:
+                self.line_buffer[self.point]= c
+                self.point += 1
+        else:            
+            for c in text:
+                self.line_buffer.insert(self.point, c)
+                self.point += 1
     
     def __getitem__(self,key):
         #Check if key is LineSlice, convert to regular slice
@@ -318,11 +325,14 @@ class TextLine(object):
         value=TextLine(value).line_buffer
         self.line_buffer=prev+value+rest       
 
+    def __len__(self):
+        return len(self.line_buffer)
+
     def upper(self):
-        self.line_buffer=self.line_buffer.upper()
+        self.line_buffer=[x.upper() for x in self.line_buffer]
 
     def lower(self):
-        self.line_buffer=self.line_buffer.lower()
+        self.line_buffer=[x.lower() for x in self.line_buffer]
 
     def startswith(self,txt):
         return self.get_line_text().startswith(txt)
@@ -523,4 +533,4 @@ if __name__=="__main__":
         []
         print '%-15s "%s"'%(name,show_pos(q,pos,"^"))
 
-
+    l=TextLine("kjjk")

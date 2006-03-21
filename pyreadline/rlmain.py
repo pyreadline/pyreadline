@@ -26,6 +26,7 @@ from   keysyms import key_text_to_keyinfo
 
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
+import release
 
 from modes import editingmodes
 
@@ -59,9 +60,10 @@ class Readline(object):
         self.tabstop = 4
 
         self.editingmodes=[mode(self) for mode in editingmodes]
+        for mode in self.editingmodes:
+            mode.init_editing_mode(None)
         self.mode=self.editingmodes[0]
 
-        self.mode.init_editing_mode(None)
         self.begidx = 0
         self.endidx = 0
 
@@ -351,7 +353,9 @@ class Readline(object):
         def debug_output(on,filename="pyreadline_debug_log.txt"):  #Not implemented yet
             logger.start_log(on,filename)
             logger.log("STARTING LOG")
-        loc={"mode":mode,
+#            print release.branch
+        loc={"branch":release.branch,
+             "mode":mode,
              "modes":modes,
              "set_mode":setmode,
              "bind_key":bind_key,

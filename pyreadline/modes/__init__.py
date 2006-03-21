@@ -1,5 +1,5 @@
-__all__=["emacs","notemacs"]
-import emacs,notemacs
-editingmodes=[emacs.EmacsMode,notemacs.NotEmacsMode]
+__all__=["emacs","notemacs","vi"]
+import emacs,notemacs,vi
+editingmodes=[emacs.EmacsMode,notemacs.NotEmacsMode,vi.ViMode]
 
 #add check to ensure all modes have unique mode names

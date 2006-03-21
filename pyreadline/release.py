@@ -20,6 +20,7 @@ name = 'pyreadline'
 # because bdist_rpm does not accept dashes (an RPM) convention, and
 # bdist_deb does not accept underscores (a Debian convention).
 
+branch = 'refactor'
 
 version = 'refactor'
 

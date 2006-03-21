@@ -522,11 +522,14 @@ class Console(object):
         else:
             return (info.dwSize.X, info.dwSize.Y)
 
-    def cursor(self, visible):
+    def cursor(self, visible=None, size=None):
         '''Set cursor on or off.'''
         info = CONSOLE_CURSOR_INFO()
         if self.GetConsoleCursorInfo(self.hout, byref(info)):
-            info.bVisible = visible
+            if visible is not None:
+                info.bVisible = visible
+            if size is not None:
+                info.dwSize = size
             self.SetConsoleCursorInfo(self.hout, byref(info))
 
     def bell(self):
