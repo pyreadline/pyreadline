@@ -210,9 +210,10 @@ class TextLine(object):
 
     def set_point(self,value):
         if isinstance(value,LinePositioner):
-            self._point=value(self)
-        else:
-            self._point=value
+            value=value(self)
+        if value>len(self.line_buffer):
+            value=len(self.line_buffer)
+        self._point=value
     def get_point(self):
         return self._point
     point=property(get_point,set_point)
@@ -240,6 +241,9 @@ class TextLine(object):
     def reset_line(self):
         self.line_buffer = []
         self.point = 0
+
+    def end_of_line(self):
+        self.point = len(self.line_buffer)
 
     def _insert_text(self, text):
         if self.overwrite:
@@ -280,7 +284,8 @@ class TextLine(object):
         elif isinstance(key,tuple):
             raise IndexError("Cannot use step in line buffer indexing") #Multiple slice not allowed
         else:
-            return TextLine(self.line_buffer[key])
+            # return TextLine(self.line_buffer[key])
+            return self.line_buffer[key]
 
     def __delitem__(self,key):
         if isinstance(key,LineSlice):

@@ -60,11 +60,6 @@ class Readline(object):
         self.next_meta = False # True to force meta on next character
         self.tabstop = 4
 
-        self.editingmodes=[mode(self) for mode in editingmodes]
-        for mode in self.editingmodes:
-            mode.init_editing_mode(None)
-        self.mode=self.editingmodes[0]
-
         self.begidx = 0
         self.endidx = 0
 
@@ -75,6 +70,13 @@ class Readline(object):
         self.mark=-1
         self.l_buffer=lineobj.ReadLineTextBuffer("")
         self._history=history.LineHistory()
+
+        # this code needs to follow l_buffer and history creation
+        self.editingmodes=[mode(self) for mode in editingmodes]
+        for mode in self.editingmodes:
+            mode.init_editing_mode(None)
+        self.mode=self.editingmodes[0]
+
         self.read_inputrc()
         log("\n".join(self.rl_settings_to_string()))
 

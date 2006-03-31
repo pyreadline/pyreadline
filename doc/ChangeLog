@@ -1,3 +1,7 @@
+2006-03-31 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Merged patch from Michael Graz for the vi mode
+	* test directory now have a vi_test, should add more tests
+	
 2006-03-16 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Added vi patch
 	* Added visible selection mode to emacs mode

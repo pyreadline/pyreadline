@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #*****************************************************************************
 #       Copyright (C) 2003-2006 Gary Bishop.
+#       Copyright (C) 2006  Michael Graz. <mgraz@plan10.com>
 #       Copyright (C) 2006  Jorgen Stenarson. <jorgen.stenarson@bostream.nu>
 #
 #  Distributed under the terms of the BSD License.  The full license is in
@@ -92,7 +93,6 @@ class ViMode(basemode.BaseMode):
 
     ### Methods below here are bindable emacs functions
 
-
     def init_editing_mode(self, e): # (M-C-j)
         '''Initialize vi editingmode'''
         self.show_all_if_ambiguous = 'on'
@@ -117,13 +117,13 @@ class ViMode(basemode.BaseMode):
         self._bind_key('BackSpace', self.vi_backspace)
         self._bind_key('Escape', self.vi_escape)
         self._bind_key('Return', self.vi_accept_line)
-        
+
         self._bind_key('Left', self.backward_char)
         self._bind_key('Right', self.forward_char)
         self._bind_key('Home', self.beginning_of_line)
         self._bind_key('End', self.end_of_line)
         self._bind_key('Delete', self.delete_char)
-        
+
         self._bind_key('Control-d', self.vi_eof)
         self._bind_key('Control-z', self.vi_eof)
         self._bind_key('Control-r', self.vi_redo)
@@ -178,12 +178,12 @@ class ViMode(basemode.BaseMode):
                 if self.l_buffer.overwrite:
                     try:
                         prev = self._vi_undo_stack [self._vi_undo_cursor][1][self.l_buffer.point ]
-                        self.l_buffer [self.l_buffer.point] = prev
+                        self.l_buffer.line_buffer [self.l_buffer.point] = prev
                     except IndexError:
-                        del self.l_buffer[self.l_buffer.point ]
+                        del self.l_buffer.line_buffer [self.l_buffer.point ]
                 else:
                     self.vi_save_line ()
-                    del self.l_buffer[self.l_buffer.point ]
+                    del self.l_buffer.line_buffer [self.l_buffer.point ]
 
     def vi_accept_line (self, e):
         if self._vi_command and self._vi_command.is_search:
@@ -210,15 +210,15 @@ class ViMode(basemode.BaseMode):
             self.console.cursor (size=100)
 
     def vi_undo_restart (self):
-        tpl_undo = (self.line_cursor, self.line_buffer[:], )
+        tpl_undo = (self.l_buffer.point, self.l_buffer.line_buffer[:], )
         self._vi_undo_stack = [tpl_undo]
         self._vi_undo_cursor = 0
 
     def vi_save_line (self):
-        return
         if self._vi_undo_stack and self._vi_undo_cursor >= 0:
             del self._vi_undo_stack [self._vi_undo_cursor + 1 : ]
-        tpl_undo = (self.line_cursor, self.line_buffer[:], )
+        # tpl_undo = (self.l_buffer.point, self.l_buffer[:], )
+        tpl_undo = (self.l_buffer.point, self.l_buffer.line_buffer[:], )
         if not self._vi_undo_stack or self._vi_undo_stack[self._vi_undo_cursor][1] != tpl_undo[1]:
             self._vi_undo_stack.append (tpl_undo)
             self._vi_undo_cursor += 1
@@ -245,8 +245,8 @@ class ViMode(basemode.BaseMode):
 
     def vi_undo_assign (self):
         tpl_undo = self._vi_undo_stack [self._vi_undo_cursor]
-        self.line_cursor = tpl_undo [0]
-        self.line_buffer = tpl_undo [1][:]
+        self.l_buffer.point = tpl_undo [0]
+        self.l_buffer.line_buffer = tpl_undo [1][:]
 
     def vi_redo (self, e):
         if self._vi_undo_cursor >= len(self._vi_undo_stack)-1:
@@ -257,24 +257,24 @@ class ViMode(basemode.BaseMode):
 
     def vi_search (self, rng):
         for i in rng:
-            line_history = self.history [i]
-            pos = line_history.find (self._vi_search_text)
+            line_history = self._history.history [i]
+            pos = line_history.get_line_text().find (self._vi_search_text)
             if pos >= 0:
-                self.history_cursor = i
-                self.line_buffer = list (line_history)
-                self.line_cursor = pos
+                self._history.history_cursor = i
+                self.l_buffer.line_buffer = list (line_history.line_buffer)
+                self.l_buffer.point = pos
                 self.vi_undo_restart ()
                 return True
         self._bell ()
         return False
 
     def vi_search_first (self):
-        text = ''.join (self.line_buffer [1:])
+        text = ''.join (self.l_buffer.line_buffer [1:])
         if text:
             self._vi_search_text = text
-            position = len (self.history) - 1
+            position = len (self._history.history) - 1
         elif self._vi_search_text:
-            position = self.history_cursor - 1
+            position = self._history.history_cursor - 1
         else:
             self.vi_error ()
             self.vi_undo ()
@@ -284,15 +284,16 @@ class ViMode(basemode.BaseMode):
             self.vi_undo ()
 
     def vi_search_again_backward (self):
-        self.vi_search (range (self.history_cursor-1, -1, -1))
+        self.vi_search (range (self._history.history_cursor-1, -1, -1))
 
     def vi_search_again_forward (self):
-        self.vi_search (range (self.history_cursor+1, len(self.history)))
+        self.vi_search (range (self._history.history_cursor+1, len(self._history.history)))
 
     def vi_up (self, e):
-        if self.history_cursor == len(self.history):
-            self._vi_current = self.line_buffer [:]
-        self.previous_history (e)
+        if self._history.history_cursor == len(self._history.history):
+            self._vi_current = self.l_buffer.line_buffer [:]
+        # self._history.previous_history (e)
+        self._history.previous_history (self.l_buffer)
         if self.vi_is_insert_mode:
             self.end_of_line (e)
         else:
@@ -300,22 +301,23 @@ class ViMode(basemode.BaseMode):
         self.vi_undo_restart ()
 
     def vi_down (self, e):
-        if self.history_cursor >= len(self.history):
+        if self._history.history_cursor >= len(self._history.history):
             self.vi_error ()
             return
-        if self.history_cursor < len(self.history) - 1:
-            self.next_history (e)
+        if self._history.history_cursor < len(self._history.history) - 1:
+            # self._history.next_history (e)
+            self._history.next_history (self.l_buffer)
             if self.vi_is_insert_mode:
                 self.end_of_line (e)
             else:
                 self.beginning_of_line (e)
             self.vi_undo_restart ()
         elif self._vi_current is not None:
-            self.history_cursor = len(self.history)
-            self.line_buffer = self._vi_current
+            self._history.history_cursor = len(self._history.history)
+            self.l_buffer.line_buffer = self._vi_current
             self.end_of_line (e)
-            if not self.vi_is_insert_mode and self.line_cursor > 0:
-                self.line_cursor -= 1
+            if not self.vi_is_insert_mode and self.l_buffer.point > 0:
+                self.l_buffer.point -= 1
             self._vi_current = None
         else:
             self.vi_error ()
@@ -332,7 +334,7 @@ class ViMode(basemode.BaseMode):
         self.vi_save_line ()
 
     def vi_complete (self, e):
-        text = ''.join (self.line_buffer)
+        text = self.l_buffer.get_line_text ()
         if text and not text.isspace ():
             return self.complete (e)
         else:
@@ -363,7 +365,7 @@ class ViCommand:
         self.text = None
         self.pos_motion = None
         self.is_edit = False
-#        self.is_overwrite = False
+        self.is_overwrite = False
         self.is_error = False
         self.is_star = False
         self.delete_left = 0
@@ -402,7 +404,7 @@ class ViCommand:
                 self.escape (char)
             elif char == '\x09':  # tab
                 ts = self.readline.tabstop
-                ws = ' ' * (ts - (self.readline.line_cursor%ts))
+                ws = ' ' * (ts - (self.readline.l_buffer.point%ts))
                 self.set_text (ws)
             elif char == '\x08':  # backspace
                 self.key_backspace (char)
@@ -439,20 +441,20 @@ class ViCommand:
         for char in text:
             if not self.char_isprint (char):
                 continue
-            self.readline.l_buffer.insert_text(char)
-            return
-            #overwrite in l_buffer obj
+#             self.readline.l_buffer.insert_text(char)
+#             continue
+#             #overwrite in l_buffer obj
             if self.is_overwrite:
-                if self.readline.line_cursor < len (self.readline.l_buffer):
-                    self.readline.l_buffer[self.l_buffer.point]=char
-                    #self.readline.line_buffer [self.readline.line_cursor] = char
+                if self.readline.l_buffer.point < len (self.readline.l_buffer.line_buffer):
+                    # self.readline.l_buffer[self.l_buffer.point]=char
+                    self.readline.l_buffer.line_buffer [self.readline.l_buffer.point] = char
                 else:
-                    self.readline.l_buffer.insert_text(char)
-                    #self.readline.line_buffer.append (char)
+                    # self.readline.l_buffer.insert_text(char)
+                    self.readline.l_buffer.line_buffer.append (char)
             else:
-                self.readline.l_buffer.insert_text(char)
-                #self.readline.line_buffer.insert (self.readline.line_cursor, char)
-            #self.readline.line_cursor += 1
+                # self.readline.l_buffer.insert_text(char)
+                self.readline.l_buffer.line_buffer.insert (self.readline.l_buffer.point, char)
+            self.readline.l_buffer.point += 1
 
     def replace_one (self, char):
         if char == '\x1b':  # escape
@@ -461,10 +463,10 @@ class ViCommand:
         self.is_edit = True
         self.readline.vi_save_line ()
         times = self.get_multiplier ()
-        cursor = self.readline.line_cursor
-        self.readline.line_buffer [cursor : cursor + times] = char * times
+        cursor = self.readline.l_buffer.point
+        self.readline.l_buffer.line_buffer [cursor : cursor + times] = char * times
         if times > 1:
-            self.readline.line_cursor += (times - 1)
+            self.readline.l_buffer.point += (times - 1)
         self.end ()
 
     def char_isprint (self, char):
@@ -611,14 +613,14 @@ class ViCommand:
             vi_cmd.set_override_multiplier (vi_cmd_edit.override_multiplier)
         for char in vi_cmd_edit.lst_char:
             vi_cmd.add_char (char)
-        if vi_cmd_edit.is_overwrite and self.readline.line_cursor > 0:
-            self.readline.line_cursor -= 1
+        if vi_cmd_edit.is_overwrite and self.readline.l_buffer.point > 0:
+            self.readline.l_buffer.point -= 1
         self.readline.vi_set_insert_mode (False)
         self.end ()
 
     def key_slash (self, char):
         self.readline.vi_save_line ()
-        self.readline.line_cursor, self.readline.line_buffer = 1, ['/']
+        self.readline.l_buffer.point, self.readline.l_buffer.line_buffer = 1, ['/']
         self.state = _VI_SEARCH
 
     def key_star (self, char):
@@ -628,9 +630,9 @@ class ViCommand:
         completions = self.readline._get_completions()
         if completions:
             text = ' '.join (completions) + ' '
-            self.readline.line_buffer [self.readline.begidx : self.readline.endidx + 1] = list (text)
+            self.readline.l_buffer.line_buffer [self.readline.begidx : self.readline.endidx + 1] = list (text)
             prefix_len = self.readline.endidx - self.readline.begidx
-            self.readline.line_cursor += len(text) - prefix_len
+            self.readline.l_buffer.point += len(text) - prefix_len
             self.readline.vi_set_insert_mode (True)
         else:
             self.error ()
@@ -646,12 +648,12 @@ class ViCommand:
         self.readline.vi_save_line ()
         for i in range (self.get_multiplier()):
             try:
-                c = self.readline.line_buffer [self.readline.line_cursor]
+                c = self.readline.l_buffer.line_buffer [self.readline.l_buffer.point]
                 if c.isupper ():
-                    self.readline.line_buffer [self.readline.line_cursor] = c.lower()
+                    self.readline.l_buffer.line_buffer [self.readline.l_buffer.point] = c.lower()
                 elif c.islower ():
-                    self.readline.line_buffer [self.readline.line_cursor] = c.upper()
-                self.readline.line_cursor += 1
+                    self.readline.l_buffer.line_buffer [self.readline.l_buffer.point] = c.upper()
+                self.readline.l_buffer.point += 1
             except IndexError:
                 break
         self.end ()
@@ -674,7 +676,7 @@ class ViCommand:
         else:
             self.key_h (char)
         self.readline._vi_do_backspace (self)
-        if self.state == _VI_SEARCH and not (self.readline.line_buffer):
+        if self.state == _VI_SEARCH and not (self.readline.l_buffer.line_buffer):
             self.state = _VI_BEGIN
 
     def key_l (self, char):
@@ -691,20 +693,20 @@ class ViCommand:
         self.is_edit = True
         self.state = _VI_TEXT
         self.readline.vi_set_insert_mode (True)
-        self.readline.line_cursor = 0
+        self.readline.l_buffer.point = 0
 
     def key_a (self, char):
         self.is_edit = True
         self.state = _VI_TEXT
         self.readline.vi_set_insert_mode (True)
-        if len (self.readline.line_buffer):
-            self.readline.line_cursor += 1
+        if len (self.readline.l_buffer.line_buffer):
+            self.readline.l_buffer.point += 1
 
     def key_A (self, char):
         self.is_edit = True
         self.state = _VI_TEXT
         self.readline.vi_set_insert_mode (True)
-        self.readline.line_cursor = len (self.readline.line_buffer)
+        self.readline.l_buffer.point = len (self.readline.l_buffer.line_buffer)
 
     def key_d (self, char):
         self.is_edit = True
@@ -731,18 +733,18 @@ class ViCommand:
 
     def key_s (self, char):
         self.is_edit = True
-        i1 = self.readline.line_cursor
-        i2 = self.readline.line_cursor + self.get_multiplier ()
+        i1 = self.readline.l_buffer.point
+        i2 = self.readline.l_buffer.point + self.get_multiplier ()
         self.skip_multipler = True
         self.readline.vi_set_insert_mode (True)
-        del self.readline.line_buffer [i1 : i2]
+        del self.readline.l_buffer.line_buffer [i1 : i2]
         self.state = _VI_TEXT
 
     def key_S (self, char):
         self.is_edit = True
         self.readline.vi_set_insert_mode (True)
-        self.readline.line_buffer = []
-        self.readline.line_cursor = 0
+        self.readline.l_buffer.line_buffer = []
+        self.readline.l_buffer.point = 0
         self.state = _VI_TEXT
 
     def key_c (self, char):
@@ -753,7 +755,7 @@ class ViCommand:
     def key_C (self, char):
         self.is_edit = True
         self.readline.vi_set_insert_mode (True)
-        del self.readline.line_buffer [self.readline.line_cursor : ]
+        del self.readline.l_buffer.line_buffer [self.readline.l_buffer.point : ]
         self.state = _VI_TEXT
 
     def key_r (self, char):
@@ -771,7 +773,7 @@ class ViCommand:
         self.action = self.yank
 
     def key_Y (self, char):
-        self.readline._vi_yank_buffer = ''.join (self.readline.line_buffer)
+        self.readline._vi_yank_buffer = self.readline.l_buffer.get_line_text()
         self.end ()
 
     def key_p (self, char):
@@ -779,9 +781,9 @@ class ViCommand:
             return
         self.is_edit = True
         self.readline.vi_save_line ()
-        self.readline.line_cursor += 1
-        self.readline.insert_text (self.readline._vi_yank_buffer * self.get_multiplier ())
-        self.readline.line_cursor -= 1
+        self.readline.l_buffer.point += 1
+        self.readline.l_buffer.insert_text (self.readline._vi_yank_buffer * self.get_multiplier ())
+        self.readline.l_buffer.point -= 1
         self.state = _VI_END
 
     def key_P (self, char):
@@ -789,8 +791,8 @@ class ViCommand:
             return
         self.is_edit = True
         self.readline.vi_save_line ()
-        self.readline.insert_text (self.readline._vi_yank_buffer * self.get_multiplier ())
-        self.readline.line_cursor -= 1
+        self.readline.l_buffer.insert_text (self.readline._vi_yank_buffer * self.get_multiplier ())
+        self.readline.l_buffer.point -= 1
         self.state = _VI_END
 
     def key_u (self, char):
@@ -802,9 +804,9 @@ class ViCommand:
         self.state = _VI_END
 
     def key_v (self, char):
-        editor = ViExternalEditor (self.readline.line_buffer)
-        self.readline.line_buffer = list (editor.result)
-        self.readline.line_cursor = 0
+        editor = ViExternalEditor (self.readline.l_buffer.line_buffer)
+        self.readline.l_buffer.line_buffer = list (editor.result)
+        self.readline.l_buffer.point = 0
         self.is_edit = True
         self.state = _VI_END
 
@@ -840,7 +842,7 @@ class ViCommand:
         return 0
 
     def motion_end_in_line (self, line, index=0, count=1, **kw):
-        return max (0, len (self.readline.line_buffer)-1)
+        return max (0, len (self.readline.l_buffer.line_buffer)-1)
 
     def motion_word_short (self, line, index=0, count=1, **kw):
         return vi_pos_word_short (line, index, count)
@@ -903,7 +905,7 @@ class ViCommand:
 
     def apply (self):
         if self.motion:
-            self.pos_motion = self.motion (self.readline.l_buffer, self.readline.l_buffer.point,
+            self.pos_motion = self.motion (self.readline.l_buffer.line_buffer, self.readline.l_buffer.point,
                     self.get_multiplier(), char=self.motion_argument)
             if self.pos_motion < 0:
                 self.error ()
@@ -913,54 +915,56 @@ class ViCommand:
             self.end ()
 
     def movement (self):
-        if self.pos_motion <= len(self.readline.l_buffer):
+        if self.pos_motion <= len(self.readline.l_buffer.line_buffer):
             self.readline.l_buffer.point = self.pos_motion
         else:
-            self.readline.l_buffer.point = len(self.readline.l_buffer) - 1
+            self.readline.l_buffer.point = len(self.readline.l_buffer.line_buffer) - 1
 
     def yank (self):
-        if self.pos_motion > self.readline.line_cursor:
-            s = self.readline.line_buffer [self.readline.line_cursor : self.pos_motion + self.delete_right]
+        if self.pos_motion > self.readline.l_buffer.point:
+            s = self.readline.l_buffer.line_buffer [self.readline.l_buffer.point : self.pos_motion + self.delete_right]
         else:
             index = max (0, self.pos_motion - self.delete_left)
-            s = self.readline.line_buffer [index : self.readline.line_cursor + self.delete_right]
+            s = self.readline.l_buffer.line_buffer [index : self.readline.l_buffer.point + self.delete_right]
         self.readline._vi_yank_buffer = s
 
     def delete (self):
         self.readline.vi_save_line ()
         self.yank ()
-        point=lineobj.Point(self.readline.l_buffer)
-        pm=self.pos_motion
-        del self.readline.l_buffer[point:pm]
-            
-        return
-        if self.pos_motion > self.readline.line_cursor:
-            del self.readline.line_buffer [self.readline.line_cursor : self.pos_motion + self.delete_right]
-            if self.readline.line_cursor > len (self.readline.line_buffer):
-                self.readline.line_cursor = len (self.readline.line_buffer)
+#         point=lineobj.Point(self.readline.l_buffer)
+#         pm=self.pos_motion
+#         del self.readline.l_buffer[point:pm]
+#         return
+        if self.pos_motion > self.readline.l_buffer.point:
+            del self.readline.l_buffer.line_buffer [self.readline.l_buffer.point : self.pos_motion + self.delete_right]
+            if self.readline.l_buffer.point > len (self.readline.l_buffer.line_buffer):
+                self.readline.l_buffer.point = len (self.readline.l_buffer.line_buffer)
         else:
             index = max (0, self.pos_motion - self.delete_left)
-            del self.readline.line_buffer [index : self.readline.line_cursor + self.delete_right]
-            self.readline.line_cursor = index
+            del self.readline.l_buffer.line_buffer [index : self.readline.l_buffer.point + self.delete_right]
+            self.readline.l_buffer.point = index
 
     def delete_end_of_line (self):
         self.readline.vi_save_line ()
-        del self.readline.line_buffer [self.readline.line_cursor : ]
-        if self.readline.line_cursor > 0:
-            self.readline.line_cursor -= 1
+        # del self.readline.l_buffer [self.readline.l_buffer.point : ]
+        line_text = self.readline.l_buffer.get_line_text ()
+        line_text = line_text [ : self.readline.l_buffer.point]
+        self.readline.l_buffer.set_line (line_text)
+        if self.readline.l_buffer.point > 0:
+            self.readline.l_buffer.point -= 1
 
     def delete_char (self):
-        point=lineobj.Point(self.readline.l_buffer)
-        del self.readline.l_buffer[point:point+self.get_multiplier ()]
-        return
-        self.pos_motion = self.readline.line_cursor + self.get_multiplier ()
+#         point=lineobj.Point(self.readline.l_buffer)
+#         del self.readline.l_buffer[point:point+self.get_multiplier ()]
+#         return
+        self.pos_motion = self.readline.l_buffer.point + self.get_multiplier ()
         self.delete ()
-        end = max (0, len (self.readline.line_buffer) - 1)
-        if self.readline.line_cursor > end:
-            self.readline.line_cursor = end
+        end = max (0, len (self.readline.l_buffer) - 1)
+        if self.readline.l_buffer.point > end:
+            self.readline.l_buffer.point = end
 
     def delete_prev_char (self):
-        self.pos_motion = self.readline.line_cursor - self.get_multiplier ()
+        self.pos_motion = self.readline.l_buffer.point - self.get_multiplier ()
         self.delete ()
 
     def change (self):
@@ -984,8 +988,8 @@ class ViCommand:
 
     def end (self):
         self.state = _VI_END
-        #if self.readline.line_cursor >= len(self.readline.line_buffer):
-        #    self.readline.line_cursor = max (0, len(self.readline.line_buffer) - 1)
+        if self.readline.l_buffer.point >= len(self.readline.l_buffer.line_buffer):
+            self.readline.l_buffer.point = max (0, len(self.readline.l_buffer.line_buffer) - 1)
 
 class ViExternalEditor:
     def __init__ (self, line):
@@ -1030,6 +1034,7 @@ class ViEvent:
 
 # vi standalone functions
 def vi_is_word (char):
+    log ('xx vi_is_word: type(%s), %s' % (type(char), char, ))
     return char.isalpha() or char.isdigit() or char == '_'
 
 def vi_is_space (char):

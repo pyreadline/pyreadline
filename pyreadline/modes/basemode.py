@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import os,re
+import os,re,math
 import pyreadline.logger as logger
 from   pyreadline.logger import log
 from   pyreadline.keysyms import key_text_to_keyinfo
@@ -352,3 +352,14 @@ class BaseMode(object):
         '''Copy the text in the region to the windows clipboard.'''
         self.l_buffer.cut_selection_to_clipboard()
 
+def commonprefix(m):
+    "Given a list of pathnames, returns the longest common leading component"
+    if not m: return ''
+    prefix = m[0]
+    for item in m:
+        for i in range(len(prefix)):
+            if prefix[:i+1].lower() != item[:i+1].lower():
+                prefix = prefix[:i]
+                if i == 0: return ''
+                break
+    return prefix
