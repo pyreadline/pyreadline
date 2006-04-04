@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import os,re,math
+import os,re,math,glob
 import pyreadline.logger as logger
 from   pyreadline.logger import log
 from   pyreadline.keysyms import key_text_to_keyinfo
@@ -43,6 +43,10 @@ class BaseMode(object):
     first_prompt=property(*_gs("first_prompt"))
     prompt=property(*_gs("prompt"))
     paste_line_buffer=property(*_gs("paste_line_buffer"))
+    completer_delims=property(*_gs("completer_delims"))
+    show_all_if_ambiguous=property(*_gs("show_all_if_ambiguous"))
+    mark_directories=property(*_gs("mark_directories"))
+    completer=property(*_gs("completer"))
     
     console=property(_g("console"))
     insert_text=property(_g("insert_text"))
@@ -126,7 +130,7 @@ class BaseMode(object):
                     break
             text = ''.join(buf[self.begidx:self.endidx])
             log('file complete text="%s"' % text)
-            completions = glob(os.path.expanduser(text) + '*')
+            completions = glob.glob(os.path.expanduser(text) + '*')
             if self.mark_directories == 'on':
                 mc = []
                 for f in completions:

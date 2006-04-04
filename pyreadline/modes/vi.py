@@ -245,8 +245,8 @@ class ViMode(basemode.BaseMode):
 
     def vi_undo_assign (self):
         tpl_undo = self._vi_undo_stack [self._vi_undo_cursor]
-        self.l_buffer.point = tpl_undo [0]
         self.l_buffer.line_buffer = tpl_undo [1][:]
+        self.l_buffer.point = tpl_undo [0]
 
     def vi_redo (self, e):
         if self._vi_undo_cursor >= len(self._vi_undo_stack)-1:
@@ -620,7 +620,8 @@ class ViCommand:
 
     def key_slash (self, char):
         self.readline.vi_save_line ()
-        self.readline.l_buffer.point, self.readline.l_buffer.line_buffer = 1, ['/']
+        self.readline.l_buffer.line_buffer=['/']
+        self.readline.l_buffer.point= 1
         self.state = _VI_SEARCH
 
     def key_star (self, char):

@@ -14,14 +14,22 @@ import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import basemode
 
+
+
 class EmacsMode(basemode.BaseMode):
     mode="emacs"
     def __init__(self,rlobj):
         super(EmacsMode,self).__init__(rlobj)
+        self._keylog=(lambda x,y: None)
+        self.previous_func=None
 
     def __repr__(self):
         return "<EmacsMode>"
 
+    def add_key_logger(self,logfun):
+        """logfun should be function that takes disp_fun and line_buffer object """
+        self._keylog=logfun
+        
     def _readline_from_keyboard(self):
         c=self.console
         while 1:
@@ -42,6 +50,7 @@ class EmacsMode(basemode.BaseMode):
             r = None
             if dispatch_func:
                 r = dispatch_func(event)
+                self._keylog(dispatch_func,self.l_buffer)
                 self.l_buffer.push_undo()
 
             self.previous_func = dispatch_func
@@ -94,7 +103,8 @@ class EmacsMode(basemode.BaseMode):
     def previous_history(self, e): # (C-p)
         '''Move back through the history list, fetching the previous command. '''
         self._history.previous_history(self.l_buffer)
-
+        self.l_buffer.point=lineobj.EndOfLine
+        
     def next_history(self, e): # (C-n)
         '''Move forward through the history list, fetching the next command. '''
         self._history.next_history(self.l_buffer)
@@ -112,6 +122,9 @@ class EmacsMode(basemode.BaseMode):
         c = self.console
         line = self.get_line_buffer()
         query = ''
+        if (self.previous_func != self.history_search_forward and
+                self.previous_func != self.history_search_backward):
+            self.query = ''.join(self.line_buffer[0:self.point].get_line_text())
         hc_start = self._history.history_cursor #+ direction
         while 1:
             x, y = self.prompt_end_pos
@@ -154,15 +167,11 @@ class EmacsMode(basemode.BaseMode):
     def reverse_search_history(self, e): # (C-r)
         '''Search backward starting at the current line and moving up
         through the history as necessary. This is an incremental search.'''
-#        print "HEJ"
-#        self.console.bell()
         self._i_search(self._history.reverse_search_history, -1, e)
 
     def forward_search_history(self, e): # (C-s)
         '''Search forward starting at the current line and moving down
         through the the history as necessary. This is an incremental search.'''
-#        print "HEJ"
-#        self.console.bell()
         self._i_search(self._history.forward_search_history, 1, e)
 
 
@@ -182,13 +191,26 @@ class EmacsMode(basemode.BaseMode):
         '''Search forward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
-        self.l_buffer=self._history.history_search_forward(self.l_buffer)
+        if self.previous_func and hasattr(self._history,self.previous_func.__name__):
+            self._history.lastcommand=getattr(self._history,self.previous_func.__name__)
+        else:
+            self._history.lastcommand=None
+        q=self._history.history_search_forward(self.l_buffer)
+        self.l_buffer=q
+        self.l_buffer.point=q.point
 
     def history_search_backward(self, e): # ()
         '''Search backward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
-        self.l_buffer=self._history.history_search_backward(self.l_buffer)
+        if self.previous_func and hasattr(self._history,self.previous_func.__name__):
+            self._history.lastcommand=getattr(self._history,self.previous_func.__name__)
+        else:
+            self._history.lastcommand=None
+        q=self._history.history_search_backward(self.l_buffer)
+        self.l_buffer=q
+        self.l_buffer.point=q.point
+
 
     def yank_nth_arg(self, e): # (M-C-y)
         '''Insert the first argument to the previous command (usually the

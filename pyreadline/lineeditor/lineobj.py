@@ -13,6 +13,7 @@ import pyreadline.clipboard as clipboard
 class NotAWordError(IndexError):
     pass
 
+
 def quote_char(c):
     if ord(c)>0:
         return c
@@ -63,7 +64,7 @@ class WordStart(LinePositioner):
             else:
                 return line.point
         else:   
-            raise NotInWord
+            raise NotAWordError("Point is not in a word")
 WordStart=WordStart()
 
 class WordEnd(LinePositioner):
@@ -151,6 +152,7 @@ class TextLine(object):
         self.undo_stack=[]
         self.overwrite=False
         if isinstance(txtstr,TextLine): #copy 
+            self.line_buffer=txtstr.line_buffer[:]
             if point is None:
                 self.point=txtstr.point
             else:                
@@ -159,7 +161,6 @@ class TextLine(object):
                 self.mark=txtstr.mark
             else:
                 self.mark=mark
-            self.line_buffer=txtstr.line_buffer[:]
         else:            
             self._insert_text(txtstr)
             if point is None:
@@ -211,6 +212,7 @@ class TextLine(object):
     def set_point(self,value):
         if isinstance(value,LinePositioner):
             value=value(self)
+        assert  (value <= len(self.line_buffer))           
         if value>len(self.line_buffer):
             value=len(self.line_buffer)
         self._point=value

@@ -58,9 +58,10 @@ def is_word_token(str):
     return not is_non_word_token(str)
     
 def is_non_word_token(str):
-    assert(len(str)==1)
-    if str in " \t\n":
+    if len(str)!=1 or str in " \t\n":
         return True
+    else:
+        return False
 
 def next_start_segment(str,is_segment):
     str="".join(str)
