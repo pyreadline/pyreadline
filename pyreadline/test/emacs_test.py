@@ -17,7 +17,9 @@ from pyreadline.lineeditor import lineobj
 from common import *
 #----------------------------------------------------------------------
 
+
 class EmacsModeTest (EmacsMode):
+    tested_commands={}
     def __init__ (self):
         EmacsMode.__init__ (self, MockReadline())
         self.mock_console = MockConsole ()
@@ -26,7 +28,7 @@ class EmacsModeTest (EmacsMode):
         self.completer = self.mock_completer
         self.completer_delims = ' '
         self.tabstop = 4
-
+        
     def get_mock_console (self):
         return self.mock_console
     console = property (get_mock_console)
@@ -50,8 +52,11 @@ class EmacsModeTest (EmacsMode):
         for key in lst_key:
             keyinfo, event = keytext_to_keyinfo_and_event (key)
             dispatch_func = self.key_dispatch.get(keyinfo,self.self_insert)
+            self.tested_commands[dispatch_func.__name__]=dispatch_func
+#            print key,dispatch_func.__name__
             dispatch_func (event)
             self.previous_func=dispatch_func
+
     def accept_line (self, e):
         if EmacsMode.accept_line (self, e):
             # simulate return
@@ -63,7 +68,7 @@ class EmacsModeTest (EmacsMode):
 
 #----------------------------------------------------------------------
 
-class Tests (unittest.TestCase):
+class TestsKeyinfo (unittest.TestCase):
 
     def test_keyinfo (self):
         keyinfo, event = keytext_to_keyinfo_and_event ('"d"')
@@ -76,6 +81,149 @@ class Tests (unittest.TestCase):
         self.assertEqual ('\x1b', event.char)
 
 
+class TestsMovement (unittest.TestCase):
+    def test_cursor (self):
+        r = EmacsModeTest ()
+        self.assertEqual (r.line, '')
+        r.input('"First Second Third"')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 18)
+        r.input('Control-a')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 0)
+        r.input('Control-e')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 18)
+        r.input('Home')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 0)
+        r.input('Right')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 1)
+        r.input('Ctrl-f')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 2)
+        r.input('Ctrl-Right')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 5)
+        r.input('Ctrl-Right')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 12)
+        r.input('Ctrl-Right')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 18)
+        r.input('Ctrl-Right')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 18)
+        r.input('Ctrl-Left')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 13)
+        r.input('Ctrl-Left')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 6)
+        r.input('Ctrl-Left')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 0)
+        r.input('Ctrl-Left')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 0)
+
+
+class TestsDelete (unittest.TestCase):
+    def test_delete (self):
+        r = EmacsModeTest ()
+        self.assertEqual (r.line, '')
+        r.input('"First Second Third"')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 18)
+        r.input('Delete')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 18)
+        r.input('Left')
+        r.input('Left')
+        r.input('Delete')
+        self.assertEqual (r.line, 'First Second Thid')
+        self.assertEqual (r.line_cursor, 16)
+        r.input('Delete')
+        self.assertEqual (r.line, 'First Second Thi')
+        self.assertEqual (r.line_cursor, 16)
+        r.input('Backspace')
+        self.assertEqual (r.line, 'First Second Th')
+        self.assertEqual (r.line_cursor, 15)
+        r.input('Home')
+        r.input('Right')
+        r.input('Right')
+        self.assertEqual (r.line, 'First Second Th')
+        self.assertEqual (r.line_cursor, 2)
+        r.input('Backspace')
+        self.assertEqual (r.line, 'Frst Second Th')
+        self.assertEqual (r.line_cursor, 1)
+        r.input('Backspace')
+        self.assertEqual (r.line, 'rst Second Th')
+        self.assertEqual (r.line_cursor, 0)
+        r.input('Backspace')
+        self.assertEqual (r.line, 'rst Second Th')
+        self.assertEqual (r.line_cursor, 0)
+        r.input('Escape')
+        self.assertEqual (r.line, '')
+        self.assertEqual (r.line_cursor, 0)
+
+
+    def test_delete_word (self):
+        r = EmacsModeTest ()
+        self.assertEqual (r.line, '')
+        r.input('"First Second Third"')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 18)
+        r.input('Control-Backspace')
+        self.assertEqual (r.line, 'First Second ')
+        self.assertEqual (r.line_cursor, 13)
+        r.input('Backspace')
+        r.input('Left')
+        r.input('Left')
+        self.assertEqual (r.line, 'First Second')
+        self.assertEqual (r.line_cursor, 10)
+        r.input('Control-Backspace')
+        self.assertEqual (r.line, 'First nd')
+        self.assertEqual (r.line_cursor, 6)
+        r.input('Escape')
+        self.assertEqual (r.line, '')
+        self.assertEqual (r.line_cursor, 0)
+    
+
+class TestsSelectionMovement (unittest.TestCase):
+    def test_cursor (self):
+        r = EmacsModeTest ()
+        self.assertEqual (r.line, '')
+        r.input('"First Second Third"')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 18)
+        self.assertEqual (r.l_buffer.selection_mark, -1)
+        r.input('Home')
+        r.input('Shift-Right')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 1)
+        self.assertEqual (r.l_buffer.selection_mark, 0)
+        r.input('Shift-Control-Right')
+        self.assertEqual (r.line, 'First Second Third')
+        self.assertEqual (r.line_cursor, 5)
+        self.assertEqual (r.l_buffer.selection_mark, 0)
+        r.input('"a"')
+        self.assertEqual (r.line, 'a Second Third')
+        self.assertEqual (r.line_cursor, 1)
+        self.assertEqual (r.l_buffer.selection_mark, -1)
+        r.input('Shift-End')
+        self.assertEqual (r.line, 'a Second Third')
+        self.assertEqual (r.line_cursor, 14)
+        self.assertEqual (r.l_buffer.selection_mark, 1)
+        r.input('Delete')
+        self.assertEqual (r.line, 'a')
+        self.assertEqual (r.line_cursor, 1)
+        self.assertEqual (r.l_buffer.selection_mark, -1)
+
+
+
+class TestsHistory (unittest.TestCase):
     def test_history_1 (self):
         r = EmacsModeTest ()
         r.add_history ('aa')
@@ -156,5 +304,18 @@ class Tests (unittest.TestCase):
 #----------------------------------------------------------------------
 
 if __name__ == '__main__':
-    unittest.main()
-
+    Tester()
+    tested=EmacsModeTest.tested_commands.keys()    
+    tested.sort()
+    print " Tested functions ".center(60,"-")
+    print "\n".join(tested)
+    print
+    
+    all_funcs=dict([(x.__name__,x) for x in EmacsModeTest().key_dispatch.values()])
+    all_funcs=all_funcs.keys()
+    not_tested=[x for x in all_funcs if x not in tested]
+    not_tested.sort()
+    print " Not tested functions ".center(60,"-")
+    print "\n".join(not_tested)
+    
+    

@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import win32con as c32
+import winconstants as c32
 from ctypes import windll
 import ctypes
 # table for translating virtual keys to X windows key symbols
@@ -135,6 +135,9 @@ def keyname_to_keyinfo(keyname):
         if lkeyname.startswith('control-'):
             control = True
             keyname = keyname[8:]
+        elif lkeyname.startswith('ctrl-'):
+            control = True
+            keyname = keyname[5:]
         elif lkeyname.startswith('meta-'):
             meta = True
             keyname = keyname[5:]

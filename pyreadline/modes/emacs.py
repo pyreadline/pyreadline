@@ -509,6 +509,8 @@ class EmacsMode(basemode.BaseMode):
         self._bind_key('Right',             self.forward_char)
         self._bind_key('Control-f',         self.forward_char)
         self._bind_key('BackSpace',         self.backward_delete_char)
+        self._bind_key('Control-BackSpace',         self.backward_delete_word)
+        
         self._bind_key('Home',              self.beginning_of_line)
         self._bind_key('End',               self.end_of_line)
         self._bind_key('Delete',            self.delete_char)
@@ -531,9 +533,9 @@ class EmacsMode(basemode.BaseMode):
         self._bind_key('Alt-n',             self.non_incremental_forward_search_history)
         self._bind_key('Control-z',         self.undo)
         self._bind_key('Control-_',         self.undo)
-        self._bind_key('Escape',            self.prefix_meta)
+        self._bind_key('Escape',            self.kill_whole_line)
         self._bind_key('Meta-d',            self.kill_word)
-        self._bind_key('Meta-Delete',       self.backward_kill_word)
+        self._bind_key('Control-Delete',       self.backward_kill_word)
         self._bind_key('Control-w',         self.unix_word_rubout)
         #self._bind_key('Control-Shift-v',   self.quoted_insert)
         self._bind_key('Control-v',         self.paste)
@@ -544,7 +546,14 @@ class EmacsMode(basemode.BaseMode):
         self._bind_key('Control-q',         self.copy_region_to_clipboard)
 #        self._bind_key('Control-shift-k',  self.kill_whole_line)
         self._bind_key('Control-Shift-v',   self.paste_mulitline_code)
-
+        self._bind_key("Control-Right",     self.forward_word_end)
+        self._bind_key("Control-Left",      self.backward_word)
+        self._bind_key("Shift-Right",       self.forward_char_extend_selection)
+        self._bind_key("Shift-Left",        self.backward_char_extend_selection)
+        self._bind_key("Shift-Control-Right",     self.forward_word_end_extend_selection)
+        self._bind_key("Shift-Control-Left",     self.backward_word_extend_selection)
+        self._bind_key("Shift-Home",        self.beginning_of_line_extend_selection)
+        self._bind_key("Shift-End",         self.end_of_line_extend_selection)
 
 # make it case insensitive
 def commonprefix(m):

@@ -18,8 +18,6 @@ import traceback
 import operator
 import exceptions
 
-import win32con as c32
-
 import clipboard,logger,console
 from   logger import log
 from   keysyms import key_text_to_keyinfo
@@ -308,7 +306,7 @@ class Readline(object):
         c=self.console
         c.pos(*self.prompt_end_pos)
         ltext = self.l_buffer.quoted_text()
-        if self.l_buffer.enable_selection and self.l_buffer.selection_mark>0:
+        if self.l_buffer.enable_selection and self.l_buffer.selection_mark>=0:
             start=len(self.l_buffer[:self.l_buffer.selection_mark].quoted_text())
             stop=len(self.l_buffer[:self.l_buffer.point].quoted_text())
             if start>stop:

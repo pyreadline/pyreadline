@@ -232,11 +232,15 @@ class BaseMode(object):
         letters and digits.'''
         self.l_buffer.forward_word()
 
+    def forward_word_end(self, e): # (M-f)
+        '''Move forward to the end of the next word. Words are composed of
+        letters and digits.'''
+        self.l_buffer.forward_word_end()
+
     def backward_word(self, e): # (M-b)
         '''Move back to the start of the current or previous word. Words are
         composed of letters and digits.'''
         self.l_buffer.backward_word()
-
 
 
     def beginning_of_line_extend_selection(self, e): # 
@@ -259,6 +263,11 @@ class BaseMode(object):
         '''Move forward to the end of the next word. Words are composed of
         letters and digits.'''
         self.l_buffer.forward_word_extend_selection()
+
+    def forward_word_end_extend_selection(self, e): # 
+        '''Move forward to the end of the next word. Words are composed of
+        letters and digits.'''
+        self.l_buffer.forward_word_end_extend_selection()
 
     def backward_word_extend_selection(self, e): # 
         '''Move back to the start of the current or previous word. Words are

@@ -280,7 +280,7 @@ class TextLine(object):
                 stop=key.stop(self)
             else:
                 stop=key.stop
-            return TextLine(self.line_buffer[start:stop])
+            return TextLine(self.line_buffer[start:stop],point=0)
         elif isinstance(key,LinePositioner):
             return self.line_buffer[key(self)]
         elif isinstance(key,tuple):
@@ -290,6 +290,7 @@ class TextLine(object):
             return self.line_buffer[key]
 
     def __delitem__(self,key):
+        point=self.point
         if isinstance(key,LineSlice):
             key=key(self)
         if isinstance(key,slice):
@@ -297,21 +298,26 @@ class TextLine(object):
             stop=key.stop
             if isinstance(start,LinePositioner):
                 start=start(self)
+            elif start is None:
+                start=0
             if isinstance(stop,LinePositioner):
                 stop=stop(self)
+            elif stop is None:
+                stop=EndOfLine(self)
         elif isinstance(key,LinePositioner):
             start=key(self)
             stop=start+1
         else:
             start=key
             stop=key+1
-        if self.point>stop:
-            self.point=self.point-(stop-start)
-        elif self.point>=start and self.point <=stop:
-            self.point=start
         prev=self.line_buffer[:start]
         rest=self.line_buffer[stop:]
         self.line_buffer=prev+rest
+        if point>stop:
+            self.point=point-(stop-start)
+        elif point>=start and point <=stop:
+            self.point=start
+
 
     def __setitem__(self,key,value):
         if isinstance(key,LineSlice):
@@ -328,7 +334,10 @@ class TextLine(object):
             start=key
             stop=key+1
         value=TextLine(value).line_buffer
-        self.line_buffer=prev+value+rest       
+        out=prev+value+rest
+        if len(out)>=len(self):
+            self.point=len(self)
+        self.line_buffer=out
 
     def __len__(self):
         return len(self.line_buffer)
@@ -366,6 +375,10 @@ class ReadLineTextBuffer(TextLine):
         self.selection_mark=-1
         self.enable_selection=True
 
+    def __repr__(self):
+        return 'ReadLineTextBuffer("%s",point=%s,mark=%s,selection_mark=%s)'%(self.line_buffer,self.point,self.mark,self.selection_mark)
+
+    
     def insert_text(self,char):
         self.delete_selection()
         self.selection_mark=-1
@@ -392,6 +405,10 @@ class ReadLineTextBuffer(TextLine):
     def forward_word(self):
         self.selection_mark=-1
         self.point=NextWordStart
+       
+    def forward_word_end(self):
+        self.selection_mark=-1
+        self.point=NextWordEnd
        
     def backward_word(self):
         self.selection_mark=-1
@@ -423,6 +440,11 @@ class ReadLineTextBuffer(TextLine):
             self.selection_mark=self.point
         self.point=NextWordStart
        
+    def forward_word_end_extend_selection(self):
+        if self.enable_selection and self.selection_mark<0:
+            self.selection_mark=self.point
+        self.point=NextWordEnd
+       
     def backward_word_extend_selection(self):
         if self.enable_selection and self.selection_mark<0:
             self.selection_mark=self.point
@@ -431,7 +453,7 @@ class ReadLineTextBuffer(TextLine):
 ######### delete       
 
     def delete_selection(self):
-        if self.enable_selection and self.selection_mark>0:
+        if self.enable_selection and self.selection_mark>=0:
             if self.selection_mark<self.point:
                 del self[self.selection_mark:self.point]
             else:                
@@ -454,7 +476,8 @@ class ReadLineTextBuffer(TextLine):
 
     def backward_delete_word(self):
         if not self.delete_selection():
-            del self[PrevWordEnd:Point]
+            #del self[PrevWordEnd:Point]
+            del self[PrevWordStart:Point]
         self.selection_mark=-1
 
     def delete_current_word(self):
@@ -498,7 +521,10 @@ class ReadLineTextBuffer(TextLine):
         if self.enable_win32_clipboard:
                 toclipboard="".join(self.line_buffer[self.point:])
                 clipboard.set_clipboard_text(toclipboard)
-        self.line_buffer[self.point:] = []
+        del self.line_buffer[self.point:]
+    
+    def kill_whole_line(self):
+        del self[:]
     
     def backward_kill_line(self):
         del self[StartOfLine:Point]
@@ -619,4 +645,5 @@ if __name__=="__main__":
         []
         print '%-15s "%s"'%(name,show_pos(q,pos,"^"))
 
-    l=TextLine("kjjk")
+    l=ReadLineTextBuffer("kjjk")
+    l.point=EndOfLine

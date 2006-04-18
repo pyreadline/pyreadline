@@ -16,6 +16,7 @@ from common import *
 #----------------------------------------------------------------------
 
 class ViModeTest (ViMode):
+    tested_commands={}
     def __init__ (self):
         ViMode.__init__ (self, MockReadline())
         self.mock_console = MockConsole ()
@@ -49,6 +50,7 @@ class ViModeTest (ViMode):
         for key in lst_key:
             keyinfo, event = keytext_to_keyinfo_and_event (key)
             dispatch_func = self.key_dispatch [keyinfo]
+            self.tested_commands[dispatch_func.__name__]=dispatch_func
             dispatch_func (event)
 
     def vi_accept_line (self, e):
@@ -2123,5 +2125,19 @@ class Tests (unittest.TestCase):
 #----------------------------------------------------------------------
 
 if __name__ == '__main__':
-    unittest.main()
+    Tester()
 
+    tested=ViModeTest.tested_commands.keys()    
+    tested.sort()
+    print " Tested functions ".center(60,"-")
+    print "\n".join(tested)
+    print
+    
+    all_funcs=dict([(x.__name__,x) for x in ViModeTest().key_dispatch.values()])
+    all_funcs=all_funcs.keys()
+    not_tested=[x for x in all_funcs if x not in tested]
+    not_tested.sort()
+    print " Not tested functions ".center(60,"-")
+    print "\n".join(not_tested)
+    
+    

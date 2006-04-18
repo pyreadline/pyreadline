@@ -8,7 +8,8 @@
 from pyreadline.modes.emacs import *
 from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
-
+from pyreadline.keysyms import key_text_to_keyinfo
+import unittest
 class MockReadline:
     def __init__ (self):
         self.l_buffer=lineobj.ReadLineTextBuffer("")
@@ -60,3 +61,10 @@ def keytext_to_keyinfo_and_event (keytext):
         event = Event (chr (keyinfo [3]))
     return keyinfo, event
 
+#override runTests from from main in unittest to remove sys.exit call
+class Tester(unittest.TestProgram):
+    def runTests(self):
+        if self.testRunner is None:
+            self.testRunner = unittest.TextTestRunner(verbosity=self.verbosity)
+        result = self.testRunner.run(self.test)
+#       sys.exit(not result.wasSuccessful())

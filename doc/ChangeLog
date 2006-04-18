@@ -1,3 +1,17 @@
+2006-04-18 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Added more tests for emacsmode
+	* Made changes in lineeditor 
+	* Added some new commands for move-selection
+	* primitive logging in tests (both vi and emacs) to show what
+	  functions are tested
+	* winconstants.py are added to remove dependency on win32all
+	
+2006-04-04 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* started tests for emacsmode and lineeditor
+	* assert in lineeditor for point<=len(l_buffer) required changes in vi_mode
+	* Changes in history_search_forward and history_search_backward, added tests
+	* Added a few more properties to basemode
+
 2006-03-31 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Merged patch from Michael Graz for the vi mode
 	* test directory now have a vi_test, should add more tests
