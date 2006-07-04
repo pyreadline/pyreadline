@@ -16,19 +16,17 @@ This was modeled after the C extension of the same name by Fredrik Lundh.
 import sys
 import traceback
 import re
-from logger import log
+from pyreadline.logger import log
 
 try:
     # I developed this with ctypes 0.6
     from ctypes import *
     from _ctypes import call_function
 except ImportError:
-    print 'you need the ctypes module to run this code'
-    print 'http://starship.python.net/crew/theller/ctypes/'
-    raise
+    raise ImportError("You need ctypes to run this code")
 
 # my code
-from keysyms import make_keysym, make_keyinfo
+from pyreadline.keysyms import make_keysym, make_keyinfo
 
 # some constants we need
 STD_INPUT_HANDLE = -10
@@ -544,7 +542,9 @@ class Console(object):
 for func in funcs:
     setattr(Console, func, getattr(windll.kernel32, func))
 
-class event(object):
+from event import Event
+
+class event(Event):
     '''Represent events from the console.'''
     def __init__(self, console, input):
         '''Initialize an event from the Windows input structure.'''
@@ -590,24 +590,6 @@ class event(object):
         elif input.EventType == MENU_EVENT:
             self.type = "Menu"
             self.state = input.Event.MenuEvent.dwCommandId
-
-    def __repr__(self):
-        '''Display an event for debugging.'''
-        if self.type in ['KeyPress', 'KeyRelease']:
-            s = "%s char='%s'%d keysym='%s' keycode=%d:%x state=%x keyinfo=%s" % \
-                    (self.type, self.char, ord(self.char), self.keysym, self.keycode, self.keycode,
-                     self.state, self.keyinfo)
-        elif self.type in ['Motion', 'Button']:
-            s = '%s x=%d y=%d state=%x' % (self.type, self.x, self.y, self.state)
-        elif self.type == 'Configure':
-            s = '%s w=%d h=%d' % (self.type, self.width, self.height)
-        elif self.type in ['FocusIn', 'FocusOut']:
-            s = self.type
-        elif self.type == 'Menu':
-            s = '%s state=%x' % (self.type, self.state)
-        else:
-            s = 'unknown event type'
-        return s
 
 def getconsole(buffer=1):
         """Get a console handle.

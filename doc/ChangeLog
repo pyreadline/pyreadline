@@ -1,3 +1,7 @@
+2006-07-04 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* First commit for ironpython. Typing in alphabet works but no special keys.
+	
+	
 2006-04-18 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Added more tests for emacsmode
 	* Made changes in lineeditor 

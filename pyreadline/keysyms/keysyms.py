@@ -149,7 +149,7 @@ def keyname_to_keyinfo(keyname):
             keyname = keyname[6:]
         else:
             if len(keyname) > 1:
-                return (control, meta, shift, sym2code_map[keyname.lower()])
+                return (control, meta, shift, sym2code_map.get(keyname.lower()," "))
             else:
                 return char_to_keyinfo(keyname, control, meta, shift)
 

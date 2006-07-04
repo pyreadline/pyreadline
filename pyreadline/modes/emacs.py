@@ -22,7 +22,7 @@ class EmacsMode(basemode.BaseMode):
         super(EmacsMode,self).__init__(rlobj)
         self._keylog=(lambda x,y: None)
         self.previous_func=None
-
+        self.prompt=""
     def __repr__(self):
         return "<EmacsMode>"
 
