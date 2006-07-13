@@ -9,7 +9,7 @@
 import os,re,math,glob
 import pyreadline.logger as logger
 from   pyreadline.logger import log
-from   pyreadline.keysyms import key_text_to_keyinfo
+from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
@@ -75,13 +75,12 @@ class BaseMode(object):
 
     def _bind_key(self, key, func):
         '''setup the mapping from key to call the function.'''
-        keyinfo = key_text_to_keyinfo(key)
-#        print key,keyinfo,func.__name__
+        keyinfo = make_KeyPress_from_keydescr(key.lower()).tuple()
         self.key_dispatch[keyinfo] = func
 
     def _bind_exit_key(self, key):
         '''setup the mapping from key to call the function.'''
-        keyinfo = key_text_to_keyinfo(key)
+        keyinfo = make_KeyPress_from_keydescr(key.lower()).tuple()
         self.exit_dispatch[keyinfo] = None
 
     def init_editing_mode(self, e): # (C-e)

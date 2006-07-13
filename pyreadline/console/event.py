@@ -19,3 +19,7 @@ class Event(object):
         else:
             s = 'unknown event type'
         return s
+
+
+#    def __str__(self):
+#        return "('%s',%s,%s,%s)"%(self.char,self.key,self.state,self.keyinfo)

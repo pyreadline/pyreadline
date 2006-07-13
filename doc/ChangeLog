@@ -1,3 +1,7 @@
+2006-07-13 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Work to get selection between ironpython and cpython to work
+	* Some editing works but there are issues with control keys for ironpython
+
 2006-07-04 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* First commit for ironpython. Typing in alphabet works but no special keys.
 	

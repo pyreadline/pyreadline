@@ -9,11 +9,9 @@
 import os
 import pyreadline.logger as logger
 from   pyreadline.logger import log
-from   pyreadline.keysyms import key_text_to_keyinfo
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import basemode
-
 
 
 class EmacsMode(basemode.BaseMode):
@@ -41,12 +39,12 @@ class EmacsMode(basemode.BaseMode):
                 event.keyinfo = (control, True, shift, code)
 
             #Process exit keys. Only exit on empty line
-            if event.keyinfo in self.exit_dispatch:
+            if event.keyinfo.tuple() in self.exit_dispatch:
                 if lineobj.EndOfLine(self.l_buffer) == 0:
                     raise EOFError
-
-            dispatch_func = self.key_dispatch.get(event.keyinfo,self.self_insert)
-            log("readline from keyboard:%s"%(event.keyinfo,))
+            
+            dispatch_func = self.key_dispatch.get(event.keyinfo.tuple(),self.self_insert)
+            log("readline from keyboard:%s"%(event.keyinfo.tuple(),))
             r = None
             if dispatch_func:
                 r = dispatch_func(event)
@@ -481,18 +479,6 @@ class EmacsMode(basemode.BaseMode):
 
 
     #Create key bindings:
-
-    def _bind_key(self, key, func):
-        '''setup the mapping from key to call the function.'''
-#        print key,func
-        keyinfo = key_text_to_keyinfo(key)
-#        print key,keyinfo,func.__name__
-        self.key_dispatch[keyinfo] = func
-
-    def _bind_exit_key(self, key):
-        '''setup the mapping from key to call the function.'''
-        keyinfo = key_text_to_keyinfo(key)
-        self.exit_dispatch[keyinfo] = None
 
     def init_editing_mode(self, e): # (C-e)
         '''When in vi command mode, this causes a switch to emacs editing

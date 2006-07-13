@@ -34,7 +34,7 @@
 ###################################################################################
 
 from ctypes import *
-from keysyms.winconstants import CF_TEXT, GHND
+from pyreadline.keysyms.winconstants import CF_TEXT, GHND
 
 OpenClipboard = windll.user32.OpenClipboard
 EmptyClipboard = windll.user32.EmptyClipboard

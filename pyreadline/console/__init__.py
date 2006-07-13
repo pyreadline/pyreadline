@@ -6,13 +6,12 @@ try:
     from console import *
     success=True
 except ImportError:
-    pass
 
-try:
-    from ironpython_console import *
-    success=True
-except ImportError:
-    pass
+    try:
+        from ironpython_console import *
+        success=True
+    except ImportError:
+        pass
 
 
 if not success:

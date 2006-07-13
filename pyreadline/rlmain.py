@@ -12,7 +12,7 @@ import string
 import math
 import sys
 from glob import glob
-import os
+import os,pdb
 import re
 import traceback
 import operator
@@ -20,7 +20,7 @@ import exceptions
 
 import clipboard,logger,console
 from   logger import log
-from   keysyms import key_text_to_keyinfo
+from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
 
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
@@ -251,11 +251,16 @@ class Readline(object):
         out.append("%-20s: %s"%("bell_style",self.bell_style))
         out.append("%-20s: %s"%("mark_directories",self.mark_directories))
         out.append("------------- key bindings ------------")
-        out.append("%7s %7s %7s %7s %7s %7s"%("Control","Meta","Shift","Keycode","Character","Function"))
-        bindings=[(k[0],k[1],k[2],k[3],repr(chr(k[3])),v.__name__)for k,v in self.key_dispatch.iteritems()]
+        tablepat="%-7s %-7s %-7s %-15s %-15s "
+        out.append(tablepat%("Control","Meta","Shift","Keycode/char","Function"))
+        bindings=[(k[0],k[1],k[2],k[3],v.__name__)for k,v in self.mode.key_dispatch.iteritems()]
+        #print self.mode.key_dispatch
+        #bindings=[str(v) for k,v in self.mode.key_dispatch.iteritems()]
         bindings.sort()
         for key in bindings:
-            out.append("%7s %7s %7s %7d %7s %7s"%(key))
+            pass
+         #   out.append(str(key))
+            out.append(tablepat%(key))
         return out
     
     def _bell(self):
@@ -331,18 +336,19 @@ class Readline(object):
         def setmode(name):
             self.mode=modes[name]
         def bind_key(key,name):
+         #   print "bind",key,name
             if hasattr(modes[mode],name):
-                #print key,name
+         #       print "can bind",key,name
                 modes[mode]._bind_key(key,getattr(modes[mode],name))
         def un_bind_key(key):
-            keyinfo = key_text_to_keyinfo(key)
+            keyinfo = make_KeyPress_from_keydescr(key).tuple()
             if keyinfo in modes[mode].key_dispatch:
                 del modes[mode].key_dispatch[keyinfo]
 
         def bind_exit_key(key):
             modes[mode]._bind_exit_key(key)
         def un_bind_exit_key(key):
-            keyinfo = key_text_to_keyinfo(key)
+            keyinfo = make_KeyPress_from_keydescr(key).tuple()
             if keyinfo in modes[mode].exit_dispatch:
                 del modes[mode].exit_dispatch[keyinfo]
 
@@ -402,6 +408,7 @@ def CTRL(c):
 
 # create a Readline object to contain the state
 rl = Readline()
+
 
 def GetOutputFile():
     '''Return the console object used by readline so that it can be used for printing in color.'''

@@ -26,7 +26,7 @@ except ImportError:
     raise ImportError("You need ctypes to run this code")
 
 # my code
-from pyreadline.keysyms import make_keysym, make_keyinfo
+from pyreadline.keysyms import make_KeyPress
 
 # some constants we need
 STD_INPUT_HANDLE = -10
@@ -459,7 +459,6 @@ class Console(object):
         '''Return next key press event from the queue, ignoring others.'''
         while 1:
             e = self.get()
-            log("getKeypress:%s,%s,%s"%(e.keyinfo,e.keycode,e.type))
             if e.type == 'KeyPress' and e.keycode not in key_modifiers:
                 log(e)
                 if e.keysym == 'Next':
@@ -469,6 +468,7 @@ class Console(object):
                 else:
                     return e
             elif e.type == 'KeyRelease' and e.keyinfo==(True, False, False, 83):
+                log("getKeypress:%s,%s,%s"%(e.keyinfo,e.keycode,e.type))
                 return e
                 
     def getchar(self):
@@ -544,6 +544,9 @@ for func in funcs:
 
 from event import Event
 
+VkKeyScan = windll.user32.VkKeyScanA
+
+
 class event(Event):
     '''Represent events from the console.'''
     def __init__(self, console, input):
@@ -557,9 +560,9 @@ class event(Event):
         self.char = ''
         self.keycode = 0
         self.keysym = '??'
-        self.keyinfo = '' # a tuple with (control, meta, shift, keycode) for dispatch
+        self.keyinfo = None # a tuple with (control, meta, shift, keycode) for dispatch
         self.width = None
-
+        
         if input.EventType == KEY_EVENT:
             if input.Event.KeyEvent.bKeyDown:
                 self.type = "KeyPress"
@@ -568,8 +571,8 @@ class event(Event):
             self.char = input.Event.KeyEvent.uChar.AsciiChar
             self.keycode = input.Event.KeyEvent.wVirtualKeyCode
             self.state = input.Event.KeyEvent.dwControlKeyState
-            self.keysym = make_keysym(self.keycode)
-            self.keyinfo = make_keyinfo(self.keycode, self.state)
+            self.keyinfo=make_KeyPress(self.char,self.state,self.keycode)
+
         elif input.EventType == MOUSE_EVENT:
             if input.Event.MouseEvent.dwEventFlags & MOUSE_MOVED:
                 self.type = "Motion"
@@ -690,10 +693,16 @@ def install_readline(hook):
 
 if __name__ == '__main__':
     import time, sys
+
+    
+    def p(char):
+        return chr(VkKeyScan(ord(char)) & 0xff)
+
     c = Console(0)
     sys.stdout = c
     sys.stderr = c
     c.page()
+    print p("d"),p("D")
     c.pos(5, 10)
     c.write('hi there')
     print 'some printed output'

@@ -7,8 +7,12 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 import System
+from common import validkey,KeyPress,make_KeyPress_from_keydescr
 
 c32=System.ConsoleKey
+Shift=System.ConsoleModifiers.Shift
+Control=System.ConsoleModifiers.Control
+Alt=System.ConsoleModifiers.Alt
 # table for translating virtual keys to X windows key symbols
 code2sym_map = {#c32.CANCEL: 'Cancel',
                 c32.Backspace:  'BackSpace',
@@ -184,3 +188,15 @@ def make_keyinfo(keycode, state):
     meta=False
     shift=False
     return (control, meta, shift, keycode)
+
+
+def make_KeyPress(char,state,keycode):
+
+    shift=bool(int(state)&int(Shift))
+    control=bool(int(state)&int(Control))
+    meta=bool(int(state)&int(Alt))
+    keyname=code2sym_map.get(keycode,"").lower()
+    if control:
+        char=str(keycode)
+    return KeyPress(char,shift,control,meta,keyname)
+

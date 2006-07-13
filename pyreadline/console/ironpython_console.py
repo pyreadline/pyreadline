@@ -12,7 +12,7 @@
 # primitive debug printing that won't interfere with the screen
 
 import clr
-clr.AddReference("IronPythonConsole.exe")
+clr.AddReference("ipy.exe")
 import IronPythonConsole
 
 import sys
@@ -25,8 +25,8 @@ import System
 from event import Event
 from pyreadline.logger import log
 
-print "Codepage",System.Console.InputEncoding.CodePage
-from pyreadline.keysyms import make_keysym, make_keyinfo
+#print "Codepage",System.Console.InputEncoding.CodePage
+from pyreadline.keysyms import make_keysym, make_keyinfo,make_KeyPress
 
 color=System.ConsoleColor
 
@@ -61,7 +61,7 @@ class Console(object):
         self.serial=0
         self.attr = System.Console.ForegroundColor
         self.saveattr = System.Console.ForegroundColor
-        log('initial attr=%x' % self.attr)
+        log('initial attr=%s' % self.attr)
 
     def __del__(self):
         '''Cleanup the console when finished.'''
@@ -219,6 +219,16 @@ class Console(object):
         '''Fill Rectangle.'''
         pass
         #raise NotImplementedError
+        x0, y0, x1, y1 = rect
+        if attr is None:
+            attr = self.attr
+        if fill:
+            rowfill=fill[:1]*abs(x1-x0)
+        else:
+            rowfill=' '*abs(x1-x0)
+        for y in range(y0, y1):
+                System.Console.SetCursorPosition(x0,y)
+                self.write_color(rowfill,attr)
 
     def scroll(self, rect, dx, dy, attr=None, fill=' '):
         '''Scroll a rectangle.'''
@@ -263,7 +273,7 @@ class Console(object):
         else:
             return sc.WindowWidth,sc.WindowHeight
     
-    def cursor(self, visible=None, size=None):
+    def cursor(self, visible=True, size=None):
         '''Set cursor on or off.'''
         System.Console.CursorVisible=visible
 
@@ -285,14 +295,14 @@ class event(Event):
         self.height = 0
         self.x = 0
         self.y = 0
-        self.char = chr(input.KeyChar)
+        self.char = str(input.KeyChar)
         self.keycode = input.Key
         self.state = input.Modifiers
         
         self.type="KeyRelease"
 
         self.keysym = make_keysym(self.keycode)
-        self.keyinfo = make_keyinfo(self.keycode, self.state)
+        self.keyinfo = make_KeyPress(self.char, self.state, self.keycode)
 
 
 def install_readline(hook):
@@ -315,7 +325,7 @@ def getconsole(buffer=1):
         c = Console(buffer)
         return c
 
-if __name__ == '_zx_main__':
+if __name__ == '__main__':
     import time, sys
     c = Console(0)
     sys.stdout = c
@@ -333,3 +343,4 @@ if __name__ == '_zx_main__':
         print e.Key,chr(e.KeyChar),ord(e.KeyChar),e.Modifiers
     del c
 
+System.Console.Clear()

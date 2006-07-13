@@ -10,7 +10,6 @@
 import os
 import pyreadline.logger as logger
 from   pyreadline.logger import log
-from   pyreadline.keysyms import key_text_to_keyinfo
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import basemode
@@ -113,7 +112,7 @@ class ViMode(basemode.BaseMode):
         self.vi_set_insert_mode (True)
         # make ' ' to ~ self insert
         for c in range(ord(' '), 127):
-            self._bind_key('"%s"' % chr(c), self.vi_key)
+            self._bind_key('%s' % chr(c), self.vi_key)
         self._bind_key('BackSpace', self.vi_backspace)
         self._bind_key('Escape', self.vi_escape)
         self._bind_key('Return', self.vi_accept_line)
