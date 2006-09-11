@@ -8,11 +8,19 @@
 #*****************************************************************************
 import os
 import pyreadline.logger as logger
-from   pyreadline.logger import log
+from   pyreadline.logger import log,log_sock
+from pyreadline.lineeditor.lineobj import Point
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import basemode
-
+import string
+def format(keyinfo):
+    if len(keyinfo[-1])!=1:
+        k=keyinfo+(-1,)
+    else:
+        k=keyinfo+(ord(keyinfo[-1]),)
+    
+    return "(%s,%s,%s,%s,%x)"%k
 
 class EmacsMode(basemode.BaseMode):
     mode="emacs"
@@ -30,6 +38,8 @@ class EmacsMode(basemode.BaseMode):
         
     def _readline_from_keyboard(self):
         c=self.console
+        def nop(e):
+            pass
         while 1:
             self._update_line()
             event = c.getkeypress()
@@ -39,12 +49,18 @@ class EmacsMode(basemode.BaseMode):
                 event.keyinfo = (control, True, shift, code)
 
             #Process exit keys. Only exit on empty line
-            if event.keyinfo.tuple() in self.exit_dispatch:
+            keyinfo=event.keyinfo.tuple()
+            if keyinfo in self.exit_dispatch:
                 if lineobj.EndOfLine(self.l_buffer) == 0:
                     raise EOFError
+            if len(keyinfo[-1])>1:
+                default=nop
+            else:
+                default=self.self_insert
+            dispatch_func = self.key_dispatch.get(keyinfo,default)
             
-            dispatch_func = self.key_dispatch.get(event.keyinfo.tuple(),self.self_insert)
-            log("readline from keyboard:%s"%(event.keyinfo.tuple(),))
+            log("readline from keyboard:%s,%s"%(keyinfo,dispatch_func))
+            log_sock("%s|%s"%(format(keyinfo),dispatch_func.__name__))
             r = None
             if dispatch_func:
                 r = dispatch_func(event)
@@ -118,11 +134,12 @@ class EmacsMode(basemode.BaseMode):
 
     def _i_search(self, searchfun, direction, init_event):
         c = self.console
-        line = self.get_line_buffer()
+        line = self.l_buffer.get_line_text()
+        log_sock(str(line))
         query = ''
         if (self.previous_func != self.history_search_forward and
                 self.previous_func != self.history_search_backward):
-            self.query = ''.join(self.line_buffer[0:self.point].get_line_text())
+            self.query = ''.join(self.l_buffer[0:Point].get_line_text())
         hc_start = self._history.history_cursor #+ direction
         while 1:
             x, y = self.prompt_end_pos
@@ -137,24 +154,25 @@ class EmacsMode(basemode.BaseMode):
             self._clear_after()
 
             event = c.getkeypress()
-            if event.keysym == 'BackSpace':
+            if event.keyinfo.keyname == 'backspace':
+                query = query[:-1]
                 if len(query) > 0:
-                    query = query[:-1]
-                    self._history.history_cursor = hc_start
+                    #self._history.history_cursor = hc_start  #forces search to restart when search empty
+                    line=searchfun(query)                
                 else:
                     self._bell()
+                    line=""   #empty query means no search result
             elif event.char in string.letters + string.digits + string.punctuation + ' ':
-                self._history.history_cursor = hc_start
+                #self._history.history_cursor = hc_start
                 query += event.char
+                line=searchfun(query)
             elif event.keyinfo == init_event.keyinfo:
                 self._history.history_cursor += direction
                 line=searchfun(query)                
-                pass
             else:
-                if event.keysym != 'Return':
+                if event.keyinfo.keyname != 'return':
                     self._bell()
                 break
-            line=searchfun(query)
 
         px, py = self.prompt_begin_pos
         c.pos(0, py)
@@ -177,13 +195,15 @@ class EmacsMode(basemode.BaseMode):
         '''Search backward starting at the current line and moving up
         through the history as necessary using a non-incremental search for
         a string supplied by the user.'''
-        self._history.non_incremental_reverse_search_history(self.l_buffer)
+        q=self._history.non_incremental_reverse_search_history(self.l_buffer)
+        self.l_buffer=q
 
     def non_incremental_forward_search_history(self, e): # (M-n)
         '''Search forward starting at the current line and moving down
         through the the history as necessary using a non-incremental search
         for a string supplied by the user.'''
-        self._history.non_incremental_reverse_search_history(self.l_buffer)
+        q=self._history.non_incremental_reverse_search_history(self.l_buffer)
+        self.l_buffer=q
 
     def history_search_forward(self, e): # ()
         '''Search forward through the history for the string of characters
@@ -487,6 +507,7 @@ class EmacsMode(basemode.BaseMode):
         self._bind_exit_key('Control-z')
 
         # I often accidentally hold the shift or control while typing space
+        self._bind_key('space',       self.self_insert)
         self._bind_key('Shift-space',       self.self_insert)
         self._bind_key('Control-space',     self.self_insert)
         self._bind_key('Return',            self.accept_line)
@@ -540,6 +561,21 @@ class EmacsMode(basemode.BaseMode):
         self._bind_key("Shift-Control-Left",     self.backward_word_extend_selection)
         self._bind_key("Shift-Home",        self.beginning_of_line_extend_selection)
         self._bind_key("Shift-End",         self.end_of_line_extend_selection)
+        self._bind_key("numpad0",           self.self_insert)
+        self._bind_key("numpad1",           self.self_insert)
+        self._bind_key("numpad2",           self.self_insert)
+        self._bind_key("numpad3",           self.self_insert)
+        self._bind_key("numpad4",           self.self_insert)
+        self._bind_key("numpad5",           self.self_insert)
+        self._bind_key("numpad6",           self.self_insert)
+        self._bind_key("numpad7",           self.self_insert)
+        self._bind_key("numpad8",           self.self_insert)
+        self._bind_key("numpad9",           self.self_insert)
+        self._bind_key("add",               self.self_insert)
+        self._bind_key("subtract",          self.self_insert)
+        self._bind_key("multiply",          self.self_insert)
+        self._bind_key("divide",            self.self_insert)
+        self._bind_key("vk_decimal",        self.self_insert)
 
 # make it case insensitive
 def commonprefix(m):

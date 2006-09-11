@@ -29,6 +29,8 @@ validkey =set(['cancel',     'backspace',    'tab',          'clear',
               'numpad8',     'numpad9',      'divide',       'multiply',
               'add',         'subtract',     'vk_decimal'])
 
+escape_sequence_to_special_key={"\\e[a":"up","\\e[b":"down","del":"delete"}
+
 class KeyPress(object):
     def __init__(self,char="",shift=False,control=False,meta=False,keyname=""):
         if control or meta or shift:
@@ -65,7 +67,9 @@ class KeyPress(object):
 
 def make_KeyPress_from_keydescr(keydescr):
     keyinfo=KeyPress()
-
+    if len(keydescr)>2 and keydescr[:1]=='"' and keydescr[-1:]=='"':
+        keydescr=keydescr[1:-1]
+        
     while 1:
         lkeyname = keydescr.lower()
         if lkeyname.startswith('control-'):
@@ -74,14 +78,14 @@ def make_KeyPress_from_keydescr(keydescr):
         elif lkeyname.startswith('ctrl-'):
             keyinfo.control = True
             keydescr = keydescr[5:]
-        elif keydescr.startswith('\\C-'):
+        elif keydescr.lower().startswith('\\c-'):
             keyinfo.control = True
             keydescr = keydescr[3:]
-        elif keydescr.startswith('\\M-'):
+        elif keydescr.lower().startswith('\\m-'):
             keyinfo.meta = True
             keydescr = keydescr[3:]
-        elif keydescr.startswith('\\e-'):
-            keydescr = "escape"+keydescr[3:]
+        elif keydescr in escape_sequence_to_special_key:
+            keydescr = escape_sequence_to_special_key[keydescr]
         elif lkeyname.startswith('meta-'):
             keyinfo.meta = True
             keydescr = keydescr[5:]

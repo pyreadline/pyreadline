@@ -21,6 +21,8 @@ import exceptions
 class EscapeHistory(exceptions.Exception):
     pass
 
+from pyreadline.logger import log_sock
+
 class LineHistory(object):
     def __init__(self):
         self.history=[]
@@ -96,15 +98,19 @@ class LineHistory(object):
         self.history_cursor=len(self.history)
         current.set_line(self.history[-1].get_line_text())
 
-    def reverse_search_history(self,searchfor):
-        res=[(idx,line)  for idx,line in enumerate(self.history[self.history_cursor:0:-1]) if searchfor in line]
+    def reverse_search_history(self,searchfor,startpos=None):
+        if startpos is None:
+            startpos=self.history_cursor
+        res=[(idx,line)  for idx,line in enumerate(self.history[startpos:0:-1]) if searchfor in line]
         if res:
             self.history_cursor-=res[0][0]
             return res[0][1].get_line_text()
         return ""
         
-    def forward_search_history(self,searchfor):
-        res=[(idx,line) for idx,line in enumerate(self.history[self.history_cursor:]) if searchfor in line]
+    def forward_search_history(self,searchfor,startpos=None):
+        if startpos is None:
+            startpos=self.history_cursor
+        res=[(idx,line) for idx,line in enumerate(self.history[startpos:]) if searchfor in line]
         if res:
             self.history_cursor+=res[0][0]
             return res[0][1].get_line_text()
@@ -121,41 +127,41 @@ class LineHistory(object):
             pyreadline.rl._clear_after()
 
             event = c.getkeypress()
-            if event.keysym == 'BackSpace':
+            log_sock(str(event))
+            
+            if event.keyinfo.keyname == 'backspace':
                 if len(query) > 0:
                     query = query[:-1]
                 else:
                     break
             elif event.char in string.letters + string.digits + string.punctuation + ' ':
                 query += event.char
-            elif event.keysym == 'Return':
+            elif event.keyinfo.keyname == 'return':
                 break
             else:
                 pyreadline.rl._bell()
-
+        log_sock(query)
+        res=""
         if query:
-            hc = self.history_cursor - 1
-            while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
-                if self.history[hc].startswith(query) >= 0:
-                    current=self.history[hc]
-                    self.history_cursor = hc
-                    return
-                hc += direction
+            if direction==-1:
+                res=self.reverse_search_history(query)
+                
             else:
-                pyreadline.rl._bell()
-
-
+                res=self.forward_search_history(query)
+            log_sock(res)
+        return lineobj.ReadLineTextBuffer(res,point=0)
+        
     def non_incremental_reverse_search_history(self,current): # (M-p)
         '''Search backward starting at the current line and moving up
         through the history as necessary using a non-incremental search for
         a string supplied by the user.'''
-        self._non_i_search(-1,current)
+        return self._non_i_search(-1,current)
 
     def non_incremental_forward_search_history(self,current): # (M-n)
         '''Search forward starting at the current line and moving down
         through the the history as necessary using a non-incremental search
         for a string supplied by the user.'''
-        self._non_i_search(1,current)
+        return self._non_i_search(1,current)
 
     def _search(self, direction, partial):
         if (self.lastcommand != self.history_search_forward and

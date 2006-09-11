@@ -20,6 +20,7 @@ import exceptions
 
 import clipboard,logger,console
 from   logger import log
+from error import ReadlineError,GetSetError
 from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
 
 import pyreadline.lineeditor.lineobj as lineobj
@@ -32,14 +33,9 @@ def quote_char(c):
     if ord(c)>0:
         return c
 
-class ReadlineError(exceptions.Exception):
-    pass
-
 def inword(buffer,point):
     return buffer[point:point+1] in [A-Za-z0-9]
 
-class GetSetError(ReadlineError):
-    pass
 
 class Readline(object):
     def __init__(self):
@@ -245,7 +241,7 @@ class Readline(object):
 
 ##  Internal functions
 
-    def rl_settings_to_string(self):
+    def rl_settings_to_string(self,e=None):
         out=["%-20s: %s"%("show all if ambigous",self.show_all_if_ambiguous)]
         out.append("%-20s: %s"%("mark_directories",self.mark_directories))
         out.append("%-20s: %s"%("bell_style",self.bell_style))
@@ -253,7 +249,7 @@ class Readline(object):
         out.append("------------- key bindings ------------")
         tablepat="%-7s %-7s %-7s %-15s %-15s "
         out.append(tablepat%("Control","Meta","Shift","Keycode/char","Function"))
-        bindings=[(k[0],k[1],k[2],k[3],v.__name__)for k,v in self.mode.key_dispatch.iteritems()]
+        bindings=[(k[0],k[1],k[2],k[3],v.__name__) for k,v in self.mode.key_dispatch.iteritems()]
         #print self.mode.key_dispatch
         #bindings=[str(v) for k,v in self.mode.key_dispatch.iteritems()]
         bindings.sort()
@@ -261,6 +257,8 @@ class Readline(object):
             pass
          #   out.append(str(key))
             out.append(tablepat%(key))
+        if e:
+            print "\n".join(out)
         return out
     
     def _bell(self):

@@ -16,7 +16,7 @@ This was modeled after the C extension of the same name by Fredrik Lundh.
 import sys
 import traceback
 import re
-from pyreadline.logger import log
+from pyreadline.logger import log,log_sock
 
 try:
     # I developed this with ctypes 0.6
@@ -27,6 +27,7 @@ except ImportError:
 
 # my code
 from pyreadline.keysyms import make_KeyPress
+from pyreadline.console.ansi import AnsiState,AnsiWriter
 
 # some constants we need
 STD_INPUT_HANDLE = -10
@@ -183,6 +184,11 @@ class Console(object):
         self.GetConsoleScreenBufferInfo(self.hout, byref(info))
         self.attr = info.wAttributes
         self.saveattr = info.wAttributes # remember the initial colors
+
+        self.defaultstate=AnsiState()
+        self.defaultstate.winattr=info.wAttributes
+        self.ansiwriter=AnsiWriter(self.defaultstate)
+
         background = self.attr & 0xf0
         for escape in self.escape_to_color:
             if self.escape_to_color[escape] is not None:
@@ -336,6 +342,17 @@ class Console(object):
             self.WriteConsoleA(self.hout, chunk, len(chunk), byref(junk), None)
         return n
 
+    def write_color(self, text, attr=None):
+        n,res= self.ansiwriter.write_color(text,attr)
+        junk = c_int(0)
+        for attr,chunk in res:
+            log(str(attr))
+            log(str(chunk))
+            self.SetConsoleTextAttribute(self.hout, attr.winattr)
+            self.WriteConsoleA(self.hout, chunk, len(chunk), byref(junk), None)
+        return n
+
+
     def write_plain(self, text, attr=None):
         '''write text at current cursor position.'''
         log('write("%s", %s)' %(text,attr))
@@ -453,6 +470,7 @@ class Console(object):
             status = self.ReadConsoleInputA(self.hin, byref(Cevent), 1, byref(count))
             if status and count.value == 1:
                 e = event(self, Cevent)
+                log_sock(str(e.keyinfo),"keypress")
                 return e
 
     def getkeypress(self):
@@ -469,6 +487,7 @@ class Console(object):
                     return e
             elif e.type == 'KeyRelease' and e.keyinfo==(True, False, False, 83):
                 log("getKeypress:%s,%s,%s"%(e.keyinfo,e.keycode,e.type))
+#                log_sock(str(e))
                 return e
                 
     def getchar(self):

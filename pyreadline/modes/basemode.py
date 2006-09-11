@@ -13,6 +13,7 @@ from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
+from pyreadline.error import ReadlineError,GetSetError
 
 class BaseMode(object):
     mode="base"
@@ -64,6 +65,10 @@ class BaseMode(object):
     enable_ipython_paste_for_paths=property(_g("enable_ipython_paste_for_paths"))
     _bell=property(_g("_bell"))
     _history=property(_g("_history"))
+    prompt_end_pos=property(_g("prompt_end_pos"))
+    prompt_begin_pos=property(_g("prompt_begin_pos"))
+
+    rl_settings_to_string=property(_g("rl_settings_to_string"))
 
     def _readline_from_keyboard(self):
         raise NotImplementedError
@@ -75,6 +80,9 @@ class BaseMode(object):
 
     def _bind_key(self, key, func):
         '''setup the mapping from key to call the function.'''
+        if type(func) != type(self._bind_key):
+            print "Trying to bind non method to keystroke:%s,%s"%(key,func)
+            raise PyreadlineError("Trying to bind non method to keystroke:%s,%s,%s,%s"%(key,func,type(func),type(self._bind_key)))
         keyinfo = make_KeyPress_from_keydescr(key.lower()).tuple()
         self.key_dispatch[keyinfo] = func
 

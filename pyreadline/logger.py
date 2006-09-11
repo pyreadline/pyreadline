@@ -6,7 +6,7 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
-
+import socket
 _logfile=False
 
 def start_log(on,filename):
@@ -20,3 +20,22 @@ def log(s):
     if _logfile:
         print >>_logfile, s
         _logfile.flush()
+
+
+host="localhost"
+port=8081
+logsocket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+
+show_event=["keypress","bound_function"]
+show_event=["bound_function"]
+
+def log_sock(s,event_type=None):
+    if event_type is None:
+        logsocket.sendto(s,(host,port))
+    elif event_type in show_event:
+        logsocket.sendto(s,(host,port))
+    else:
+        pass
+    
+    
+log_sock("Starting pyreadline")
