@@ -167,9 +167,8 @@ class LineHistory(object):
         if (self.lastcommand != self.history_search_forward and
                 self.lastcommand != self.history_search_backward):
             self.query = ''.join(partial[0:partial.point].get_line_text())
-        hcstart=self.history_cursor        
+        hcstart=max(self.history_cursor-1,0) 
         hc = self.history_cursor + direction
-#        print hc,hcstart,self.query
         while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
             h = self.history[hc]
             if not self.query:
@@ -182,7 +181,9 @@ class LineHistory(object):
                 return result
             hc += direction
         else:
-            if hc>=len(self.history) and not self.query:
+            if len(self.history)==0:
+                pass 
+            elif hc>=len(self.history) and not self.query:
                 return lineobj.ReadLineTextBuffer("",point=0)
             elif self.history[hcstart].get_line_text().startswith(self.query) and self.query:
                 return lineobj.ReadLineTextBuffer(self.history[hcstart],point=partial.point)

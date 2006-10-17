@@ -1,3 +1,7 @@
+2006-10-17 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fixed history search bug. Exception when no match was found
+	* Added backward_kill_word. (No difference to backward_delete_word)
+	
 2006-09-11 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Added logserver. Socket based server that can receive logmessage.
 	  To be used when debugging keypresses, could be a security risk as a keyboard sniffer.

@@ -83,6 +83,18 @@ class PrevWordEnd(LinePositioner):
         return line.prev_end_segment(line.line_buffer,line.is_word_token)[line.point]
 PrevWordEnd=PrevWordEnd()
 
+class PrevSpace(LinePositioner):
+    def __call__(self,line):
+        point=line.point
+        if line[point-1:point].get_line_text()==" ":
+            while point>0 and line[point-1:point].get_line_text()==" ":
+                point-=1
+        while point>0 and line[point-1:point].get_line_text()!=" ":
+            point-=1
+        return point
+PrevSpace=PrevSpace()
+
+
 class StartOfLine(LinePositioner):
     def __call__(self,line):
         return 0
@@ -524,35 +536,49 @@ class ReadLineTextBuffer(TextLine):
         del self.line_buffer[self.point:]
     
     def kill_whole_line(self):
+        clipboard.set_clipboard_text()
         del self[:]
     
     def backward_kill_line(self):
+        clipboard.set_clipboard_text()
         del self[StartOfLine:Point]
         
     def unix_line_discard(self):
+        clipboard.set_clipboard_text(self[StartOfLine:Point])
         pass
 
     def kill_word(self):
         """Kills to next word ending"""
+        clipboard.set_clipboard_text(self[Point:NextWordEnd])
         del self[Point:NextWordEnd]
 
     def backward_kill_word(self):
         """Kills to next word ending"""
-        pass
+        clipboard.set_clipboard_text(self[PrevWordStart:Point])
+        if not self.delete_selection():
+            del self[PrevWordStart:Point]
+        self.selection_mark=-1
 
-    def unix_word_rubout(self): 
-        pass
+    def unix_word_rubout(self):
+        clipboard.set_clipboard_text(self[PrevSpace:Point])
+        if not self.delete_selection():
+            del self[PrevSpace:Point]
+        self.selection_mark=-1
 
     def kill_region(self):
+        clipboard.set_clipboard_text()
         pass
 
     def copy_region_as_kill(self):
+        clipboard.set_clipboard_text()
         pass
 
     def copy_backward_word(self):
+        clipboard.set_clipboard_text()
         pass
 
     def copy_forward_word(self):
+        clipboard.set_clipboard_text()
         pass
         
 
@@ -634,7 +660,7 @@ def test_positioner(buff,points,positioner):
         print '"%s"'%("".join(out))
     
 if __name__=="__main__":
-
+    import startup
 
     print '%-15s "%s"'%("Position",q.get_line_text())
     print '%-15s "%s"'%("Point",show_pos(q,q.point))
@@ -645,5 +671,5 @@ if __name__=="__main__":
         []
         print '%-15s "%s"'%(name,show_pos(q,pos,"^"))
 
-    l=ReadLineTextBuffer("kjjk")
+    l=ReadLineTextBuffer("kjjk asads   asad")
     l.point=EndOfLine
