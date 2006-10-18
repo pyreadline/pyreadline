@@ -1,3 +1,15 @@
+2006-10-18 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Adding functionality to dump_functions
+	* fixing some clipboard bugs
+	* Added transpose_chars, transpose_words, upcase_word, downcase_word
+	  capitalize_word, forward_delete_word, delete_horizontal_spacing
+	* Added alias forward_kill_word for kill_word
+	* Fixed bug in handling control keystrokes
+	* Fixed bug in delete_selection
+	* Changed clipboard handling in kill functions
+	* Change paste to only paste single line and dropping trailing newline
+	* Change paste_mulitline_code docstring
+	
 2006-10-17 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fixed history search bug. Exception when no match was found
 	* Added backward_kill_word. (No difference to backward_delete_word)
