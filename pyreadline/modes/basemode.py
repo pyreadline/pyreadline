@@ -84,6 +84,7 @@ class BaseMode(object):
             print "Trying to bind non method to keystroke:%s,%s"%(key,func)
             raise PyreadlineError("Trying to bind non method to keystroke:%s,%s,%s,%s"%(key,func,type(func),type(self._bind_key)))
         keyinfo = make_KeyPress_from_keydescr(key.lower()).tuple()
+        log(">>>%s -> %s<<<"%(keyinfo,func.__name__))
         self.key_dispatch[keyinfo] = func
 
     def _bind_exit_key(self, key):
@@ -282,6 +283,21 @@ class BaseMode(object):
         self.l_buffer.backward_word_extend_selection()
 
 
+    def upcase_word(self, e): # (M-u)
+        '''Uppercase the current (or following) word. With a negative
+        argument, uppercase the previous word, but do not move the cursor.'''
+        self.l_buffer.upcase_word()
+
+    def downcase_word(self, e): # (M-l)
+        '''Lowercase the current (or following) word. With a negative
+        argument, lowercase the previous word, but do not move the cursor.'''
+        self.l_buffer.downcase_word()
+
+    def capitalize_word(self, e): # (M-c)
+        '''Capitalize the current (or following) word. With a negative
+        argument, capitalize the previous word, but do not move the cursor.'''
+        self.l_buffer.capitalize_word()
+
 
 
     def clear_screen(self, e): # (C-l)
@@ -312,10 +328,19 @@ class BaseMode(object):
         to kill the characters instead of deleting them.'''
         self.l_buffer.backward_delete_char()
 
-    def backward_delete_word(self, e): # (Rubout)
+    def backward_delete_word(self, e): # (Control-Rubout)
         '''Delete the character behind the cursor. A numeric argument means
         to kill the characters instead of deleting them.'''
         self.l_buffer.backward_delete_word()
+
+    def forward_delete_word(self, e): # (Control-Delete)
+        '''Delete the character behind the cursor. A numeric argument means
+        to kill the characters instead of deleting them.'''
+        self.l_buffer.forward_delete_word()
+
+    def delete_horizontal_space(self, e): # ()
+        '''Delete all spaces and tabs around point. By default, this is unbound. '''
+        self.l_buffer.delete_horizontal_space()
 
     def self_insert(self, e): # (a, b, A, 1, !, ...)
         '''Insert yourself. '''
@@ -326,13 +351,17 @@ class BaseMode(object):
 #   Paste from clipboard
 
     def paste(self,e):
-        '''Paste windows clipboard'''
+        '''Paste windows clipboard.
+        Assume single line strip other lines and end of line markers and trailing spaces''' #(Control-v)
         if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(False)
+                txt=txt.split("\n")[0].strip("\r").strip("\n")
+                log("paste: >%s<"%map(ord,txt))
                 self.insert_text(txt)
 
     def paste_mulitline_code(self,e):
-        '''Paste windows clipboard'''
+        '''Paste windows clipboard as multiline code.
+        Removes any empty lines in the code'''
         reg=re.compile("\r?\n")
         if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(False)
@@ -371,6 +400,20 @@ class BaseMode(object):
     def cut_selection_to_clipboard(self, e): # ()
         '''Copy the text in the region to the windows clipboard.'''
         self.l_buffer.cut_selection_to_clipboard()
+
+
+    def dump_functions(self, e): # ()
+        '''Print all of the functions and their key bindings to the Readline
+        output stream. If a numeric argument is supplied, the output is
+        formatted in such a way that it can be made part of an inputrc
+        file. This command is unbound by default.'''
+        print
+        txt="\n".join(self.rl_settings_to_string())
+        print txt
+        self._print_prompt()
+
+
+
 
 def commonprefix(m):
     "Given a list of pathnames, returns the longest common leading component"

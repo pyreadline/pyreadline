@@ -9,7 +9,7 @@ import re,operator
 
 import wordmatcher
 import pyreadline.clipboard as clipboard
-
+from pyreadline.logger import  log,log_sock
 class NotAWordError(IndexError):
     pass
 
@@ -292,7 +292,7 @@ class TextLine(object):
                 stop=key.stop(self)
             else:
                 stop=key.stop
-            return TextLine(self.line_buffer[start:stop],point=0)
+            return self.__class__(self.line_buffer[start:stop],point=0)
         elif isinstance(key,LinePositioner):
             return self.line_buffer[key(self)]
         elif isinstance(key,tuple):
@@ -337,15 +337,15 @@ class TextLine(object):
         if isinstance(key,slice):
             start=key.start
             stop=key.stop
-            prev=self.line_buffer[:start]
-            rest=self.line_buffer[stop:]
         elif isinstance(key,LinePositioner):
             start=key(self)
             stop=start+1
         else:
             start=key
             stop=key+1
-        value=TextLine(value).line_buffer
+        prev=self.line_buffer[:start]
+        value=self.__class__(value).line_buffer
+        rest=self.line_buffer[stop:]
         out=prev+value+rest
         if len(out)>=len(self):
             self.point=len(self)
@@ -356,10 +356,16 @@ class TextLine(object):
 
     def upper(self):
         self.line_buffer=[x.upper() for x in self.line_buffer]
+        return self
 
     def lower(self):
         self.line_buffer=[x.lower() for x in self.line_buffer]
-
+        return self
+        
+    def capitalize(self):
+        self.set_line(self.get_line_text().capitalize(),self.point)
+        return self
+        
     def startswith(self,txt):
         return self.get_line_text().startswith(txt)
 
@@ -390,11 +396,15 @@ class ReadLineTextBuffer(TextLine):
     def __repr__(self):
         return 'ReadLineTextBuffer("%s",point=%s,mark=%s,selection_mark=%s)'%(self.line_buffer,self.point,self.mark,self.selection_mark)
 
-    
+
     def insert_text(self,char):
         self.delete_selection()
         self.selection_mark=-1
         self._insert_text(char)
+    
+    def to_clipboard(self):
+        if self.enable_win32_clipboard:
+                clipboard.set_clipboard_text(self.get_line_text())
     
 ######### Movement
 
@@ -473,6 +483,7 @@ class ReadLineTextBuffer(TextLine):
             return True
         else:
             return False
+        self.selection_mark=-1
 
     def delete_char(self):
         if not self.delete_selection():
@@ -492,93 +503,128 @@ class ReadLineTextBuffer(TextLine):
             del self[PrevWordStart:Point]
         self.selection_mark=-1
 
+    def forward_delete_word(self):
+        if not self.delete_selection():
+            #del self[PrevWordEnd:Point]
+            del self[Point:NextWordStart]
+        self.selection_mark=-1
+
     def delete_current_word(self):
         if not self.delete_selection():
             del self[CurrentWord]
         self.selection_mark=-1
         
     def delete_horizontal_space(self):
-        if not self.delete_selection():
-            pass
+        if self[Point] in " \t":
+            del self[PrevWordEnd:NextWordStart]
         self.selection_mark=-1
 ######### Case
 
     def upcase_word(self):
+        p=self.point
         try:
-            self[CurrentWord]=self[CurrentWord].line_buffer.upper()
+            self[CurrentWord]=self[CurrentWord].upper()
+            self.point=p
         except NotAWordError:
             pass
         
     def downcase_word(self):
+        p=self.point
         try:
-            self[CurrentWord]=self[CurrentWord].line_buffer.lower()
+            self[CurrentWord]=self[CurrentWord].lower()
+            self.point=p
         except NotAWordError:
             pass
         
-    def  capitalize_word(self):
+    def capitalize_word(self):
+        p=self.point
         try:
-            self[CurrentWord]=self[CurrentWord].line_buffer.capitalize()
+            self[CurrentWord]=self[CurrentWord].capitalize()
+            self.point=p
         except NotAWordError:
             pass
 ########### Transpose
     def transpose_chars(self):
-        pass
+        p2=Point(self)
+        if p2==0:
+            return
+        elif p2==len(self):
+            p2=p2-1
+        p1=p2-1
+        self[p2],self[p1]=self[p1],self[p2]
+        self.point=p2+1
 
     def transpose_words(self):
-        pass
+        word1=TextLine(self)
+        word2=TextLine(self)
+        if self.point==len(self):
+            word2.point=PrevWordStart
+            word1.point=PrevWordStart(word2)
+        else:
+            word1.point=PrevWordStart
+            word2.point=NextWordStart
+        stop1=NextWordEnd(word1)
+        stop2=NextWordEnd(word2)
+        start1=word1.point
+        start2=word2.point
+        self[start2:stop2]=word1[Point:NextWordEnd]
+        self[start1:stop1]=word2[Point:NextWordEnd]
+        self.point=stop2
+        
 
 ############ Kill
 
     def kill_line(self):
-        if self.enable_win32_clipboard:
-                toclipboard="".join(self.line_buffer[self.point:])
-                clipboard.set_clipboard_text(toclipboard)
+        self[self.point:].to_clipboard()
         del self.line_buffer[self.point:]
     
     def kill_whole_line(self):
-        clipboard.set_clipboard_text()
+        self[:].to_clipboard()
         del self[:]
     
     def backward_kill_line(self):
-        clipboard.set_clipboard_text()
+        self[StartOfLine:Point].to_clipboard()
         del self[StartOfLine:Point]
         
     def unix_line_discard(self):
-        clipboard.set_clipboard_text(self[StartOfLine:Point])
+        del self[StartOfLine:Point]
         pass
 
     def kill_word(self):
         """Kills to next word ending"""
-        clipboard.set_clipboard_text(self[Point:NextWordEnd])
+        self[Point:NextWordEnd].to_clipboard()
         del self[Point:NextWordEnd]
 
     def backward_kill_word(self):
         """Kills to next word ending"""
-        clipboard.set_clipboard_text(self[PrevWordStart:Point])
+        self[PrevWordStart:Point].to_clipboard()
         if not self.delete_selection():
             del self[PrevWordStart:Point]
         self.selection_mark=-1
 
+    def forward_kill_word(self):
+        """Kills to next word ending"""
+        self[Point:NextWordEnd].to_clipboard()
+        if not self.delete_selection():
+            del self[Point:NextWordEnd]
+        self.selection_mark=-1
+
     def unix_word_rubout(self):
-        clipboard.set_clipboard_text(self[PrevSpace:Point])
+        self[PrevSpace:Point].to_clipboard()
         if not self.delete_selection():
             del self[PrevSpace:Point]
         self.selection_mark=-1
 
     def kill_region(self):
-        clipboard.set_clipboard_text()
         pass
 
     def copy_region_as_kill(self):
-        clipboard.set_clipboard_text()
         pass
 
     def copy_backward_word(self):
-        clipboard.set_clipboard_text()
         pass
 
     def copy_forward_word(self):
-        clipboard.set_clipboard_text()
         pass
         
 

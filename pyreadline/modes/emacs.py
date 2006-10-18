@@ -275,21 +275,6 @@ class EmacsMode(basemode.BaseMode):
         of the line, this transposes the last two words on the line.'''
         self.l_buffer.transpose_words()
 
-    def upcase_word(self, e): # (M-u)
-        '''Uppercase the current (or following) word. With a negative
-        argument, uppercase the previous word, but do not move the cursor.'''
-        self.l_buffer.upcase_word()
-
-    def downcase_word(self, e): # (M-l)
-        '''Lowercase the current (or following) word. With a negative
-        argument, lowercase the previous word, but do not move the cursor.'''
-        self.l_buffer.downcase_word()
-
-    def capitalize_word(self, e): # (M-c)
-        '''Capitalize the current (or following) word. With a negative
-        argument, capitalize the previous word, but do not move the cursor.'''
-        self.l_buffer.capitalize_word()
-
     def overwrite_mode(self, e): # ()
         '''Toggle overwrite mode. With an explicit positive numeric
         argument, switches to overwrite mode. With an explicit non-positive
@@ -324,7 +309,8 @@ class EmacsMode(basemode.BaseMode):
         words, to the end of the next word. Word boundaries are the same as
         forward-word.'''
         self.l_buffer.kill_word()
-
+    forward_kill_word=kill_word
+    
     def backward_kill_word(self, e): # (M-DEL)
         '''Kill the word behind point. Word boundaries are the same as
         backward-word. '''
@@ -334,10 +320,6 @@ class EmacsMode(basemode.BaseMode):
         '''Kill the word behind point, using white space as a word
         boundary. The killed text is saved on the kill-ring.'''
         self.l_buffer.unix_word_rubout()
-
-    def delete_horizontal_space(self, e): # ()
-        '''Delete all spaces and tabs around point. By default, this is unbound. '''
-        pass
 
     def kill_region(self, e): # ()
         '''Kill the text in the current region. By default, this command is unbound. '''
@@ -476,13 +458,6 @@ class EmacsMode(basemode.BaseMode):
         case, the line is accepted as if a newline had been typed.'''
         pass
 
-    def dump_functions(self, e): # ()
-        '''Print all of the functions and their key bindings to the Readline
-        output stream. If a numeric argument is supplied, the output is
-        formatted in such a way that it can be made part of an inputrc
-        file. This command is unbound by default.'''
-        pass
-
     def dump_variables(self, e): # ()
         '''Print all of the settable variables and their values to the
         Readline output stream. If a numeric argument is supplied, the
@@ -516,7 +491,7 @@ class EmacsMode(basemode.BaseMode):
         self._bind_key('Right',             self.forward_char)
         self._bind_key('Control-f',         self.forward_char)
         self._bind_key('BackSpace',         self.backward_delete_char)
-        self._bind_key('Control-BackSpace',         self.backward_delete_word)
+        self._bind_key('Control-BackSpace', self.backward_delete_word)
         
         self._bind_key('Home',              self.beginning_of_line)
         self._bind_key('End',               self.end_of_line)
@@ -576,6 +551,7 @@ class EmacsMode(basemode.BaseMode):
         self._bind_key("multiply",          self.self_insert)
         self._bind_key("divide",            self.self_insert)
         self._bind_key("vk_decimal",        self.self_insert)
+        log("RUNNING INIT EMACS")
 
 # make it case insensitive
 def commonprefix(m):

@@ -115,8 +115,10 @@ def make_KeyPress(char,state,keycode):
     control = (state & (4+8)) != 0
     meta = (state & (1+2)) != 0
     shift = (state & 0x10) != 0
-    if control:
+    if control and char !="\x00":
        char = chr(VkKeyScan(ord(char)) & 0xff)
+    elif control:
+        char=chr(keycode)
     try:
         keyname=code2sym_map[keycode]
     except KeyError:

@@ -26,7 +26,7 @@ host="localhost"
 port=8081
 logsocket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
-show_event=["keypress","bound_function"]
+show_event=["keypress","bound_function","bind_key"]
 show_event=["bound_function"]
 
 def log_sock(s,event_type=None):

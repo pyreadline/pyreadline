@@ -19,7 +19,7 @@ import operator
 import exceptions
 
 import clipboard,logger,console
-from   logger import log
+from   logger import log,log_sock
 from error import ReadlineError,GetSetError
 from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
 
@@ -241,7 +241,7 @@ class Readline(object):
 
 ##  Internal functions
 
-    def rl_settings_to_string(self,e=None):
+    def rl_settings_to_string(self):
         out=["%-20s: %s"%("show all if ambigous",self.show_all_if_ambiguous)]
         out.append("%-20s: %s"%("mark_directories",self.mark_directories))
         out.append("%-20s: %s"%("bell_style",self.bell_style))
@@ -250,15 +250,9 @@ class Readline(object):
         tablepat="%-7s %-7s %-7s %-15s %-15s "
         out.append(tablepat%("Control","Meta","Shift","Keycode/char","Function"))
         bindings=[(k[0],k[1],k[2],k[3],v.__name__) for k,v in self.mode.key_dispatch.iteritems()]
-        #print self.mode.key_dispatch
-        #bindings=[str(v) for k,v in self.mode.key_dispatch.iteritems()]
         bindings.sort()
         for key in bindings:
-            pass
-         #   out.append(str(key))
             out.append(tablepat%(key))
-        if e:
-            print "\n".join(out)
         return out
     
     def _bell(self):
@@ -334,10 +328,13 @@ class Readline(object):
         def setmode(name):
             self.mode=modes[name]
         def bind_key(key,name):
-         #   print "bind",key,name
+            log("bind %s %s"%(key,name))
+            log_sock("bindkey: %s %s"%(key,name),"bind_key")
             if hasattr(modes[mode],name):
          #       print "can bind",key,name
                 modes[mode]._bind_key(key,getattr(modes[mode],name))
+            else:
+                print "Trying to bind unknown command '%s' to key '%s'"%(name,key)
         def un_bind_key(key):
             keyinfo = make_KeyPress_from_keydescr(key).tuple()
             if keyinfo in modes[mode].key_dispatch:
