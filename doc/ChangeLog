@@ -1,3 +1,11 @@
+2006-10-19 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Adding argument handling.
+	* Adding argument to functions:forward_char, backward_char, forward_word, backward_word
+	  forward_word_end, backward_word_end, beginning_of_line_extend_selection, end_of_line_extend_selection
+	  forward_char_extend_selection, backward_char_extend_selection, forward_word_extend_selection,
+	  backward_word_extend_selection, forward_word_end_extend_selection, backward_word_end_extend_selection,
+	  delete_char, backward_delete_char, backward_delete_word, forward_delete_word, 
+	
 2006-10-18 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Adding functionality to dump_functions
 	* fixing some clipboard bugs

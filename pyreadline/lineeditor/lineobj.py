@@ -415,26 +415,48 @@ class ReadLineTextBuffer(TextLine):
     def end_of_line(self):
         self.selection_mark=-1
         self.point=EndOfLine
-        
-    def forward_char(self):
+
+    def forward_char(self,argument=1):
+        if argument<0:
+            self.backward_char(-argument)
         self.selection_mark=-1
-        self.point=NextChar
+        for x in range(argument):
+            self.point=NextChar
         
-    def backward_char(self):
+    def backward_char(self,argument=1):
+        if argument<0:
+            self.forward_char(-argument)
         self.selection_mark=-1
-        self.point=PrevChar
+        for x in range(argument):
+            self.point=PrevChar
         
-    def forward_word(self):
+    def forward_word(self,argument=1):
+        if argument<0:
+            self.backward_word(-argument)
         self.selection_mark=-1
-        self.point=NextWordStart
+        for x in range(argument):
+            self.point=NextWordStart
        
-    def forward_word_end(self):
+    def backward_word(self,argument=1):
+        if argument<0:
+            self.forward_word(-argument)
         self.selection_mark=-1
-        self.point=NextWordEnd
-       
-    def backward_word(self):
+        for x in range(argument):
+            self.point=PrevWordStart
+
+    def forward_word_end(self,argument=1):
+        if argument<0:
+            self.backward_word_end(-argument)
         self.selection_mark=-1
-        self.point=PrevWordStart
+        for x in range(argument):
+            self.point=NextWordEnd
+
+    def backward_word_end(self,argument=1):
+        if argument<0:
+            self.forward_word_end(-argument)
+        self.selection_mark=-1
+        for x in range(argument):
+            self.point=NextWordEnd
 
 ######### Movement select
     def beginning_of_line_extend_selection(self):
@@ -446,31 +468,56 @@ class ReadLineTextBuffer(TextLine):
         if self.enable_selection and self.selection_mark<0:
             self.selection_mark=self.point
         self.point=EndOfLine
-        
-    def forward_char_extend_selection(self):
+
+    def forward_char_extend_selection(self,argument=1):
+        if argument<0:
+            self.backward_char_extend_selection(-argument)
         if self.enable_selection and self.selection_mark<0:
             self.selection_mark=self.point
-        self.point=NextChar
+        for x in range(argument):
+            self.point=NextChar
         
-    def backward_char_extend_selection(self):
+    def backward_char_extend_selection(self,argument=1):
+        if argument<0:
+            self.forward_char_extend_selection(-argument)
         if self.enable_selection and self.selection_mark<0:
             self.selection_mark=self.point
-        self.point=PrevChar
+        for x in range(argument):
+            self.point=PrevChar
         
-    def forward_word_extend_selection(self):
+    def forward_word_extend_selection(self,argument=1):
+        if argument<0:
+            self.backward_word_extend_selection(-argument)
         if self.enable_selection and self.selection_mark<0:
             self.selection_mark=self.point
-        self.point=NextWordStart
+        for x in range(argument):
+            self.point=NextWordStart
        
-    def forward_word_end_extend_selection(self):
+    def backward_word_extend_selection(self,argument=1):
+        if argument<0:
+            self.forward_word_extend_selection(-argument)
         if self.enable_selection and self.selection_mark<0:
             self.selection_mark=self.point
-        self.point=NextWordEnd
+        for x in range(argument):
+            self.point=PrevWordStart
+
        
-    def backward_word_extend_selection(self):
+    def forward_word_end_extend_selection(self,argument=1):
+        if argument<0:
+            self.backward_word_end_extend_selection(-argument)
         if self.enable_selection and self.selection_mark<0:
             self.selection_mark=self.point
-        self.point=PrevWordStart
+        for x in range(argument):
+            self.point=NextWordEnd
+
+    def backward_word_end_extend_selection(self,argument=1):
+        if argument<0:
+            self.forward_word_end_extend_selection(-argument)
+        if self.enable_selection and self.selection_mark<0:
+            self.selection_mark=self.point
+        for x in range(argument):
+            self.point=PrevWordEnd
+
 
 ######### delete       
 
@@ -478,36 +525,48 @@ class ReadLineTextBuffer(TextLine):
         if self.enable_selection and self.selection_mark>=0:
             if self.selection_mark<self.point:
                 del self[self.selection_mark:self.point]
+                self.selection_mark=-1
             else:                
                 del self[self.point:self.selection_mark]
+                self.selection_mark=-1
             return True
         else:
+            self.selection_mark=-1
             return False
-        self.selection_mark=-1
 
-    def delete_char(self):
-        if not self.delete_selection():
+    def delete_char(self,argument=1):
+        if argument<0:
+            self.backward_delete_char(-argument)
+        if self.delete_selection():
+            argument-=1
+        for x in range(argument):
             del self[Point]
-        self.selection_mark=-1
         
-    def backward_delete_char(self):
-        if not self.delete_selection():
+    def backward_delete_char(self,argument=1):
+        if argument<0:
+            self.delete_char(-argument)
+        if self.delete_selection():
+            argument-=1
+        for x in range(argument):
             if self.point>0:
                 self.backward_char()
                 self.delete_char()
-        self.selection_mark=-1
 
-    def backward_delete_word(self):
-        if not self.delete_selection():
-            #del self[PrevWordEnd:Point]
-            del self[PrevWordStart:Point]
-        self.selection_mark=-1
-
-    def forward_delete_word(self):
-        if not self.delete_selection():
-            #del self[PrevWordEnd:Point]
+    def forward_delete_word(self,argument=1):
+        if argument<0:
+            self.backward_delete_word(-argument)
+        if self.delete_selection():
+            argument-=1
+        for x in range(argument):
             del self[Point:NextWordStart]
-        self.selection_mark=-1
+
+    def backward_delete_word(self,argument=1):
+        if argument<0:
+            self.forward_delete_word(-argument)
+        if self.delete_selection():
+            argument-=1
+        for x in range(argument):
+            del self[PrevWordStart:Point]
 
     def delete_current_word(self):
         if not self.delete_selection():

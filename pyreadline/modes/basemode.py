@@ -23,6 +23,8 @@ class BaseMode(object):
         self.key_dispatch = {}
         self.startup_hook=None
         self.pre_input_hook=None
+        self.argument=1
+        self.prevargument=None
         
     def __repr__(self):
         return "<BaseMode>"
@@ -38,6 +40,12 @@ class BaseMode(object):
         def g(self):
             return getattr(self.rlobj,x)
         return g
+
+    def _argreset(self):
+        val=self.argument
+        self.argument=1
+        return val
+    argument_reset=property(_argreset)
         
     l_buffer=property(*_gs("l_buffer"))
     next_meta=property(*_gs("next_meta"))
@@ -57,7 +65,6 @@ class BaseMode(object):
     _bell=property(_g("_bell"))
     _clear_after=property(_g("_clear_after"))
     _set_cursor=property(_g("_set_cursor"))
-    _print_prompt=property(_g("_print_prompt"))
     _update_prompt_pos=property(_g("_update_prompt_pos"))
     _update_line=property(_g("_update_line"))
     enable_win32_clipboard=property(_g("enable_win32_clipboard"))
@@ -229,59 +236,71 @@ class BaseMode(object):
 
     def forward_char(self, e): # (C-f)
         '''Move forward a character. '''
-        self.l_buffer.forward_char()
+        self.l_buffer.forward_char(self.argument_reset)
 
     def backward_char(self, e): # (C-b)
         '''Move back a character. '''
-        self.l_buffer.backward_char()
+        self.l_buffer.backward_char(self.argument_reset)
 
     def forward_word(self, e): # (M-f)
         '''Move forward to the end of the next word. Words are composed of
         letters and digits.'''
-        self.l_buffer.forward_word()
-
-    def forward_word_end(self, e): # (M-f)
-        '''Move forward to the end of the next word. Words are composed of
-        letters and digits.'''
-        self.l_buffer.forward_word_end()
+        self.l_buffer.forward_word(self.argument_reset)
 
     def backward_word(self, e): # (M-b)
         '''Move back to the start of the current or previous word. Words are
         composed of letters and digits.'''
-        self.l_buffer.backward_word()
+        self.l_buffer.backward_word(self.argument_reset)
 
+    def forward_word_end(self, e): # ()
+        '''Move forward to the end of the next word. Words are composed of
+        letters and digits.'''
+        self.l_buffer.forward_word_end(self.argument_reset)
 
+    def backward_word_end(self, e): # ()
+        '''Move forward to the end of the next word. Words are composed of
+        letters and digits.'''
+        self.l_buffer.backward_word_end(self.argument_reset)
+
+### Movement with extend selection
     def beginning_of_line_extend_selection(self, e): # 
         '''Move to the start of the current line. '''
-        self.l_buffer.beginning_of_line_extend_selection()
+        self.l_buffer.beginning_of_line_extend_selection(self.argument_reset)
 
     def end_of_line_extend_selection(self, e): # 
         '''Move to the end of the line. '''
-        self.l_buffer.end_of_line_extend_selection()
+        self.l_buffer.end_of_line_extend_selection(self.argument_reset)
 
     def forward_char_extend_selection(self, e): # 
         '''Move forward a character. '''
-        self.l_buffer.forward_char_extend_selection()
+        self.l_buffer.forward_char_extend_selection(self.argument_reset)
 
     def backward_char_extend_selection(self, e): #
         '''Move back a character. '''
-        self.l_buffer.backward_char_extend_selection()
+        self.l_buffer.backward_char_extend_selection(self.argument_reset)
 
     def forward_word_extend_selection(self, e): # 
         '''Move forward to the end of the next word. Words are composed of
         letters and digits.'''
-        self.l_buffer.forward_word_extend_selection()
-
-    def forward_word_end_extend_selection(self, e): # 
-        '''Move forward to the end of the next word. Words are composed of
-        letters and digits.'''
-        self.l_buffer.forward_word_end_extend_selection()
+        self.l_buffer.forward_word_extend_selection(self.argument_reset)
 
     def backward_word_extend_selection(self, e): # 
         '''Move back to the start of the current or previous word. Words are
         composed of letters and digits.'''
-        self.l_buffer.backward_word_extend_selection()
+        self.l_buffer.backward_word_extend_selection(self.argument_reset)
 
+    def forward_word_end_extend_selection(self, e): # 
+        '''Move forward to the end of the next word. Words are composed of
+        letters and digits.'''
+        self.l_buffer.forward_word_end_extend_selection(self.argument_reset)
+
+    def backward_word_end_extend_selection(self, e): # 
+        '''Move forward to the end of the next word. Words are composed of
+        letters and digits.'''
+        self.l_buffer.forward_word_end_extend_selection(self.argument_reset)
+
+
+######## Change case
 
     def upcase_word(self, e): # (M-u)
         '''Uppercase the current (or following) word. With a negative
@@ -299,7 +318,7 @@ class BaseMode(object):
         self.l_buffer.capitalize_word()
 
 
-
+########
     def clear_screen(self, e): # (C-l)
         '''Clear the screen and redraw the current line, leaving the current
         line at the top of the screen.'''
@@ -321,22 +340,22 @@ class BaseMode(object):
         '''Delete the character at point. If point is at the beginning of
         the line, there are no characters in the line, and the last
         character typed was not bound to delete-char, then return EOF.'''
-        self.l_buffer.delete_char()
+        self.l_buffer.delete_char(self.argument_reset)
 
     def backward_delete_char(self, e): # (Rubout)
         '''Delete the character behind the cursor. A numeric argument means
         to kill the characters instead of deleting them.'''
-        self.l_buffer.backward_delete_char()
+        self.l_buffer.backward_delete_char(self.argument_reset)
 
     def backward_delete_word(self, e): # (Control-Rubout)
         '''Delete the character behind the cursor. A numeric argument means
         to kill the characters instead of deleting them.'''
-        self.l_buffer.backward_delete_word()
+        self.l_buffer.backward_delete_word(self.argument_reset)
 
     def forward_delete_word(self, e): # (Control-Delete)
         '''Delete the character behind the cursor. A numeric argument means
         to kill the characters instead of deleting them.'''
-        self.l_buffer.forward_delete_word()
+        self.l_buffer.forward_delete_word(self.argument_reset)
 
     def delete_horizontal_space(self, e): # ()
         '''Delete all spaces and tabs around point. By default, this is unbound. '''

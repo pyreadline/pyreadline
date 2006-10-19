@@ -356,7 +356,45 @@ class EmacsMode(basemode.BaseMode):
     def digit_argument(self, e): # (M-0, M-1, ... M--)
         '''Add this digit to the argument already accumulating, or start a
         new argument. M-- starts a negative argument.'''
-        pass
+        args=e.char
+
+        c = self.console
+        line = self.l_buffer.get_line_text()
+        oldprompt=self.prompt
+        def nop(e):
+            pass
+        while 1:
+            x, y = self.prompt_end_pos
+            c.pos(0, y)
+            self.prompt="(arg: %s) "%args
+            self._print_prompt()
+            self._update_line()
+
+            event = c.getkeypress()
+            if event.keyinfo.keyname == 'enter':
+                break
+            elif event.char in "0123456789":
+                args+=event.char
+            else:
+                self.argument=int(args)
+                keyinfo=event.keyinfo.tuple()
+                if len(keyinfo[-1])>1:
+                    default=nop
+                else:
+                    default=self.self_insert
+                dispatch_func = self.key_dispatch.get(keyinfo,default)
+                log_sock("%s|%s"%(dispatch_func,str(keyinfo)))
+                dispatch_func(event)
+                break
+        log_sock("END arg=%s"%(self.argument))
+        self.prompt=oldprompt
+        x, y = self.prompt_end_pos
+        c.pos(0, y)
+        self._print_prompt()
+        self._update_line()
+
+            
+
 
     def universal_argument(self, e): # ()
         '''This is another way to specify an argument. If this command is
