@@ -1,4 +1,11 @@
 2006-10-19 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fixed bug in history_search_*
+	* Fixed bug in beginning_of_line_extend_selection and end_of_line_extend_selection
+	* Fixd bugs to make vi_test work again, one test failure remains
+	*
+	
+	
+2006-10-19 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Adding argument handling.
 	* Adding argument to functions:forward_char, backward_char, forward_word, backward_word
 	  forward_word_end, backward_word_end, beginning_of_line_extend_selection, end_of_line_extend_selection

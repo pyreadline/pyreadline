@@ -51,10 +51,11 @@ class EmacsModeTest (EmacsMode):
             lst_key = [keytext]
         for key in lst_key:
             keyinfo, event = keytext_to_keyinfo_and_event (key)
-            dispatch_func = self.key_dispatch.get(keyinfo,self.self_insert)
+            dispatch_func = self.key_dispatch.get(keyinfo.tuple(),self.self_insert)
             self.tested_commands[dispatch_func.__name__]=dispatch_func
 #            print key,dispatch_func.__name__
             dispatch_func (event)
+            log_sock("emacs readline from keyboard:%s->%s"%(keyinfo.tuple(),dispatch_func))
             self.previous_func=dispatch_func
 
     def accept_line (self, e):

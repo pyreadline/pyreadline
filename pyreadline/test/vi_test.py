@@ -6,11 +6,14 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
-import sys, unittest
+import sys, unittest,pdb
 sys.path.append ('../..')
 from pyreadline.modes.vi import *
 from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
+from pyreadline.logger import log_sock
+import pyreadline.logger as logger
+from common import *
 
 from common import *
 #----------------------------------------------------------------------
@@ -49,7 +52,7 @@ class ViModeTest (ViMode):
             lst_key = [keytext]
         for key in lst_key:
             keyinfo, event = keytext_to_keyinfo_and_event (key)
-            dispatch_func = self.key_dispatch [keyinfo]
+            dispatch_func = self.key_dispatch.get( keyinfo.tuple(),self.vi_key)
             self.tested_commands[dispatch_func.__name__]=dispatch_func
             dispatch_func (event)
 

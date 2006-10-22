@@ -265,11 +265,11 @@ class BaseMode(object):
 ### Movement with extend selection
     def beginning_of_line_extend_selection(self, e): # 
         '''Move to the start of the current line. '''
-        self.l_buffer.beginning_of_line_extend_selection(self.argument_reset)
+        self.l_buffer.beginning_of_line_extend_selection()
 
     def end_of_line_extend_selection(self, e): # 
         '''Move to the end of the line. '''
-        self.l_buffer.end_of_line_extend_selection(self.argument_reset)
+        self.l_buffer.end_of_line_extend_selection()
 
     def forward_char_extend_selection(self, e): # 
         '''Move forward a character. '''

@@ -97,8 +97,8 @@ def make_KeyPress_from_keydescr(keydescr):
             keydescr = keydescr[6:]
         else:
             if len(keydescr) > 1:
-                if keydescr.strip() in validkey:
-                    keyinfo.keyname=keydescr.strip()
+                if keydescr.strip().lower() in validkey:
+                    keyinfo.keyname=keydescr.strip().lower()
                     keyinfo.char=""
                 else:
                     raise IndexError("Not a valid key: '%s'"%keydescr)

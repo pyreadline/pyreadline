@@ -9,7 +9,7 @@
 #*****************************************************************************
 import os
 import pyreadline.logger as logger
-from   pyreadline.logger import log
+from   pyreadline.logger import log,log_sock
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import basemode
@@ -38,8 +38,8 @@ class ViMode(basemode.BaseMode):
                 if lineobj.EndOfLine(self.l_buffer) == 0:
                     raise EOFError
 
-            dispatch_func = self.key_dispatch.get(event.keyinfo,self.self_insert)
-            log("readline from keyboard:%s"%(event.keyinfo,))
+            dispatch_func = self.key_dispatch.get(event.keyinfo.tuple(),self.vi_key)
+            log("readline from keyboard:%s->%s"%(event.keyinfo.tuple(),dispatch_func))
             r = None
             if dispatch_func:
                 r = dispatch_func(event)

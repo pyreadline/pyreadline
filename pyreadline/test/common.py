@@ -8,7 +8,8 @@
 from pyreadline.modes.emacs import *
 from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
-from pyreadline.keysyms import key_text_to_keyinfo
+from pyreadline.keysyms.common import make_KeyPress_from_keydescr
+
 import unittest
 class MockReadline:
     def __init__ (self):
@@ -51,15 +52,22 @@ class MockConsole:
 
 class Event:
     def __init__ (self, char):
-        self.char = char
+        if char=="escape":
+            self.char='\x1b'
+        elif char=="backspace":
+            self.char='\x08'
+        else:
+            self.char = char
 
 def keytext_to_keyinfo_and_event (keytext):
-    keyinfo = keysyms.key_text_to_keyinfo (keytext)
+    keyinfo = keysyms.common.make_KeyPress_from_keydescr (keytext)
     if len(keytext) == 3 and keytext[0] == '"' and keytext[2] == '"':
         event = Event (keytext[1])
     else:
-        event = Event (chr (keyinfo [3]))
+        event = Event (keyinfo.tuple() [3])
     return keyinfo, event
+
+
 
 #override runTests from from main in unittest to remove sys.exit call
 class Tester(unittest.TestProgram):

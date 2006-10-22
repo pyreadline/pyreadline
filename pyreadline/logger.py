@@ -29,13 +29,18 @@ logsocket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 show_event=["keypress","bound_function","bind_key"]
 show_event=["bound_function"]
 
+sock_silent=False
+
 def log_sock(s,event_type=None):
-    if event_type is None:
-        logsocket.sendto(s,(host,port))
-    elif event_type in show_event:
-        logsocket.sendto(s,(host,port))
-    else:
+    if sock_silent:
         pass
-    
+    else:
+        if event_type is None:
+            logsocket.sendto(s,(host,port))
+        elif event_type in show_event:
+            logsocket.sendto(s,(host,port))
+        else:
+            pass
+
     
 log_sock("Starting pyreadline")

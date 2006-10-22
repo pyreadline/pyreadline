@@ -101,7 +101,7 @@ class LineHistory(object):
     def reverse_search_history(self,searchfor,startpos=None):
         if startpos is None:
             startpos=self.history_cursor
-        res=[(idx,line)  for idx,line in enumerate(self.history[startpos:0:-1]) if searchfor in line]
+        res=[(idx,line)  for idx,line in enumerate(self.history[startpos:0:-1]) if line.startswith(searchfor)]
         if res:
             self.history_cursor-=res[0][0]
             return res[0][1].get_line_text()
@@ -110,7 +110,7 @@ class LineHistory(object):
     def forward_search_history(self,searchfor,startpos=None):
         if startpos is None:
             startpos=self.history_cursor
-        res=[(idx,line) for idx,line in enumerate(self.history[startpos:]) if searchfor in line]
+        res=[(idx,line) for idx,line in enumerate(self.history[startpos:]) if line.startswith(searchfor)]
         if res:
             self.history_cursor+=res[0][0]
             return res[0][1].get_line_text()
@@ -167,7 +167,7 @@ class LineHistory(object):
         if (self.lastcommand != self.history_search_forward and
                 self.lastcommand != self.history_search_backward):
             self.query = ''.join(partial[0:partial.point].get_line_text())
-        hcstart=max(self.history_cursor-1,0) 
+        hcstart=max(self.history_cursor,0) 
         hc = self.history_cursor + direction
         while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
             h = self.history[hc]
@@ -210,8 +210,9 @@ class LineHistory(object):
 if __name__=="__main__":
     q=LineHistory()
     RL=lineobj.ReadLineTextBuffer
-    q.add_history(RL("apan"))
-    q.add_history(RL("apbn"))
-    q.add_history(RL("apcn"))
-    q.add_history(RL("apdn"))
-    q.add_history(RL("apen"))
+    q.add_history(RL("aaaa"))
+    q.add_history(RL("aaba"))
+    q.add_history(RL("aaca"))
+    q.add_history(RL("akca"))
+    q.add_history(RL("bbb"))
+    q.add_history(RL("ako"))
