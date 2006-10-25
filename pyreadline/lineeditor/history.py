@@ -26,17 +26,32 @@ from pyreadline.logger import log_sock
 class LineHistory(object):
     def __init__(self):
         self.history=[]
-        self.history_length=100
-        self.history_cursor=0
+        self._history_length=100
+        self._history_cursor=0
         self.history_filename=os.path.expanduser('~/.history')
         self.lastcommand=None
         self.query=""
 
     def get_history_length(self):
-        return self.history_length
+        value=self._history_length
+        log_sock("get_history_length:%d"%value,"history")
+        return value
 
     def set_history_length(self,value):
-        self.history_length=value
+        log_sock("set_history_length: old:%d new:%d"%(self._history_length,value),"history")
+        self._history_length=value
+
+    def get_history_cursor(self):
+        value=self._history_cursor
+        log_sock("get_history_cursor:%d"%value,"history")
+        return value
+
+    def set_history_cursor(self,value):
+        log_sock("set_history_cursor: old:%d new:%d"%(self._history_cursor,value),"history")
+        self._history_cursor=value
+        
+    history_length=property(get_history_length,set_history_length)
+    history_cursor=property(get_history_cursor,set_history_cursor)
 
     def read_history_file(self, filename=None): 
         '''Load a readline history file.'''
@@ -184,6 +199,7 @@ class LineHistory(object):
             if len(self.history)==0:
                 pass 
             elif hc>=len(self.history) and not self.query:
+                self.history_cursor=len(self.history)
                 return lineobj.ReadLineTextBuffer("",point=0)
             elif self.history[hcstart].get_line_text().startswith(self.query) and self.query:
                 return lineobj.ReadLineTextBuffer(self.history[hcstart],point=partial.point)

@@ -188,7 +188,8 @@ class Console(object):
         self.defaultstate=AnsiState()
         self.defaultstate.winattr=info.wAttributes
         self.ansiwriter=AnsiWriter(self.defaultstate)
-
+#        self.ansiwriter.defaultstate.bold=False
+        
         background = self.attr & 0xf0
         for escape in self.escape_to_color:
             if self.escape_to_color[escape] is not None:
@@ -343,9 +344,12 @@ class Console(object):
         return n
 
     def write_color(self, text, attr=None):
+        log_sock(text)
+        log_sock("%s"%attr)
         n,res= self.ansiwriter.write_color(text,attr)
         junk = c_int(0)
         for attr,chunk in res:
+            log_sock("%s:%s"%(attr,chunk))
             log(str(attr))
             log(str(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)

@@ -45,7 +45,7 @@ class EmacsModeTest (EmacsMode):
     line_cursor = property (get_line_cursor)
 
     def input (self, keytext):
-        if keytext[0] == '"' and keytext[-1] == '"':
+        if keytext[0:1] == '"' and keytext[-1:] == '"':
             lst_key = ['"%s"' % c for c in keytext[1:-1]]
         else:
             lst_key = [keytext]
@@ -254,51 +254,62 @@ class TestsHistory (unittest.TestCase):
         r.add_history ('akca')
         r.add_history ('bbb')
         r.add_history ('ako')
-        self.assertEqual (r.line, '')
+        self.assert_line(r,'',0)
         r.input ('"a"')
         r.input ('Up')
-        self.assertEqual (r.line, 'ako')
-        self.assertEqual (r.line_cursor, 1)
+        self.assert_line(r,'ako',1)
         r.input ('Up')
-        self.assertEqual (r.line, 'akca')
-        self.assertEqual (r.line_cursor, 1)
+        self.assert_line(r,'akca',1)
         r.input ('Up')
-        self.assertEqual (r.line, 'aaca')
-        self.assertEqual (r.line_cursor, 1)
+        self.assert_line(r,'aaca',1)
         r.input ('Up')
-        self.assertEqual (r.line, 'aaba')
-        self.assertEqual (r.line_cursor, 1)
+        self.assert_line(r,'aaba',1)
         r.input ('Up')
-        self.assertEqual (r.line, 'aaaa')
-        self.assertEqual (r.line_cursor, 1)
+        self.assert_line(r,'aaaa',1)
         r.input ('Right')
-        self.assertEqual (r.line, 'aaaa')
-        self.assertEqual (r.line_cursor, 2)
+        self.assert_line(r,'aaaa',2)
         r.input ('Down')
-        self.assertEqual (r.line, 'aaba')
-        self.assertEqual (r.line_cursor, 2)
+        self.assert_line(r,'aaba',2)
         r.input ('Down')
-        self.assertEqual (r.line, 'aaca')
-        self.assertEqual (r.line_cursor, 2)
+        self.assert_line(r,'aaca',2)
         r.input ('Down')
-        self.assertEqual (r.line, 'aaca')
-        self.assertEqual (r.line_cursor, 2)
+        self.assert_line(r,'aaca',2)
         r.input ('Left')
         r.input ('Left')
         r.input ('Down')
         r.input ('Down')
-        self.assertEqual (r.line, 'bbb')
-        self.assertEqual (r.line_cursor, 3)
+        self.assert_line(r,'bbb',3)
         r.input ('Left')
-        self.assertEqual (r.line, 'bbb')
-        self.assertEqual (r.line_cursor, 2)
+        self.assert_line(r,'bbb',2)
         r.input ('Down')
-        self.assertEqual (r.line, 'bbb')
-        self.assertEqual (r.line_cursor, 2)
+        self.assert_line(r,'bbb',2)
         r.input ('Up')
-        self.assertEqual (r.line, 'bbb')
-        self.assertEqual (r.line_cursor, 2)
+        self.assert_line(r,'bbb',2)
 
+
+    def test_history_3 (self):
+        r = EmacsModeTest ()
+        r.add_history ('aaaa')
+        r.add_history ('aaba')
+        r.add_history ('aaca')
+        r.add_history ('akca')
+        r.add_history ('bbb')
+        r.add_history ('ako')
+        self.assert_line(r,'',0)
+        r.input ('')
+        r.input ('Up')
+        self.assert_line(r,'ako',3)
+        r.input ('Down')
+        self.assert_line(r,'',0)
+        r.input ('Up')
+        self.assert_line(r,'ako',3)
+
+
+
+    def assert_line(self,r,line,cursor):
+        self.assertEqual (r.line, line)
+        self.assertEqual (r.line_cursor, cursor)
+        
 #----------------------------------------------------------------------
 # utility functions
 

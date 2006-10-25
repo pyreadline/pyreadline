@@ -84,9 +84,14 @@ class AnsiWriter(object):
         for chunk in chunks:
             m = escape_parts.match(chunk)
             if m:
-                for part in m.group(1).split(";"):
+                parts=m.group(1).split(";")
+                if len(parts)==1 and parts[0]=="0":
+                    attr = self.defaultstate.copy()
+                    continue
+                for part in parts:
                     if part == "0": # No text attribute
                         attr = self.defaultstate.copy()
+                        attr.bold=False
                     elif part == "7": # switch on reverse
                         attr.inverse=True
                     elif part == "1": # switch on bold (i.e. intensify foreground color)

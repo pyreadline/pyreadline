@@ -1,9 +1,12 @@
+2006-10-25 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* port set_text_color and set_prompt_color config file options from trunk
+	* Fix bug in history search and add tests for the case.
+	* port ansi color changes from trunk
+	
 2006-10-19 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fixed bug in history_search_*
 	* Fixed bug in beginning_of_line_extend_selection and end_of_line_extend_selection
 	* Fixd bugs to make vi_test work again, one test failure remains
-	*
-	
 	
 2006-10-19 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Adding argument handling.

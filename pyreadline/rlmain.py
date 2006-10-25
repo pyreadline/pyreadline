@@ -366,7 +366,17 @@ class Readline(object):
             logger.start_log(on,filename)
             logger.log("STARTING LOG")
 #            print release.branch
+        def set_prompt_color(color):
+            trtable={"black":0,"darkred":4,"darkgreen":2,"darkyellow":6,"darkblue":1,"darkmagenta":5,"darkcyan":3,"gray":7,
+                     "red":4+8,"green":2+8,"yellow":6+8,"blue":1+8,"magenta":5+8,"cyan":3+8,"white":7+8}
+            self.prompt_color=trtable.get(color.lower(),7)            
+            
+        def set_input_color(color):
+            trtable={"black":0,"darkred":4,"darkgreen":2,"darkyellow":6,"darkblue":1,"darkmagenta":5,"darkcyan":3,"gray":7,
+                     "red":4+8,"green":2+8,"yellow":6+8,"blue":1+8,"magenta":5+8,"cyan":3+8,"white":7+8}
+            self.command_color=trtable.get(color.lower(),7)            
         loc={"branch":release.branch,
+             "version":release.version,
              "mode":mode,
              "modes":modes,
              "set_mode":setmode,
@@ -380,7 +390,10 @@ class Readline(object):
              "completer_delims":completer_delims,
              "debug_output":debug_output,
              "history_filename":sethistoryfilename,
-             "history_length":sethistorylength}
+             "history_length":sethistorylength,
+             "set_prompt_color":set_prompt_color,
+             "set_input_color":set_input_color,
+             }
         if os.path.isfile(inputrcpath): 
             try:
                 execfile(inputrcpath,loc,loc)

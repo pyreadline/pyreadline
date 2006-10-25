@@ -363,7 +363,8 @@ class BaseMode(object):
 
     def self_insert(self, e): # (a, b, A, 1, !, ...)
         '''Insert yourself. '''
-        if ord(e.char)!=0: #don't insert null character in buffer, can happen with dead keys.
+        
+        if e.char and ord(e.char)!=0: #don't insert null character in buffer, can happen with dead keys.
             self.insert_text(e.char)
 
 
