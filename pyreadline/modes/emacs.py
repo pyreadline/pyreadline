@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import os
+import os,sys
 import pyreadline.logger as logger
 from   pyreadline.logger import log,log_sock
 from pyreadline.lineeditor.lineobj import Point
@@ -21,6 +21,8 @@ def format(keyinfo):
         k=keyinfo+(ord(keyinfo[-1]),)
     
     return "(%s,%s,%s,%s,%x)"%k
+in_ironpython=sys.version.startswith("IronPython")
+
 
 class EmacsMode(basemode.BaseMode):
     mode="emacs"
@@ -28,7 +30,7 @@ class EmacsMode(basemode.BaseMode):
         super(EmacsMode,self).__init__(rlobj)
         self._keylog=(lambda x,y: None)
         self.previous_func=None
-        self.prompt=""
+        self.prompt=">>>"
     def __repr__(self):
         return "<EmacsMode>"
 
@@ -105,7 +107,13 @@ class EmacsMode(basemode.BaseMode):
             self.paste_line_buffer=self.paste_line_buffer[1:]
             c.write('\r\n')
         else:
-            self._readline_from_keyboard()
+            try:
+                self._readline_from_keyboard()
+            except EOFError:
+                if in_ironpython:
+                    return None
+                else:
+                    raise
             c.write('\r\n')
 
         self.add_history(self.l_buffer.copy())

@@ -1,14 +1,17 @@
-import glob
+import glob,sys
 
 success=False
+in_ironpython=sys.version.startswith("IronPython")
 
-try:
-    from console import *
-    success=True
-except ImportError:
-
+if in_ironpython:
     try:
         from ironpython_console import *
+        success=True
+    except ImportError:
+        raise
+else:
+    try:
+        from console import *
         success=True
     except ImportError:
         pass

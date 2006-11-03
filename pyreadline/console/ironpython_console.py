@@ -9,6 +9,21 @@
 '''Cursor control and color for the .NET console.
 '''
 
+#
+# Ironpython requires a patch to work do:
+#
+# In file PythonCommandLine.cs patch line:     
+#    class PythonCommandLine
+#    {
+
+# to:
+#    public class PythonCommandLine
+#    {
+#
+#
+#
+
+
 # primitive debug printing that won't interfere with the screen
 
 import clr
@@ -23,14 +38,14 @@ import os
 import System
 
 from event import Event
-from pyreadline.logger import log
+from pyreadline.logger import log,log_sock
 
 #print "Codepage",System.Console.InputEncoding.CodePage
-from pyreadline.keysyms import make_keysym, make_keyinfo,make_KeyPress
-
+from pyreadline.keysyms import make_keysym, make_keyinfo,make_KeyPress,make_KeyPress_from_keydescr
+from pyreadline.console.ansi import AnsiState
 color=System.ConsoleColor
 
-ansicolor={
+ansicolor={"0;30": color.Black,
            "0;31": color.DarkRed,
            "0;32": color.DarkGreen,
            "0;33": color.DarkYellow,
@@ -38,6 +53,7 @@ ansicolor={
            "0;35": color.DarkMagenta,
            "0;36": color.DarkCyan,
            "0;37": color.DarkGray,
+           "1;30": color.Gray,
            "1;31": color.Red,
            "1;32": color.Green,
            "1;33": color.Yellow,
@@ -46,6 +62,15 @@ ansicolor={
            "1;36": color.Cyan,
            "1;37": color.White
           }
+
+winattr={"black":0,"darkgray":0+8,
+         "darkred":4,"red":4+8,
+         "darkgreen":2,"green":2+8,
+         "darkyellow":6,"yellow":6+8,
+         "darkblue":1,"blue":1+8,
+         "darkmagenta":5, "magenta":5+8,
+         "darkcyan":3,"cyan":3+8,
+         "gray":7,"white":7+8}
 
 class Console(object):
     '''Console driver for Windows.
@@ -60,15 +85,25 @@ class Console(object):
         '''
         self.serial=0
         self.attr = System.Console.ForegroundColor
-        self.saveattr = System.Console.ForegroundColor
+        self.saveattr = winattr[str(System.Console.ForegroundColor).lower()]
+        self.savebg=System.Console.BackgroundColor
         log('initial attr=%s' % self.attr)
+        log_sock("%s"%self.saveattr)
+
+    def _get(self):
+        top=System.Console.WindowTop
+        log_sock("WindowTop:%s"%top,"console")
+        return top
+    def _set(self,value):
+        top=System.Console.WindowTop
+        log_sock("Set WindowTop:old:%s,new:%s"%(top,value),"console")
+    WindowTop=property(_get,_set)
+    del _get,_set
 
     def __del__(self):
         '''Cleanup the console when finished.'''
         # I don't think this ever gets called
-        self.SetConsoleTextAttribute(self.hout, self.saveattr)
-        self.SetConsoleMode(self.hin, self.inmode)
-        self.FreeConsole()
+        pass
 
     def pos(self, x=None, y=None):
         '''Move or query the window cursor.'''
@@ -153,6 +188,11 @@ class Console(object):
                     y = h - 1
         return scroll
 
+    trtable={0:color.Black,4:color.DarkRed,2:color.DarkGreen,6:color.DarkYellow,
+             1:color.DarkBlue,5:color.DarkMagenta,3:color.DarkCyan,7:color.Gray,
+             8:color.DarkGray,4+8:color.Red,2+8:color.Green,6+8:color.Yellow,
+             1+8:color.Blue,5+8:color.Magenta,3+8:color.Cyan,7+8:color.White}
+
     def write_color(self, text, attr=None):
         '''write text at current cursor position and interpret color escapes.
 
@@ -161,17 +201,24 @@ class Console(object):
         log('write_color("%s", %s)' % (text, attr))
         chunks = self.terminal_escape.split(text)
         log('chunks=%s' % repr(chunks))
+        bg=self.savebg
         n = 0 # count the characters we actually write, omitting the escapes
         if attr is None:#use attribute from initial console
             attr = self.attr
+        try:
+            fg=self.trtable[(0x000f&attr)]
+            bg=self.trtable[(0x00f0&attr)>>4]
+        except TypeError:
+            fg=attr
+            
         for chunk in chunks:
             m = self.escape_parts.match(chunk)
             if m:
                 log(m.group(1))
                 attr=ansicolor.get(m.group(1),self.attr)
             n += len(chunk)
-            log('attr=%s' % attr)
-            System.Console.ForegroundColor=attr
+            System.Console.ForegroundColor=fg
+            System.Console.BackgroundColor=bg
             #self.WriteConsoleA(self.hout, chunk, len(chunk), byref(junk), None)
             System.Console.Write(chunk)
         return n
@@ -215,9 +262,21 @@ class Console(object):
         self.pos(x,y)
         self.write_color(text,attr)
 
+    def clear_to_end_of_window(self):
+        oldtop=self.WindowTop
+        lastline=self.WindowTop+System.Console.WindowHeight
+        pos=self.pos()
+        w,h=self.size()
+        length=w-pos[0]+min((lastline-pos[1]-1),5)*w-1
+        self.write_color(length*" ")
+        self.pos(*pos)
+        self.WindowTop=oldtop
+        
     def rectangle(self, rect, attr=None, fill=' '):
         '''Fill Rectangle.'''
         pass
+        oldtop=self.WindowTop
+        oldpos=self.pos()
         #raise NotImplementedError
         x0, y0, x1, y1 = rect
         if attr is None:
@@ -229,6 +288,7 @@ class Console(object):
         for y in range(y0, y1):
                 System.Console.SetCursorPosition(x0,y)
                 self.write_color(rowfill,attr)
+        self.pos(*oldpos)
 
     def scroll(self, rect, dx, dy, attr=None, fill=' '):
         '''Scroll a rectangle.'''
@@ -237,23 +297,28 @@ class Console(object):
 
     def scroll_window(self, lines):
         '''Scroll the window by the indicated number of lines.'''
-        top=System.Console.WindowTop+lines
+        top=self.WindowTop+lines
         if top<0:
             top=0
         if top+System.Console.WindowHeight>System.Console.BufferHeight:
             top=System.Console.BufferHeight
-        System.Console.WindowTop=top
+        self.WindowTop=top
 
     def getkeypress(self):
         '''Return next key press event from the queue, ignoring others.'''
         ck=System.ConsoleKey
         while 1:
-            e = System.Console.ReadKey(True)
+            try:
+                e = System.Console.ReadKey(True)
+            except KeyboardInterrupt:
+                return CTRL_C_EVENT    
             if e.Key == System.ConsoleKey.PageDown: #PageDown
                 self.scroll_window(12)
             elif e.Key == System.ConsoleKey.PageUp:#PageUp
                 self.scroll_window(-12)
             elif str(e.KeyChar)=="\000":#Drop deadkeys
+                log_sock("Deadkey: %s"%e)
+                return event(self,e)
                 pass
             else:
                 return event(self,e)
@@ -268,10 +333,17 @@ class Console(object):
     def size(self, width=None, height=None):
         '''Set/get window size.'''
         sc=System.Console
+        
+    
+        if width is not None and height is not None:
+            sc.BufferWidth,sc.BufferHeight=width,height
+        else:
+            return sc.BufferWidth,sc.BufferHeight
+
         if width is not None and height is not None:
             sc.WindowWidth,sc.WindowHeight=width,height
         else:
-            return sc.WindowWidth,sc.WindowHeight
+            return sc.WindowWidth-1,sc.WindowHeight-1
     
     def cursor(self, visible=True, size=None):
         '''Set cursor on or off.'''
@@ -298,12 +370,25 @@ class event(Event):
         self.char = str(input.KeyChar)
         self.keycode = input.Key
         self.state = input.Modifiers
-        
+        log_sock("%s,%s,%s"%(input.Modifiers,input.Key,input.KeyChar),"console")
         self.type="KeyRelease"
-
         self.keysym = make_keysym(self.keycode)
         self.keyinfo = make_KeyPress(self.char, self.state, self.keycode)
 
+def make_event_from_keydescr(keydescr):
+    def input():
+        return 1
+    input.KeyChar="a"
+    input.Key=System.ConsoleKey.A
+    input.Modifiers=System.ConsoleModifiers.Shift
+    input.next_serial=input
+    e=event(input,input)
+    del input.next_serial
+    keyinfo=make_KeyPress_from_keydescr(keydescr)
+    e.keyinfo=keyinfo
+    return e
+
+CTRL_C_EVENT=make_event_from_keydescr("Control-c")
 
 def install_readline(hook):
     class IronPythonWrapper(IronPythonConsole.IConsole):
@@ -343,4 +428,4 @@ if __name__ == '__main__':
         print e.Key,chr(e.KeyChar),ord(e.KeyChar),e.Modifiers
     del c
 
-System.Console.Clear()
+    System.Console.Clear()

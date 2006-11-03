@@ -26,10 +26,10 @@ host="localhost"
 port=8081
 logsocket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
-show_event=["keypress","bound_function","bind_key"]
+show_event=["keypress","bound_function","bind_key","console"]
 show_event=["bound_function"]
 
-sock_silent=False
+sock_silent=True
 
 def log_sock(s,event_type=None):
     if sock_silent:
@@ -43,4 +43,3 @@ def log_sock(s,event_type=None):
             pass
 
     
-log_sock("Starting pyreadline")

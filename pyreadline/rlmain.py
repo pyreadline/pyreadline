@@ -29,6 +29,14 @@ import release
 
 from modes import editingmodes
 
+in_ironpython=sys.version.startswith("IronPython")
+if in_ironpython:#ironpython does not provide a prompt string to readline
+    import System    
+    default_prompt=">>> "
+else:
+    default_prompt=""
+
+
 def quote_char(c):
     if ord(c)>0:
         return c
@@ -47,7 +55,7 @@ class Readline(object):
         self.size = self.console.size()
         self.prompt_color = None
         self.command_color = None
-        self.selection_color =0x00f0
+        self.selection_color = self.console.saveattr<<4
         self.key_dispatch = {}
         self.previous_func = None
         self.first_prompt = True
@@ -270,7 +278,7 @@ class Readline(object):
         c = self.console
         x, y = c.pos()
         w, h = c.size()
-        c.rectangle((x, y, w, y+1))
+        c.rectangle((x, y, w+1, y+1))
         c.rectangle((0, y+1, w, min(y+3,h)))
 
     def _set_cursor(self):
@@ -278,15 +286,15 @@ class Readline(object):
         xc, yc = self.prompt_end_pos
         w, h = c.size()
         xc += self.l_buffer.visible_line_width()
-        while(xc > w):
+        while(xc >= w):
             xc -= w
             yc += 1
         c.pos(xc, yc)
 
     def _print_prompt(self):
         c = self.console
-        log('prompt="%s"' % repr(self.prompt))
         x, y = c.pos()
+        
         n = c.write_scrolling(self.prompt, self.prompt_color)
         self.prompt_begin_pos = (x, y - n)
         self.prompt_end_pos = c.pos()
@@ -313,9 +321,11 @@ class Readline(object):
             n = c.write_scrolling(ltext[stop:], self.command_color)
         else:
             n = c.write_scrolling(ltext, self.command_color)
-            
         self._update_prompt_pos(n)
-        self._clear_after()
+        if hasattr(c,"clear_to_end_of_window"): #Work around function for ironpython due 
+            c.clear_to_end_of_window()          #to System.Console's lack of FillFunction
+        else:
+            self._clear_after()
         self._set_cursor()
     
     def readline(self, prompt=''):
@@ -329,9 +339,7 @@ class Readline(object):
             self.mode=modes[name]
         def bind_key(key,name):
             log("bind %s %s"%(key,name))
-            log_sock("bindkey: %s %s"%(key,name),"bind_key")
             if hasattr(modes[mode],name):
-         #       print "can bind",key,name
                 modes[mode]._bind_key(key,getattr(modes[mode],name))
             else:
                 print "Trying to bind unknown command '%s' to key '%s'"%(name,key)

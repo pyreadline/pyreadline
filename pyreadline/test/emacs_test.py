@@ -304,6 +304,19 @@ class TestsHistory (unittest.TestCase):
         r.input ('Up')
         self.assert_line(r,'ako',3)
 
+    def test_history_3 (self):
+        r = EmacsModeTest ()
+        r.add_history ('aaaa')
+        r.add_history ('aaba')
+        r.add_history ('aaca')
+        r.add_history ('akca')
+        r.add_history ('bbb')
+        r.add_history ('ako')
+        self.assert_line(r,'',0)
+        r.input ('k')
+        r.input ('Up')
+        self.assert_line(r,'k',1)
+
 
 
     def assert_line(self,r,line,cursor):

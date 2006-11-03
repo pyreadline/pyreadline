@@ -1,15 +1,19 @@
+import sys
 success=False
+in_ironpython=sys.version.startswith("IronPython")
 
-try:
-    from clipboard import GetClipboardText,SetClipboardText
-    success=True
-except ImportError:
+if in_ironpython:
     try:
         from ironpython_clipboard import GetClipboardText,SetClipboardText
         success=True
     except ImportError:
         pass
-    
+else:
+    try:
+        from clipboard import GetClipboardText,SetClipboardText
+        success=True
+    except ImportError:
+        pass    
     
     
     

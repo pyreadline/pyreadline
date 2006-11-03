@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import os,re,math,glob
+import os,re,math,glob,sys
 import pyreadline.logger as logger
 from   pyreadline.logger import log
 from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
@@ -14,6 +14,7 @@ import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
 from pyreadline.error import ReadlineError,GetSetError
+in_ironpython=sys.version.startswith("IronPython")
 
 class BaseMode(object):
     mode="base"
@@ -173,6 +174,8 @@ class BaseMode(object):
                 if i < len(completions):
                     self.console.write(completions[i].ljust(wmax+1))
             self.console.write('\n')
+        if in_ironpython:
+            self.prompt=sys.ps1
         self._print_prompt()
 
     def complete(self, e): # (TAB)

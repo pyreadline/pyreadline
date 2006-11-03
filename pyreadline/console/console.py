@@ -209,6 +209,14 @@ class Console(object):
         self.SetConsoleMode(self.hin, self.inmode)
         self.FreeConsole()
 
+    def _get_top_bot(self):
+        info = CONSOLE_SCREEN_BUFFER_INFO()
+        self.GetConsoleScreenBufferInfo(self.hout, byref(info))
+        rect = info.srWindow
+        top = rect.Top 
+        bot = rect.Bottom 
+        return top,bot
+
     def fixcoord(self, x, y):
         '''Return a long with x and y packed inside, also handle negative x and y.'''
         if x < 0 or y < 0:
@@ -279,7 +287,6 @@ class Console(object):
         x, y = self.pos()
         w, h = self.size()
         scroll = 0 # the result
-
         # split the string into ordinary characters and funny characters
         chunks = self.motion_char_re.split(text)
         for chunk in chunks:
@@ -344,12 +351,9 @@ class Console(object):
         return n
 
     def write_color(self, text, attr=None):
-        log_sock(text)
-        log_sock("%s"%attr)
         n,res= self.ansiwriter.write_color(text,attr)
         junk = c_int(0)
         for attr,chunk in res:
-            log_sock("%s:%s"%(attr,chunk))
             log(str(attr))
             log(str(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)
@@ -409,8 +413,17 @@ class Console(object):
         self.WriteConsoleOutputCharacterA(self.hout, text, len(text), pos, byref(n))
         self.FillConsoleOutputAttribute(self.hout, attr, n, pos, byref(n))
 
+    def clear_to_end_of_window(self):
+        top,bot=self._get_top_bot()
+        pos=self.pos()
+        w,h=self.size()
+        self.rectangle( (pos[0],pos[1],w,pos[1]+1))
+        if pos[1]<bot:
+            self.rectangle((0,pos[1]+1,w,bot+1))
+
     def rectangle(self, rect, attr=None, fill=' '):
         '''Fill Rectangle.'''
+        log_sock("rect:%s"%[rect])
         x0, y0, x1, y1 = rect
         n = c_int(0)
         if attr is None:
@@ -445,7 +458,6 @@ class Console(object):
         bot = rect.Bottom + lines
         h = bot - top
         maxbot = info.dwSize.Y-1
-        log('sw: lines=%d mb=%d top=%d bot=%d' % (lines,maxbot,top,bot))
         if top < 0:
             top = 0
             bot = h
@@ -491,7 +503,6 @@ class Console(object):
                     return e
             elif e.type == 'KeyRelease' and e.keyinfo==(True, False, False, 83):
                 log("getKeypress:%s,%s,%s"%(e.keyinfo,e.keycode,e.type))
-#                log_sock(str(e))
                 return e
                 
     def getchar(self):
