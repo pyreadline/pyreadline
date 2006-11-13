@@ -1,13 +1,17 @@
-import glob
+import sys
 
 success=False
-try:
-    from keysyms import *
-    success=True
-except ImportError,x:
+in_ironpython=sys.version.startswith("IronPython")
 
+if in_ironpython:
     try:
         from ironpython_keysyms import *
+        success=True
+    except ImportError,x:
+        pass
+else:
+    try:
+        from keysyms import *
         success=True
     except ImportError,x:
         pass

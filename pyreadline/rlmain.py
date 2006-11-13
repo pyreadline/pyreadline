@@ -7,16 +7,8 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 ''' an attempt to implement readline for Python in Python using ctypes'''
-
-import string
-import math
-import sys
+import sys,os,re
 from glob import glob
-import os,pdb
-import re
-import traceback
-import operator
-import exceptions
 
 import clipboard,logger,console
 from   logger import log,log_sock
@@ -35,6 +27,7 @@ if in_ironpython:#ironpython does not provide a prompt string to readline
     default_prompt=">>> "
 else:
     default_prompt=""
+    import pdb
 
 
 def quote_char(c):
@@ -143,7 +136,6 @@ class Readline(object):
                 self.mode._bind_key(key, func)
         except:
             log('error')
-            traceback.print_exc()
             raise
 
     def get_line_buffer(self):
@@ -268,7 +260,7 @@ class Readline(object):
         if self.bell_style == 'none':
             pass
         elif self.bell_style == 'visible':
-            raise exceptions.NotImplementedError("Bellstyle visible is not implemented yet.")
+            raise NotImplementedError("Bellstyle visible is not implemented yet.")
         elif self.bell_style == 'audible':
             self.console.bell()
         else:

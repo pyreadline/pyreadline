@@ -1,3 +1,24 @@
+2006-11-06 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fixed bug in tab completion when point is not at end of line
+	* Changed clr.AddReference to clr.AddReferenceToFileAndPath (ironpython_console)
+	* Fix points position after tab completion
+	* Fix for difference in handling of multiline input between cpython and ironpython (emacs.py)
+	* added test_complete case to emacs_test.py
+	
+2006-11-03 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Improvements in ironpython handling.
+	* Detection of ironpython explicit on sys.version instead of relying on presense of ctypes
+	* Lots of fixes to take care of peculiaritis of System.Console in .NET it does not have 
+	  the full windows console functionality. Fill a rectangle is missing, writing without 
+	  affecting cursor is missing, altgr keys show up as alt+ctrl so had to blank alt+ctrl in
+	  keyboard event checking, endoffile signal to from readline is not using EOFError in ironpython
+	  rather returning None
+	* Set selectioncolor by looking at foregroundcolor at startup
+	* open in ironpython does not ignore unknown letters in mode silently, hade "rt" in history open
+	* Have to print prompt in ironpython since ironpythons readline looks at sys.ps1 and print it instead
+	  of passing it into readline explicitly.
+	* Fixed another bug in historysearch
+	
 2006-10-25 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* port set_text_color and set_prompt_color config file options from trunk
 	* Fix bug in history search and add tests for the case.

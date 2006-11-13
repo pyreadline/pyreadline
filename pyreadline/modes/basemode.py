@@ -8,7 +8,7 @@
 #*****************************************************************************
 import os,re,math,glob,sys
 import pyreadline.logger as logger
-from   pyreadline.logger import log
+from   pyreadline.logger import log,log_sock
 from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
@@ -186,8 +186,9 @@ class BaseMode(object):
         if completions:
             cprefix = commonprefix(completions)
             rep = [ c for c in cprefix ]
+            point=self.l_buffer.point
             self.l_buffer[self.begidx:self.endidx] = rep
-            self.l_buffer.point += len(rep) - (self.endidx - self.begidx)
+            self.l_buffer.point = point + len(rep) - (self.endidx - self.begidx)
             if len(completions) > 1:
                 if self.show_all_if_ambiguous == 'on':
                     self._display_completions(completions)

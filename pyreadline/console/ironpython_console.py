@@ -22,16 +22,13 @@
 #
 #
 #
-
-
 # primitive debug printing that won't interfere with the screen
 
-import clr
-clr.AddReference("ipy.exe")
+import clr,sys
+clr.AddReferenceToFileAndPath(sys.executable)
 import IronPythonConsole
 
 import sys
-import traceback
 import re
 import os
 
@@ -401,14 +398,6 @@ def install_readline(hook):
     IronPythonConsole.PythonCommandLine.MyConsole = IronPythonWrapper()
 
 
-def getconsole(buffer=1):
-        """Get a console handle.
-
-        If buffer is non-zero, a new console buffer is allocated and
-        installed.  Otherwise, this returns a handle to the current
-        console buffer"""
-        c = Console(buffer)
-        return c
 
 if __name__ == '__main__':
     import time, sys

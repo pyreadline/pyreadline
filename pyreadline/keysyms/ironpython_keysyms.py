@@ -8,7 +8,7 @@
 #*****************************************************************************
 import System
 from common import validkey,KeyPress,make_KeyPress_from_keydescr
-from pyreadline.logger import log_sock
+#from pyreadline.logger import log_sock
 c32=System.ConsoleKey
 Shift=System.ConsoleModifiers.Shift
 Control=System.ConsoleModifiers.Control
@@ -196,7 +196,7 @@ def make_KeyPress(char,state,keycode):
     control=bool(int(state)&int(Control))
     meta=bool(int(state)&int(Alt))
     keyname=code2sym_map.get(keycode,"").lower()
-    log_sock("make key %s %s %s %s"%(shift,control,meta,keycode),"keysyms")
+#    log_sock("make key %s %s %s %s"%(shift,control,meta,keycode),"keysyms")
     if control and meta: #equivalent to altgr so clear flags
         control=False
         meta=False    

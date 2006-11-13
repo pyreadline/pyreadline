@@ -62,7 +62,7 @@ class EmacsMode(basemode.BaseMode):
             dispatch_func = self.key_dispatch.get(keyinfo,default)
             
             log("readline from keyboard:%s,%s"%(keyinfo,dispatch_func))
-            log_sock("%s|%s"%(format(keyinfo),dispatch_func.__name__))
+            log_sock("%s|%s"%(format(keyinfo),dispatch_func.__name__),"bound_function")
             r = None
             if dispatch_func:
                 r = dispatch_func(event)
@@ -119,7 +119,10 @@ class EmacsMode(basemode.BaseMode):
         self.add_history(self.l_buffer.copy())
 
         log('returning(%s)' % self.l_buffer.get_line_text())
-        return self.l_buffer.get_line_text() + '\n'
+        if in_ironpython:
+            return self.l_buffer.get_line_text()
+        else:
+            return self.l_buffer.get_line_text() + '\n'
 
 #########  History commands
     def previous_history(self, e): # (C-p)

@@ -142,7 +142,7 @@ class LineHistory(object):
             pyreadline.rl._clear_after()
 
             event = c.getkeypress()
-            log_sock(str(event))
+            log_sock(str(event),"history")
             
             if event.keyinfo.keyname == 'backspace':
                 if len(query) > 0:
@@ -155,7 +155,7 @@ class LineHistory(object):
                 break
             else:
                 pyreadline.rl._bell()
-        log_sock(query)
+        log_sock(query,"history")
         res=""
         if query:
             if direction==-1:
@@ -163,7 +163,7 @@ class LineHistory(object):
                 
             else:
                 res=self.forward_search_history(query)
-            log_sock(res)
+            log_sock(res,"history")
         return lineobj.ReadLineTextBuffer(res,point=0)
         
     def non_incremental_reverse_search_history(self,current): # (M-p)
@@ -184,7 +184,7 @@ class LineHistory(object):
                     self.lastcommand != self.history_search_backward):
                 self.query = ''.join(partial[0:partial.point].get_line_text())
             hcstart=max(self.history_cursor,0) 
-            log_sock("hcstart %s"%hcstart)
+            log_sock("hcstart %s"%hcstart,"history")
             hc = self.history_cursor + direction
             while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
                 h = self.history[hc]
@@ -209,7 +209,7 @@ class LineHistory(object):
                     return lineobj.ReadLineTextBuffer(partial,point=partial.point)
                 return lineobj.ReadLineTextBuffer(self.query,point=min(len(self.query),partial.point))
         except IndexError:
-            log_sock("hcstart:%s %s"%(hcstart,len(self.history)))
+            log_sock("hcstart:%s %s"%(hcstart,len(self.history)),"history")
             raise
 
     def history_search_forward(self,partial): # ()

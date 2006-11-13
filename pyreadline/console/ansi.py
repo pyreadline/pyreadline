@@ -1,6 +1,5 @@
 # -*- coding: ISO-8859-1 -*-
-import re,sys,os,pprint
-pprint=pprint.pprint
+import re,sys,os
 
 terminal_escape = re.compile('(\001?\033\\[[0-9;]*m\002?)')
 escape_parts = re.compile('\001?\033\\[([0-9;]*)m\002?')
@@ -153,7 +152,9 @@ def write_color_old( text, attr=None):
 #trtable={0:"black",1:"red",2:"green",3:"yellow",4:"blue",5:"magenta",6:"cyan",7:"white"}
 
 if __name__=="__main__":
-    import startup
+    import pprint
+    pprint=pprint.pprint
+
     s="\033[0;31mred\033[0;32mgreen\033[0;33myellow\033[0;34mblue\033[0;35mmagenta\033[0;36mcyan\033[0;37mwhite\033[0m"
     pprint (write_color(s))    
     pprint (write_color_old(s))

@@ -15,6 +15,11 @@ from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
 
 from common import *
+from pyreadline.logger import log_sock
+import pyreadline.logger as logger
+logger.sock_silent=True
+logger.show_event=["debug"]
+
 #----------------------------------------------------------------------
 
 
@@ -28,6 +33,8 @@ class EmacsModeTest (EmacsMode):
         self.completer = self.mock_completer
         self.completer_delims = ' '
         self.tabstop = 4
+        self.mark_directories=False
+        self.show_all_if_ambiguous=False
         
     def get_mock_console (self):
         return self.mock_console
@@ -53,9 +60,8 @@ class EmacsModeTest (EmacsMode):
             keyinfo, event = keytext_to_keyinfo_and_event (key)
             dispatch_func = self.key_dispatch.get(keyinfo.tuple(),self.self_insert)
             self.tested_commands[dispatch_func.__name__]=dispatch_func
-#            print key,dispatch_func.__name__
+            log_sock("keydisp: %s %s"%( key,dispatch_func.__name__),"debug")
             dispatch_func (event)
-            log_sock("emacs readline from keyboard:%s->%s"%(keyinfo.tuple(),dispatch_func))
             self.previous_func=dispatch_func
 
     def accept_line (self, e):
@@ -317,8 +323,33 @@ class TestsHistory (unittest.TestCase):
         r.input ('Up')
         self.assert_line(r,'k',1)
 
+    def test_complete (self):
+        import rlcompleter
+        logger.sock_silent=False
 
+        log_sock("-"*50,"debug")
+        r=EmacsModeTest()
+        r.completer=rlcompleter.Completer().complete
+        r._bind_key("tab",r.complete)
+        r.input('"exi(ksdjksjd)"')
+        r.input('Control-a')
+        r.input('Right')
+        r.input('Right')
+        r.input('Right')
+        r.input('Tab')
+        self.assert_line(r,"exit(ksdjksjd)",4)
 
+        r.input('Escape')
+        r.input('"exi"')
+        r.input('Control-a')
+        r.input('Right')
+        r.input('Right')
+        r.input('Right')
+        r.input('Tab')
+        self.assert_line(r,"exit",4)
+
+        
+        
     def assert_line(self,r,line,cursor):
         self.assertEqual (r.line, line)
         self.assertEqual (r.line_cursor, cursor)
@@ -332,9 +363,9 @@ if __name__ == '__main__':
     Tester()
     tested=EmacsModeTest.tested_commands.keys()    
     tested.sort()
-    print " Tested functions ".center(60,"-")
-    print "\n".join(tested)
-    print
+#    print " Tested functions ".center(60,"-")
+#    print "\n".join(tested)
+#    print
     
     all_funcs=dict([(x.__name__,x) for x in EmacsModeTest().key_dispatch.values()])
     all_funcs=all_funcs.keys()
