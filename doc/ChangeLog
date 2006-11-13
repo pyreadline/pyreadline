@@ -1,9 +1,10 @@
-2006-11-06 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+2006-11-13 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fixed bug in tab completion when point is not at end of line
 	* Changed clr.AddReference to clr.AddReferenceToFileAndPath (ironpython_console)
 	* Fix points position after tab completion
 	* Fix for difference in handling of multiline input between cpython and ironpython (emacs.py)
 	* added test_complete case to emacs_test.py
+	* Ported changes to configuration/startup from trunk
 	
 2006-11-03 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Improvements in ironpython handling.
