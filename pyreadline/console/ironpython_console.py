@@ -388,9 +388,20 @@ def make_event_from_keydescr(keydescr):
 CTRL_C_EVENT=make_event_from_keydescr("Control-c")
 
 def install_readline(hook):
+    def hook_wrap():
+        try:
+            res=hook()
+        except KeyboardInterrupt,x:   #this exception does not seem to be caught
+            res=""
+        except EOFError:
+            return None
+        if res[-1:]=="\n":
+            return res[:-1]
+        else:
+            return res
     class IronPythonWrapper(IronPythonConsole.IConsole):
         def ReadLine(self,autoIndentSize): 
-            return hook()
+            return hook_wrap()
         def Write(self,text, style):
             System.Console.Write(text)
         def WriteLine(self,text, style): 

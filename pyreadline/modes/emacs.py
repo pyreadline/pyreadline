@@ -107,22 +107,13 @@ class EmacsMode(basemode.BaseMode):
             self.paste_line_buffer=self.paste_line_buffer[1:]
             c.write('\r\n')
         else:
-            try:
-                self._readline_from_keyboard()
-            except EOFError:
-                if in_ironpython:
-                    return None
-                else:
-                    raise
+            self._readline_from_keyboard()
             c.write('\r\n')
 
         self.add_history(self.l_buffer.copy())
 
         log('returning(%s)' % self.l_buffer.get_line_text())
-        if in_ironpython:
-            return self.l_buffer.get_line_text()
-        else:
-            return self.l_buffer.get_line_text() + '\n'
+        return self.l_buffer.get_line_text() + '\n'
 
 #########  History commands
     def previous_history(self, e): # (C-p)

@@ -1,6 +1,10 @@
 2006-11-15 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
-	* Rearranging pyreadlineconfig.ini
+	* moved ironpython specifics from emacs.py->readline to a hook_wrapper
+	  just as in the hookwrapper for the normal console.
 
+2006-11-15 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Rearranging pyreadlineconfig.ini
+	
 2006-11-13 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fixed bug in tab completion when point is not at end of line
 	* Changed clr.AddReference to clr.AddReferenceToFileAndPath (ironpython_console)
