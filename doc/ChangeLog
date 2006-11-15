@@ -1,3 +1,6 @@
+2006-11-15 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Rearranging pyreadlineconfig.ini
+
 2006-11-13 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fixed bug in tab completion when point is not at end of line
 	* Changed clr.AddReference to clr.AddReferenceToFileAndPath (ironpython_console)
