@@ -21,7 +21,7 @@ import release
 
 from modes import editingmodes
 
-in_ironpython=sys.version.startswith("IronPython")
+in_ironpython="IronPython" in sys.version
 if in_ironpython:#ironpython does not provide a prompt string to readline
     import System    
     default_prompt=">>> "
@@ -54,6 +54,7 @@ class Readline(object):
         self.first_prompt = True
         self.next_meta = False # True to force meta on next character
         self.tabstop = 4
+        self.allow_ctrl_c=False
 
         self.begidx = 0
         self.endidx = 0
@@ -85,7 +86,6 @@ class Readline(object):
         self.enable_win32_clipboard=True
 
         self.paste_line_buffer=[]
-
 
     #Below is for refactoring, raise errors when using old style attributes 
     #that should be refactored out
@@ -353,7 +353,9 @@ class Readline(object):
             self.bell_style=mode
         def sethistorylength(length):
             self._history.history_length=int(length)
-            
+        def allow_ctrl_c(mode):
+            log_sock("allow_ctrl_c:%s:%s"%(self.allow_ctrl_c,mode))
+            self.allow_ctrl_c=mode
         def setbellstyle(mode):
             self.bell_style=mode
         def show_all_if_ambiguous(mode):
@@ -393,6 +395,7 @@ class Readline(object):
              "history_length":sethistorylength,
              "set_prompt_color":set_prompt_color,
              "set_input_color":set_input_color,
+             "allow_ctrl_c":allow_ctrl_c,
              }
         if os.path.isfile(inputrcpath): 
             try:

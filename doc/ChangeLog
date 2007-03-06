@@ -1,3 +1,9 @@
+2007-03-06 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Changed tests for ironpython
+	* Added possibility to bind ctrl-c to a function
+	* Refactor clipboard handling
+	* Restructured example config file
+	
 2006-11-15 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* moved ironpython specifics from emacs.py->readline to a hook_wrapper
 	  just as in the hookwrapper for the normal console.

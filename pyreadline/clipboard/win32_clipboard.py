@@ -14,7 +14,6 @@
 #
 #
 
-
 ###################################################################################
 #
 # The Python win32clipboard lib functions work well enough ... except that they

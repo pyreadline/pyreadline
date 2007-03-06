@@ -1,14 +1,14 @@
 import sys
 
 success=False
-in_ironpython=sys.version.startswith("IronPython")
+in_ironpython="IronPython" in sys.version
 
 if in_ironpython:
     try:
         from ironpython_keysyms import *
         success=True
     except ImportError,x:
-        pass
+        raise
 else:
     try:
         from keysyms import *

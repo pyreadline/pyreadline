@@ -14,7 +14,7 @@ import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
 from pyreadline.error import ReadlineError,GetSetError
-in_ironpython=sys.version.startswith("IronPython")
+in_ironpython="IronPython" in sys.version
 
 class BaseMode(object):
     mode="base"
@@ -48,6 +48,7 @@ class BaseMode(object):
         return val
     argument_reset=property(_argreset)
         
+    allow_ctrl_c=property(*_gs("allow_ctrl_c"))
     l_buffer=property(*_gs("l_buffer"))
     next_meta=property(*_gs("next_meta"))
     first_prompt=property(*_gs("first_prompt"))

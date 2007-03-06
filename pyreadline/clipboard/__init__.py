@@ -1,7 +1,6 @@
 import sys
 success=False
-in_ironpython=sys.version.startswith("IronPython")
-
+in_ironpython="IronPython" in sys.version
 if in_ironpython:
     try:
         from ironpython_clipboard import GetClipboardText,SetClipboardText
@@ -10,14 +9,11 @@ if in_ironpython:
         pass
 else:
     try:
-        from clipboard import GetClipboardText,SetClipboardText
+        from win32_clipboard import GetClipboardText,SetClipboardText
         success=True
     except ImportError:
-        pass    
+        raise    
     
-    
-    
-
 
 def send_data(lists):
     SetClipboardText(make_tab(lists))

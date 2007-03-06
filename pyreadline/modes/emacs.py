@@ -21,7 +21,7 @@ def format(keyinfo):
         k=keyinfo+(ord(keyinfo[-1]),)
     
     return "(%s,%s,%s,%s,%x)"%k
-in_ironpython=sys.version.startswith("IronPython")
+in_ironpython="IronPython" in sys.version
 
 
 class EmacsMode(basemode.BaseMode):
@@ -44,7 +44,19 @@ class EmacsMode(basemode.BaseMode):
             pass
         while 1:
             self._update_line()
-            event = c.getkeypress()
+            try:
+                event = c.getkeypress()
+            except KeyboardInterrupt:
+                from pyreadline.keysyms.common import KeyPress
+                from pyreadline.console.event import Event
+                event=Event(0,0)
+                event.char="c"
+                event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
+                log_sock("KBDIRQ")
+                if self.allow_ctrl_c:
+                    pass
+                else:
+                    raise
             if self.next_meta:
                 self.next_meta = False
                 control, meta, shift, code = event.keyinfo

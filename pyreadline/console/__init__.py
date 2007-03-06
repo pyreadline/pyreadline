@@ -1,7 +1,7 @@
 import glob,sys
 
 success=False
-in_ironpython=sys.version.startswith("IronPython")
+in_ironpython="IronPython" in sys.version
 
 if in_ironpython:
     try:
