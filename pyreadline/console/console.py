@@ -19,7 +19,6 @@ import re
 from pyreadline.logger import log,log_sock
 
 try:
-    # I developed this with ctypes 0.6
     from ctypes import *
     from _ctypes import call_function
 except ImportError:
@@ -115,6 +114,13 @@ class INPUT_RECORD(Structure):
 class CONSOLE_CURSOR_INFO(Structure):
     _fields_ = [("dwSize", c_int),
                 ("bVisible", c_byte)]
+
+consolecodepage=sys.stdout.encoding
+def ensure_text(text):
+    """helper to ensure that text passed to WriteConsoleA is ascii"""
+    if isinstance(text, unicode):
+        return text.encode(consolecodepage,"replace")
+    return text
 
 # I didn't want to have to individually import these so I made a list, they are
 # added to the Console class later in this file.
@@ -347,7 +353,7 @@ class Console(object):
             if attr is None:
                 attr = self.attr
             self.SetConsoleTextAttribute(self.hout, attr)
-            self.WriteConsoleA(self.hout, chunk, len(chunk), byref(junk), None)
+            self.WriteConsoleA(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
         return n
 
     def write_color(self, text, attr=None):
@@ -357,7 +363,7 @@ class Console(object):
             log(str(attr))
             log(str(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)
-            self.WriteConsoleA(self.hout, chunk, len(chunk), byref(junk), None)
+            self.WriteConsoleA(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
         return n
 
 
@@ -368,7 +374,7 @@ class Console(object):
             attr = self.attr
         n = c_int(0)
         self.SetConsoleTextAttribute(self.hout, attr)
-        self.WriteConsoleA(self.hout, text, len(text), byref(n), None)
+        self.WriteConsoleA(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
         return len(text)
 
     # make this class look like a file object

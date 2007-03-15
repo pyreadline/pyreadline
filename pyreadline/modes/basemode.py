@@ -58,6 +58,8 @@ class BaseMode(object):
     show_all_if_ambiguous=property(*_gs("show_all_if_ambiguous"))
     mark_directories=property(*_gs("mark_directories"))
     completer=property(*_gs("completer"))
+    begidx=property(*_gs("begidx"))
+    endidx=property(*_gs("endidx"))
     
     console=property(_g("console"))
     insert_text=property(_g("insert_text"))
