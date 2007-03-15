@@ -1,3 +1,7 @@
+2007-03-15 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fix buggy get_begidx, get_endidx
+	* Fix to ensure unicode strings can print something using the write_x methods on Console.
+
 2007-03-06 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Changed tests for ironpython
 	* Added possibility to bind ctrl-c to a function
