@@ -11,6 +11,7 @@ from rlmain import *
 __all__ = [ 'parse_and_bind',
             'get_line_buffer',
             'insert_text',
+            'clear_history',
             'read_init_file',
             'read_history_file',
             'write_history_file',

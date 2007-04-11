@@ -53,6 +53,11 @@ class LineHistory(object):
     history_length=property(get_history_length,set_history_length)
     history_cursor=property(get_history_cursor,set_history_cursor)
 
+   def clear_history(self):
+       '''Clear readline history.'''
+       self.history[:] = []
+       self.history_cursor = 0
+
     def read_history_file(self, filename=None): 
         '''Load a readline history file.'''
         if filename is None:

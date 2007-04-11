@@ -170,6 +170,10 @@ class Readline(object):
         '''
         self._history.set_history_length(length)
 
+   def clear_history(self):
+       '''Clear readline history'''
+       self._history.clear_history()
+
     def read_history_file(self, filename=None): 
         '''Load a readline history file. The default filename is ~/.history.'''
         self._history.read_history_file(filename)
@@ -433,6 +437,7 @@ read_init_file = rl.read_init_file
 add_history = rl.add_history
 get_history_length = rl.get_history_length
 set_history_length = rl.set_history_length
+clear_history = rl.clear_history
 read_history_file = rl.read_history_file
 write_history_file = rl.write_history_file
 set_completer = rl.set_completer
