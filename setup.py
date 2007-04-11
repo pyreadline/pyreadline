@@ -8,9 +8,21 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
+import os
 import glob
+
+# BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
+# update it when the contents of directories change.
+if os.path.exists('MANIFEST'): os.remove('MANIFEST')
+#
+
 from distutils.core import setup
 execfile('pyreadline/release.py')
+
+packages = ['pyreadline','pyreadline.clipboard','pyreadline.configuration',
+            'pyreadline.console','pyreadline.keysyms','pyreadline.lineeditor',
+            'pyreadline.modes','pyreadline.test',
+            ]
 
 setup(name=name,
       version          = version,
@@ -27,7 +39,7 @@ setup(name=name,
       platforms        = platforms,
       keywords         = keywords,
       py_modules       = ['readline'],
-      packages         = ['pyreadline'],
+      packages         = packages,
       package_data     = {'pyreadline':['configuration/*']},
       data_files       = [('share/doc/pyreadline', glob.glob("doc/*")),
                          ]

@@ -22,7 +22,7 @@ name = 'pyreadline'
 
 branch = 'refactor'
 
-version = '1.4.svn'
+version = '1.4'
 
 revision = '$Revision$'
 
