@@ -1,3 +1,12 @@
+2007-04-14 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Changing binding for control-delete to forward_delete_word, adding tests to verify binding
+	
+
+2007-04-11 
+	* In revisions 2237-2239
+	* Fix to setup.py for new package structure
+	* add clear_history all the way to top_level. Patch provided by Aldarion
+
 2007-03-15 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fix buggy get_begidx, get_endidx
 	* Fix to ensure unicode strings can print something using the write_x methods on Console.

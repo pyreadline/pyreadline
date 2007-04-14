@@ -569,7 +569,7 @@ class EmacsMode(basemode.BaseMode):
         self._bind_key('Control-_',         self.undo)
         self._bind_key('Escape',            self.kill_whole_line)
         self._bind_key('Meta-d',            self.kill_word)
-        self._bind_key('Control-Delete',       self.backward_kill_word)
+        self._bind_key('Control-Delete',       self.forward_delete_word)
         self._bind_key('Control-w',         self.unix_word_rubout)
         #self._bind_key('Control-Shift-v',   self.quoted_insert)
         self._bind_key('Control-v',         self.paste)

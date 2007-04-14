@@ -174,8 +174,7 @@ class TestsDelete (unittest.TestCase):
         r.input('Escape')
         self.assertEqual (r.line, '')
         self.assertEqual (r.line_cursor, 0)
-
-
+        
     def test_delete_word (self):
         r = EmacsModeTest ()
         self.assertEqual (r.line, '')
@@ -196,7 +195,27 @@ class TestsDelete (unittest.TestCase):
         r.input('Escape')
         self.assertEqual (r.line, '')
         self.assertEqual (r.line_cursor, 0)
-    
+        r.input('"First Second Third"')
+        r.input('Home')
+        r.input('Right')
+        r.input('Right')
+        r.input('Control-Delete')
+        self.assertEqual (r.line, 'FiSecond Third')
+        self.assertEqual (r.line_cursor, 2)
+        r.input('Control-Delete')
+        self.assertEqual (r.line, 'FiThird')
+        self.assertEqual (r.line_cursor, 2)
+        r.input('Control-Delete')
+        self.assertEqual (r.line, 'Fi')
+        self.assertEqual (r.line_cursor, 2)
+        r.input('Control-Delete')
+        self.assertEqual (r.line, 'Fi')
+        self.assertEqual (r.line_cursor, 2)
+        r.input('Escape')
+        self.assertEqual (r.line, '')
+        self.assertEqual (r.line_cursor, 0)
+
+
 
 class TestsSelectionMovement (unittest.TestCase):
     def test_cursor (self):
