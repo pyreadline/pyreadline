@@ -115,7 +115,13 @@ class CONSOLE_CURSOR_INFO(Structure):
     _fields_ = [("dwSize", c_int),
                 ("bVisible", c_byte)]
 
-consolecodepage=sys.stdout.encoding
+
+try:
+    consolecodepage=sys.stdout.encoding
+except AttributeError:        #This error occurs when pdb imports readline and doctest has replaced 
+                              #stdout with stdout collector
+    consolecodepage="ascii"   #assume ascii codepage
+    
 def ensure_text(text):
     """helper to ensure that text passed to WriteConsoleA is ascii"""
     if isinstance(text, unicode):
