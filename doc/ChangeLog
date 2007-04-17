@@ -1,3 +1,8 @@
+2007-04-17 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* When allowing to bind ctrl-c we now issue a KeyBoardInterrupt if
+	  control-c is pressed twice within ctrl_c_tap_time_interval which
+	  is defaulted to 0.3 s and can be set from the configfile.
+	
 2007-04-16 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* doctest imports pdb which imports readline, this means readline
 	  can be imported when a dummy object has replaced stdout. The dummy 

@@ -55,6 +55,7 @@ class Readline(object):
         self.next_meta = False # True to force meta on next character
         self.tabstop = 4
         self.allow_ctrl_c=False
+        self.ctrl_c_tap_time_interval=0.3
 
         self.begidx = 0
         self.endidx = 0
@@ -327,6 +328,15 @@ class Readline(object):
     def readline(self, prompt=''):
         return self.mode.readline(prompt)
 
+    def event_available(self):
+        return self.mode.readline_event_available()
+
+    def setup(self,prompt=""):
+        return self.mode.readline_setup(prompt)
+
+    def keyboard_poll(self):
+        return self.mode._readline_from_keyboard_poll()
+
 
     def read_inputrc(self,inputrcpath=os.path.expanduser("~/pyreadlineconfig.ini")):
         modes=dict([(x.mode,x) for x in self.editingmodes])
@@ -364,6 +374,8 @@ class Readline(object):
             self.bell_style=mode
         def show_all_if_ambiguous(mode):
             self.show_all_if_ambiguous=mode
+        def ctrl_c_tap_time_interval(mode):
+            self.ctrl_c_tap_time_interval=mode
         def mark_directories(mode):
             self.mark_directories=mode
         def completer_delims(mode):
@@ -400,6 +412,7 @@ class Readline(object):
              "set_prompt_color":set_prompt_color,
              "set_input_color":set_input_color,
              "allow_ctrl_c":allow_ctrl_c,
+             "ctrl_c_tap_time_interval":ctrl_c_tap_time_interval,
              }
         if os.path.isfile(inputrcpath): 
             try:

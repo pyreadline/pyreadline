@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import os,sys
+import os,sys,time
 import pyreadline.logger as logger
 from   pyreadline.logger import log,log_sock
 from pyreadline.lineeditor.lineobj import Point
@@ -54,6 +54,11 @@ class EmacsMode(basemode.BaseMode):
                 event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
                 log_sock("KBDIRQ")
                 if self.allow_ctrl_c:
+                    now=time.time()
+                    if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
+                        raise
+                    else:
+                        self.ctrl_c_timeout=now
                     pass
                 else:
                     raise
@@ -89,6 +94,7 @@ class EmacsMode(basemode.BaseMode):
     def readline(self, prompt=''):
         '''Try to act like GNU readline.'''
         # handle startup_hook
+        self.ctrl_c_timeout=time.time()
         self.l_buffer.selection_mark=-1
         if self.first_prompt:
             self.first_prompt = False

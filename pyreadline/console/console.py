@@ -535,7 +535,8 @@ class Console(object):
         '''Check event queue.'''
         Cevent = INPUT_RECORD()
         count = c_int(0)
-        status = PeekConsoleInput(self.hin, byref(Cevent), 1, byref(count))
+        status = self.PeekConsoleInputA(self.hin, byref(Cevent), 1, byref(count))
+        log_sock("%s %s %s"%(status,count,Cevent))
         if status and count == 1:
             return event(self, Cevent)
 

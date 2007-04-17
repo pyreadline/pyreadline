@@ -48,6 +48,7 @@ class BaseMode(object):
         return val
     argument_reset=property(_argreset)
         
+    ctrl_c_tap_time_interval=property(*_gs("ctrl_c_tap_time_interval"))
     allow_ctrl_c=property(*_gs("allow_ctrl_c"))
     l_buffer=property(*_gs("l_buffer"))
     next_meta=property(*_gs("next_meta"))
