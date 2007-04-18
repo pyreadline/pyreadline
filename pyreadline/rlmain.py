@@ -328,16 +328,6 @@ class Readline(object):
     def readline(self, prompt=''):
         return self.mode.readline(prompt)
 
-    def event_available(self):
-        return self.mode.readline_event_available()
-
-    def setup(self,prompt=""):
-        return self.mode.readline_setup(prompt)
-
-    def keyboard_poll(self):
-        return self.mode._readline_from_keyboard_poll()
-
-
     def read_inputrc(self,inputrcpath=os.path.expanduser("~/pyreadlineconfig.ini")):
         modes=dict([(x.mode,x) for x in self.editingmodes])
         mode=self.editingmodes[0].mode

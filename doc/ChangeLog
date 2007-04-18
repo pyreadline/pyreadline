@@ -1,3 +1,6 @@
+2007-04-18 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Removing some test methods that should not have been comitted at rev 2246
+	
 2007-04-17 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* When allowing to bind ctrl-c we now issue a KeyBoardInterrupt if
 	  control-c is pressed twice within ctrl_c_tap_time_interval which
