@@ -20,7 +20,7 @@ name = 'pyreadline'
 # because bdist_rpm does not accept dashes (an RPM) convention, and
 # bdist_deb does not accept underscores (a Debian convention).
 
-branch = 'refactor'
+branch = ''
 
 version = '1.4.3.rc1'
 
@@ -35,11 +35,16 @@ it is based on the ctypes based UNC readline package by Gary Bishop.
 It is not complete. It has been tested for use with windows 2000 and windows xp.
 
 Features:
- *  Copy and paste using the clipboard
- *  Smart paste for convenient use with ipython. Converting tab separated data 
-    to python list or numpy array. Converting file paths to use / and escaping 
-    any spaces using \\\\ .
- *  Configuration file
+ *  NEW: keyboard text selection and copy/paste
+ *  Shift-arrowkeys for text selection
+ *  Control-c can be used for copy activate with allow_ctrl_c(True) is config file
+ *  Double tapping ctrl-c will raise a KeyboardInterrupt, use ctrl_c_tap_time_interval(x)
+    where x is your preferred tap time window, default 0.3 s.
+ *  paste pastes first line of content on clipboard. 
+ *  ipython_paste, pastes tab-separated data as list of lists or numpy array if all data is numeric
+ *  paste_mulitline_code  pastes multi line code, removing any empty lines.
+ *  Experimental support for ironpython. At this time Ironpython has to be patched for it to work.
+ 
  
  The latest development version is always available at the IPython subversion
  repository_.
@@ -54,7 +59,7 @@ authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@bostream.nu'),
            'Jack':    ('Jack Trainor', ''),         
            }
 
-url = 'http://projects.scipy.org/ipython/ipython/wiki/PyReadline/Intro'
+url = 'http://ipython.scipy.org/moin/PyReadline/Intro'
 
 download_url = ''
 

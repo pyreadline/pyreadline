@@ -305,10 +305,7 @@ class Console(object):
         '''Return next key press event from the queue, ignoring others.'''
         ck=System.ConsoleKey
         while 1:
-            try:
-                e = System.Console.ReadKey(True)
-            except KeyboardInterrupt:
-                return CTRL_C_EVENT    
+            e = System.Console.ReadKey(True)
             if e.Key == System.ConsoleKey.PageDown: #PageDown
                 self.scroll_window(12)
             elif e.Key == System.ConsoleKey.PageUp:#PageUp
