@@ -1,3 +1,12 @@
+2007-05-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fix ticket #153, python2.3 installation problem
+	* Updates to documentation
+
+2007-04-20 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Change in how Ironpython proagates keyboardinterrupts in console. Still
+	  some issues to resolve to get same traceback as for plain ironpython when 
+	  pressing ctrl-c.
+	
 2007-04-18 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Removing some test methods that should not have been comitted at rev 2246
 	

@@ -8,6 +8,13 @@
 #*****************************************************************************
 # table for translating virtual keys to X windows key symbols
 
+try:
+    set
+except NameError:
+    from sets import Set as set
+    
+
+
 validkey =set(['cancel',     'backspace',    'tab',          'clear',
               'return',      'shift_l',      'control_l',    'alt_l',
               'pause',       'caps_lock',    'escape',       'space',
