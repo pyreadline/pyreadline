@@ -365,12 +365,12 @@ class EmacsMode(basemode.BaseMode):
 
     def yank(self, e): # (C-y)
         '''Yank the top of the kill ring into the buffer at point. '''
-        pass
+        self.l_buffer.yank()
 
     def yank_pop(self, e): # (M-y)
         '''Rotate the kill-ring, and yank the new top. You can only do this
         if the prior command is yank or yank-pop.'''
-        pass
+        self.l_buffer.yank_pop()
 
 
     def digit_argument(self, e): # (M-0, M-1, ... M--)
@@ -580,7 +580,7 @@ class EmacsMode(basemode.BaseMode):
         #self._bind_key('Control-Shift-v',   self.quoted_insert)
         self._bind_key('Control-v',         self.paste)
         self._bind_key('Alt-v',             self.ipython_paste)
-        self._bind_key('Control-y',         self.paste)
+        self._bind_key('Control-y',         self.yank)
         self._bind_key('Control-k',         self.kill_line)
         self._bind_key('Control-m',         self.set_mark)
         self._bind_key('Control-q',         self.copy_region_to_clipboard)

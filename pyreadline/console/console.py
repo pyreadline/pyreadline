@@ -507,9 +507,9 @@ class Console(object):
             e = self.get()
             if e.type == 'KeyPress' and e.keycode not in key_modifiers:
                 log(e)
-                if e.keysym == 'Next':
+                if e.keyinfo.keyname == 'next':
                     self.scroll_window(12)
-                elif e.keysym == 'Prior':
+                elif e.keyinfo.keyname == 'prior':
                     self.scroll_window(-12)
                 else:
                     return e

@@ -1,4 +1,8 @@
 2007-05-14 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fixing pageup pagedown scrolling of window
+	* Begining work on killring. ctrl-k ctrl-y will not use clipboard anymore
+
+2007-05-14 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* pre_inputhook and startup_hook were not functioning properly.
 
 2007-05-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>

@@ -392,7 +392,7 @@ class ReadLineTextBuffer(TextLine):
         self.enable_win32_clipboard=True
         self.selection_mark=-1
         self.enable_selection=True
-
+        self.kill_ring=[]
     def __repr__(self):
         return 'ReadLineTextBuffer("%s",point=%s,mark=%s,selection_mark=%s)'%(self.line_buffer,self.point,self.mark,self.selection_mark)
 
@@ -634,15 +634,17 @@ class ReadLineTextBuffer(TextLine):
 ############ Kill
 
     def kill_line(self):
-        self[self.point:].to_clipboard()
+        #self[self.point:].to_clipboard()
+        self.add_to_kill_ring(self[self.point:])
         del self.line_buffer[self.point:]
     
     def kill_whole_line(self):
-        self[:].to_clipboard()
+        #self[:].to_clipboard()
+        self.add_to_kill_ring(self[:])
         del self[:]
     
     def backward_kill_line(self):
-        self[StartOfLine:Point].to_clipboard()
+        #self[StartOfLine:Point].to_clipboard()
         del self[StartOfLine:Point]
         
     def unix_line_discard(self):
@@ -651,25 +653,24 @@ class ReadLineTextBuffer(TextLine):
 
     def kill_word(self):
         """Kills to next word ending"""
-        self[Point:NextWordEnd].to_clipboard()
+        #self[Point:NextWordEnd].to_clipboard()
         del self[Point:NextWordEnd]
 
     def backward_kill_word(self):
         """Kills to next word ending"""
-        self[PrevWordStart:Point].to_clipboard()
+        #self[PrevWordStart:Point].to_clipboard()
         if not self.delete_selection():
             del self[PrevWordStart:Point]
         self.selection_mark=-1
 
     def forward_kill_word(self):
         """Kills to next word ending"""
-        self[Point:NextWordEnd].to_clipboard()
+        #self[Point:NextWordEnd].to_clipboard()
         if not self.delete_selection():
             del self[Point:NextWordEnd]
         self.selection_mark=-1
 
     def unix_word_rubout(self):
-        self[PrevSpace:Point].to_clipboard()
         if not self.delete_selection():
             del self[PrevSpace:Point]
         self.selection_mark=-1
@@ -688,11 +689,10 @@ class ReadLineTextBuffer(TextLine):
         
 
     def yank(self):
-        pass
+        self.paste_from_kill_ring()
 
     def yank_pop(self):
         pass
-
 
 ##############  Mark 
 
@@ -732,6 +732,16 @@ class ReadLineTextBuffer(TextLine):
         self.copy_selection_to_clipboard()
         self.delete_selection()
 ##############  Paste
+
+
+############## Kill ring
+    def add_to_kill_ring(self,txt):
+        self.kill_ring=[txt]
+        
+
+    def paste_from_kill_ring(self):
+        if self.kill_ring:
+            self.insert_text(self.kill_ring[0])
 
 
 ##################################################################
