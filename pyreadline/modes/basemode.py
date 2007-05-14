@@ -22,8 +22,6 @@ class BaseMode(object):
         self.rlobj=rlobj
         self.exit_dispatch = {}
         self.key_dispatch = {}
-        self.startup_hook=None
-        self.pre_input_hook=None
         self.argument=1
         self.prevargument=None
         
@@ -60,6 +58,8 @@ class BaseMode(object):
     mark_directories=property(*_gs("mark_directories"))
     completer=property(*_gs("completer"))
     begidx=property(*_gs("begidx"))
+    startup_hook=property(*_gs("startup_hook"))
+    pre_input_hook=property(*_gs("pre_input_hook"))
     endidx=property(*_gs("endidx"))
     
     console=property(_g("console"))

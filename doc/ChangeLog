@@ -1,3 +1,6 @@
+2007-05-14 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* pre_inputhook and startup_hook were not functioning properly.
+
 2007-05-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fix ticket #153, python2.3 installation problem
 	* Updates to documentation
