@@ -166,29 +166,27 @@ The pyreadline package now supports international characters. However using inte
 
 \section{Known issues}
   \begin{itemize}
-	  \item Ctrl-s can not be used as a bound key. It seems ctrl-s does not generate key-up events in the console. This is an issue with cygwin as well.
-	  \item No vi mode is implemented
+    \item If you do not want pyreadline at the standard windows prompt. Delete readline.py
+    from the install directory. This will not interfere with ipython usage, but you will
+    not be able to use the rlcompleter module which requires the readline.py module.
   \end{itemize}
 
 
 \section{Future work}
 \subsection{Near term}
   \begin{itemize}
-	  \item install scripts for easyinstall and distutils
 	  \item Manual
   \end{itemize}
 
 \subsection{Middle term}
   \begin{itemize}
-	  \item Refactor code
 	  \item Add missing functionality
-	  \item Make console layer pluggable to allow more platforms
   \end{itemize}
 
 \subsection{Long term}
   \begin{itemize}
 	  \item Add more platforms
-	  \item Add vi mode
+	  \item Improve vi mode
   \end{itemize}
 
 
