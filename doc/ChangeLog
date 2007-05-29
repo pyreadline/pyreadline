@@ -1,4 +1,8 @@
 2007-05-24 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fixing bug in copy_selection_to_clipboard. Didn't work
+	  when selection started at beginning of line
+
+2007-05-24 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Additions to manual
 
 2007-05-14 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>

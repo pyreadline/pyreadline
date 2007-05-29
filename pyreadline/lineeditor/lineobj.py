@@ -717,7 +717,7 @@ class ReadLineTextBuffer(TextLine):
 
     def copy_selection_to_clipboard(self): # ()
         '''Copy the text in the region to the windows clipboard.'''
-        if self.enable_win32_clipboard and self.enable_selection and self.selection_mark>0:
+        if self.enable_win32_clipboard and self.enable_selection and self.selection_mark>=0:
                 selection_mark=min(self.selection_mark,len(self.line_buffer))
                 cursor=min(self.point,len(self.line_buffer))
                 if self.selection_mark==-1:
