@@ -1,4 +1,8 @@
-2007-05-24 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+2007-05-29 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Increasing version number to 1.4.4
+	* Fixing typo in changelog
+	
+2007-05-29 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fixing bug in copy_selection_to_clipboard. Didn't work
 	  when selection started at beginning of line
 
