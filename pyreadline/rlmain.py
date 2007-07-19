@@ -133,7 +133,8 @@ class Readline(object):
                     func = getattr(self.mode, py_name)
                 except AttributeError:
                     log('unknown func key="%s" func="%s"' % (key, func_name))
-                    print 'unknown function to bind: "%s"' % func_name
+                    print 'pyeadline parse_and_bind error, unknown function to bind: "%s"' % func_name
+                    return
                 self.mode._bind_key(key, func)
         except:
             log('error')

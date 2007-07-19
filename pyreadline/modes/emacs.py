@@ -44,6 +44,8 @@ class EmacsMode(basemode.BaseMode):
             pass
         while 1:
             self._update_line()
+            lbuf=self.l_buffer
+            log_sock("point:%s mark:%s selection_mark:%s"%(lbuf.point,lbuf.mark,lbuf.selection_mark))
             try:
                 event = c.getkeypress()
             except KeyboardInterrupt:

@@ -1,3 +1,8 @@
+2007-07-19 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fix bug that made copying fail in some cases 
+	* Fix bug in parse_and_bind, reported by Michael Graz.
+	* Change version string to 1.5.svn
+	
 2007-05-29 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Increasing version number to 1.4.4
 	* Fixing typo in changelog
