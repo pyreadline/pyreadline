@@ -64,7 +64,7 @@ class LineHistory(object):
             filename=self.history_filename
         try:
             for line in open(filename, 'r'):
-                self.add_history(lineobj.ReadLineTextBuffer(line.rstrip()))
+                self.add_history(lineobj.ReadLineTextBuffer(line.rstrip().decode("utf8")))
         except IOError:
             self.history = []
             self.history_cursor = 0
@@ -75,7 +75,7 @@ class LineHistory(object):
             filename=self.history_filename
         fp = open(filename, 'wb')
         for line in self.history[-self.history_length:]:
-            fp.write(line.get_line_text())
+            fp.write(line.get_line_text().encode("utf8"))
             fp.write('\n')
         fp.close()
 

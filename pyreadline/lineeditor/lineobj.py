@@ -235,7 +235,8 @@ class TextLine(object):
 
     def visible_line_width(self,position=Point):
         """Return the visible width of the text in line buffer up to position."""
-        return len(self[:position].quoted_text())+self[:position].line_buffer.count("\t")*7
+        extra_char_width = len([ None for c in self[:position].line_buffer if 0x2013 <= ord(c) <= 0xFFFD])
+        return len(self[:position].quoted_text())+self[:position].line_buffer.count("\t")*7 + extra_char_width
 
     def quoted_text(self):
         quoted = [ quote_char(c) for c in self.line_buffer ]

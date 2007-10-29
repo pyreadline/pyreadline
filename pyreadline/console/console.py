@@ -68,7 +68,7 @@ class CONSOLE_SCREEN_BUFFER_INFO(Structure):
                 ("dwMaximumWindowSize", COORD)]
 
 class CHAR_UNION(Union):
-    _fields_ = [("UnicodeChar", c_short),
+    _fields_ = [("UnicodeChar", c_wchar),
                 ("AsciiChar", c_char)]
 
 class CHAR_INFO(Structure):
@@ -124,8 +124,8 @@ except AttributeError:        #This error occurs when pdb imports readline and d
     
 def ensure_text(text):
     """helper to ensure that text passed to WriteConsoleA is ascii"""
-    if isinstance(text, unicode):
-        return text.encode(consolecodepage,"replace")
+    if isinstance(text, str):
+        return text.decode(consolecodepage, "replace")
     return text
 
 # I didn't want to have to individually import these so I made a list, they are
@@ -135,27 +135,27 @@ funcs = [
     'AllocConsole',
     'CreateConsoleScreenBuffer',
     'FillConsoleOutputAttribute',
-    'FillConsoleOutputCharacterA',
+    'FillConsoleOutputCharacterW',
     'FreeConsole',
     'GetConsoleCursorInfo',
     'GetConsoleMode',
     'GetConsoleScreenBufferInfo',
-    'GetConsoleTitleA',
+    'GetConsoleTitleW',
     'GetProcAddress',
     'GetStdHandle',
-    'PeekConsoleInputA',
-    'ReadConsoleInputA',
-    'ScrollConsoleScreenBufferA',
+    'PeekConsoleInputW',
+    'ReadConsoleInputW',
+    'ScrollConsoleScreenBufferW',
     'SetConsoleActiveScreenBuffer',
     'SetConsoleCursorInfo',
     'SetConsoleCursorPosition',
     'SetConsoleMode',
     'SetConsoleScreenBufferSize',
     'SetConsoleTextAttribute',
-    'SetConsoleTitleA',
+    'SetConsoleTitleW',
     'SetConsoleWindowInfo',
-    'WriteConsoleA',
-    'WriteConsoleOutputCharacterA',
+    'WriteConsoleW',
+    'WriteConsoleOutputCharacterW',
     ]
 
 # I don't want events for these keys, they are just a bother for my application
@@ -359,17 +359,25 @@ class Console(object):
             if attr is None:
                 attr = self.attr
             self.SetConsoleTextAttribute(self.hout, attr)
-            self.WriteConsoleA(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
+            #self.WriteConsoleW(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
         return n
 
     def write_color(self, text, attr=None):
+        text = ensure_text(text)
         n,res= self.ansiwriter.write_color(text,attr)
         junk = c_int(0)
         for attr,chunk in res:
-            log(str(attr))
-            log(str(chunk))
+            log(unicode(attr))
+            log(unicode(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)
-            self.WriteConsoleA(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
+            x,y = self.pos()
+            x1,y1 = self.size()
+            if y == y1 - 1:
+                self.scroll_window(-1)
+                self.scroll((0,0,x1,y1),0,-1)
+                self.pos(x,y-1)
+            
+            self.WriteConsoleW(self.hout, chunk, len(chunk), byref(junk), None)
         return n
 
 
@@ -380,7 +388,7 @@ class Console(object):
             attr = self.attr
         n = c_int(0)
         self.SetConsoleTextAttribute(self.hout, attr)
-        self.WriteConsoleA(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
+        self.WriteConsoleW(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
         return len(text)
 
     # make this class look like a file object
@@ -411,7 +419,7 @@ class Console(object):
         n = c_int(0)
         for y in range(info.dwSize.Y):
             self.FillConsoleOutputAttribute(self.hout, attr, w, self.fixcoord(0, y), byref(n))
-            self.FillConsoleOutputCharacterA(self.hout, ord(fill[0]), w, self.fixcoord(0, y), byref(n))
+            self.FillConsoleOutputCharacterW(self.hout, ord(fill[0]), w, self.fixcoord(0, y), byref(n))
 
         self.attr = attr
 
@@ -422,7 +430,7 @@ class Console(object):
 
         pos = self.fixcoord(x, y)
         n = c_int(0)
-        self.WriteConsoleOutputCharacterA(self.hout, text, len(text), pos, byref(n))
+        self.WriteConsoleOutputCharacterW(self.hout, text, len(text), pos, byref(n))
         self.FillConsoleOutputAttribute(self.hout, attr, n, pos, byref(n))
 
     def clear_to_end_of_window(self):
@@ -443,7 +451,7 @@ class Console(object):
         for y in range(y0, y1):
             pos = self.fixcoord(x0, y)
             self.FillConsoleOutputAttribute(self.hout, attr, x1-x0, pos, byref(n))
-            self.FillConsoleOutputCharacterA(self.hout, ord(fill[0]), x1-x0, pos, byref(n))
+            self.FillConsoleOutputCharacterW(self.hout, ord(fill[0]), x1-x0, pos, byref(n))
 
     def scroll(self, rect, dx, dy, attr=None, fill=' '):
         '''Scroll a rectangle.'''
@@ -457,7 +465,7 @@ class Console(object):
         style.Char.AsciiChar = fill[0]
         style.Attributes = attr
 
-        return self.ScrollConsoleScreenBufferA(self.hout, byref(source), byref(source),
+        return self.ScrollConsoleScreenBufferW(self.hout, byref(source), byref(source),
                                                                                      dest, byref(style))
 
     def scroll_window(self, lines):
@@ -495,10 +503,10 @@ class Console(object):
         while 1:
             if inputHookFunc:
                 call_function(inputHookFunc, ())
-            status = self.ReadConsoleInputA(self.hin, byref(Cevent), 1, byref(count))
+            status = self.ReadConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
             if status and count.value == 1:
                 e = event(self, Cevent)
-                log_sock(str(e.keyinfo),"keypress")
+                log_sock(unicode(e.keyinfo),"keypress")
                 return e
 
     def getkeypress(self):
@@ -523,7 +531,7 @@ class Console(object):
         Cevent = INPUT_RECORD()
         count = c_int(0)
         while 1:
-            status = self.ReadConsoleInputA(self.hin, byref(Cevent), 1, byref(count))
+            status = self.ReadConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
             if (status and count.value==1 and Cevent.EventType == 1 and
                     Cevent.Event.KeyEvent.bKeyDown):
                 sym = keysym(Cevent.Event.KeyEvent.wVirtualKeyCode)
@@ -535,7 +543,7 @@ class Console(object):
         '''Check event queue.'''
         Cevent = INPUT_RECORD()
         count = c_int(0)
-        status = self.PeekConsoleInputA(self.hin, byref(Cevent), 1, byref(count))
+        status = self.PeekConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
         log_sock("%s %s %s"%(status,count,Cevent))
         if status and count == 1:
             return event(self, Cevent)
@@ -543,10 +551,10 @@ class Console(object):
     def title(self, txt=None):
         '''Set/get title.'''
         if txt:
-            self.SetConsoleTitleA(txt)
+            self.SetConsoleTitleW(txt)
         else:
             buffer = c_buffer(200)
-            n = self.GetConsoleTitleA(buffer, 200)
+            n = self.GetConsoleTitleW(buffer, 200)
             if n > 0:
                 return buffer.value[:n]
 
@@ -615,7 +623,7 @@ class event(Event):
                 self.type = "KeyPress"
             else:
                 self.type = "KeyRelease"
-            self.char = input.Event.KeyEvent.uChar.AsciiChar
+            self.char = input.Event.KeyEvent.uChar.UnicodeChar
             self.keycode = input.Event.KeyEvent.wVirtualKeyCode
             self.state = input.Event.KeyEvent.dwControlKeyState
             self.keyinfo=make_KeyPress(self.char,self.state,self.keycode)
@@ -678,7 +686,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:
         # call the Python hook
-        res = readline_hook(prompt)
+        res = readline_hook(prompt).encode(consolecodepage)
         # make sure it returned the right sort of thing
         if res and not isinstance(res, str):
             raise TypeError, 'readline must return a string.'
@@ -702,7 +710,7 @@ def hook_wrapper(prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:
         # call the Python hook
-        res = readline_hook(prompt)
+        res = readline_hook(prompt).encode(consolecodepage)
         # make sure it returned the right sort of thing
         if res and not isinstance(res, str):
             raise TypeError, 'readline must return a string.'

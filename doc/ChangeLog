@@ -1,3 +1,8 @@
+2007-10-29 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Patch as provided by pan. Changed ensure_text to decode to 
+	  consoles codepage instead of utf8, to ensure proper printing
+	  of tab completion of files/directories with non ascii characters
+	
 2007-07-19 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fix bug that made copying fail in some cases 
 	* Fix bug in parse_and_bind, reported by Michael Graz.
