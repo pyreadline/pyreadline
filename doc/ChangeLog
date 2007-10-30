@@ -1,3 +1,7 @@
+2007-10-30 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Add tests for history buffer. Add ignore_leading_spaces option for 
+	  history searches for forward_search_history, and reverse_search_history.
+	
 2007-10-29 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Patch as provided by pan. Changed ensure_text to decode to 
 	  consoles codepage instead of utf8, to ensure proper printing

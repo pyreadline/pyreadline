@@ -23,6 +23,8 @@ class EscapeHistory(exceptions.Exception):
 
 from pyreadline.logger import log_sock
 
+_ignore_leading_spaces=False
+
 class LineHistory(object):
     def __init__(self):
         self.history=[]
@@ -121,7 +123,11 @@ class LineHistory(object):
     def reverse_search_history(self,searchfor,startpos=None):
         if startpos is None:
             startpos=self.history_cursor
-        res=[(idx,line)  for idx,line in enumerate(self.history[startpos:0:-1]) if line.startswith(searchfor)]
+        if _ignore_leading_spaces:
+            res=[(idx,line.lstrip())  for idx,line in enumerate(self.history[startpos:0:-1]) if line.lstrip().startswith(searchfor.lstrip())]
+            logger.log_sock(res)
+        else:
+            res=[(idx,line)  for idx,line in enumerate(self.history[startpos:0:-1]) if line.startswith(searchfor)]
         if res:
             self.history_cursor-=res[0][0]
             return res[0][1].get_line_text()
@@ -130,7 +136,10 @@ class LineHistory(object):
     def forward_search_history(self,searchfor,startpos=None):
         if startpos is None:
             startpos=self.history_cursor
-        res=[(idx,line) for idx,line in enumerate(self.history[startpos:]) if line.startswith(searchfor)]
+        if _ignore_leading_spaces:
+            res=[(idx,line.lstrip()) for idx,line in enumerate(self.history[startpos:]) if line.lstrip().startswith(searchfor.lstrip())]
+        else:
+            res=[(idx,line) for idx,line in enumerate(self.history[startpos:]) if line.startswith(searchfor)]
         if res:
             self.history_cursor+=res[0][0]
             return res[0][1].get_line_text()
@@ -197,7 +206,7 @@ class LineHistory(object):
                     self.history_cursor = hc
                     result=lineobj.ReadLineTextBuffer(h,point=len(h.get_line_text()))
                     return result
-                elif h.get_line_text().startswith(self.query) and h != partial.get_line_text():
+                elif (h.get_line_text().startswith(self.query) and (h != partial.get_line_text())):
                     self.history_cursor = hc
                     result=lineobj.ReadLineTextBuffer(h,point=partial.point)
                     return result
@@ -232,8 +241,6 @@ class LineHistory(object):
         q= self._search(-1,partial)
         return q
 
-
-        
 if __name__=="__main__":
     q=LineHistory()
     RL=lineobj.ReadLineTextBuffer
