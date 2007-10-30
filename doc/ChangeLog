@@ -1,4 +1,8 @@
 2007-10-30 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fixing console.title to work with wide characters
+	* Fixing wide character bug for log_sock
+	
+2007-10-30 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Add tests for history buffer. Add ignore_leading_spaces option for 
 	  history searches for forward_search_history, and reverse_search_history.
 	

@@ -81,7 +81,7 @@ class EmacsMode(basemode.BaseMode):
             dispatch_func = self.key_dispatch.get(keyinfo,default)
             
             log("readline from keyboard:%s,%s"%(keyinfo,dispatch_func))
-            log_sock("%s|%s"%(format(keyinfo),dispatch_func.__name__),"bound_function")
+            log_sock(("%s|%s"%(format(keyinfo),dispatch_func.__name__)).encode(sys.stdout.encoding),"bound_function")
             r = None
             if dispatch_func:
                 r = dispatch_func(event)

@@ -553,7 +553,7 @@ class Console(object):
         if txt:
             self.SetConsoleTitleW(txt)
         else:
-            buffer = c_buffer(200)
+            buffer = create_unicode_buffer(200)
             n = self.GetConsoleTitleW(buffer, 200)
             if n > 0:
                 return buffer.value[:n]
@@ -596,6 +596,8 @@ class Console(object):
 # add the functions from the dll to the class
 for func in funcs:
     setattr(Console, func, getattr(windll.kernel32, func))
+windll.kernel32.SetConsoleTitleW.argtypes=[c_wchar_p]
+windll.kernel32.GetConsoleTitleW.argtypes=[c_wchar_p,c_short]
 
 from event import Event
 

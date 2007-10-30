@@ -36,9 +36,9 @@ def log_sock(s,event_type=None):
         pass
     else:
         if event_type is None:
-            logsocket.sendto(s,(host,port))
+            logsocket.sendto(str(s),(host,port))
         elif event_type in show_event:
-            logsocket.sendto(s,(host,port))
+            logsocket.sendto(str(s),(host,port))
         else:
             pass
 
