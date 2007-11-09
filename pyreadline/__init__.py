@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import logger,clipboard,lineeditor,modes
+import unicode_helper,logger,clipboard,lineeditor,modes
 from rlmain import *
 __all__ = [ 'parse_and_bind',
             'get_line_buffer',

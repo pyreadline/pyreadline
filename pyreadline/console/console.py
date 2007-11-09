@@ -17,7 +17,8 @@ import sys
 import traceback
 import re
 from pyreadline.logger import log,log_sock
-
+from pyreadline.unicode_helper import ensure_unicode
+import pyreadline.unicode_helper as unicode_helper
 try:
     from ctypes import *
     from _ctypes import call_function
@@ -115,18 +116,6 @@ class CONSOLE_CURSOR_INFO(Structure):
     _fields_ = [("dwSize", c_int),
                 ("bVisible", c_byte)]
 
-
-try:
-    consolecodepage=sys.stdout.encoding
-except AttributeError:        #This error occurs when pdb imports readline and doctest has replaced 
-                              #stdout with stdout collector
-    consolecodepage="ascii"   #assume ascii codepage
-    
-def ensure_text(text):
-    """helper to ensure that text passed to WriteConsoleA is ascii"""
-    if isinstance(text, str):
-        return text.decode(consolecodepage, "replace")
-    return text
 
 # I didn't want to have to individually import these so I made a list, they are
 # added to the Console class later in this file.
@@ -363,7 +352,7 @@ class Console(object):
         return n
 
     def write_color(self, text, attr=None):
-        text = ensure_text(text)
+        text = ensure_unicode(text)
         n,res= self.ansiwriter.write_color(text,attr)
         junk = c_int(0)
         for attr,chunk in res:
@@ -388,7 +377,7 @@ class Console(object):
             attr = self.attr
         n = c_int(0)
         self.SetConsoleTextAttribute(self.hout, attr)
-        self.WriteConsoleW(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
+        self.WriteConsoleW(self.hout, ensure_unicode(chunk), len(chunk), byref(junk), None)
         return len(text)
 
     # make this class look like a file object
@@ -688,7 +677,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:
         # call the Python hook
-        res = readline_hook(prompt).encode(consolecodepage)
+        res = readline_hook(prompt).encode(unicode_helper.pyreadline_codepage)
         # make sure it returned the right sort of thing
         if res and not isinstance(res, str):
             raise TypeError, 'readline must return a string.'
@@ -712,7 +701,7 @@ def hook_wrapper(prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:
         # call the Python hook
-        res = readline_hook(prompt).encode(consolecodepage)
+        res = readline_hook(prompt).encode(unicode_helper.pyreadline_codepage)
         # make sure it returned the right sort of thing
         if res and not isinstance(res, str):
             raise TypeError, 'readline must return a string.'

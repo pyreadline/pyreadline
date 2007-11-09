@@ -1,3 +1,12 @@
+2007-11-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* More fixes to ensure unicode works when completing on filepaths with non ascii symbols. 
+	  This fix assumes sys.stdout.encoding is valid for the filesystem. A more correct fix
+	  must be applied to the completer code which is outside pyreadline.
+	  Any str characters fed into pyreadline should be converted to unicode using 
+	  unicode_helper.ensure_unicode.
+	* The encoding assumed of strings is sys.stdout.encoding this can be changed by:
+	  e.g.  pyreadline.unicode_helper.pyreadline_codepage="utf8"
+
 2007-10-30 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fixing console.title to work with wide characters
 	* Fixing wide character bug for log_sock

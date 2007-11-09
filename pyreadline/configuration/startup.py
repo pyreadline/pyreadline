@@ -4,6 +4,12 @@ try:
     import pyreadline.rlmain
     #pyreadline.rlmain.config_path=r"c:\xxx\pyreadlineconfig.ini"
     import readline,atexit
+    import pyreadline.unicode_helper
+    #
+    #
+    #Normally the codepage for pyreadline is set to be sys.stdout.encoding
+    #if you need to change this uncomment the following line
+    #pyreadline.unicode_helper.pyreadline_codepage="utf8"
 except ImportError:
     print "Module readline not available."
 else:

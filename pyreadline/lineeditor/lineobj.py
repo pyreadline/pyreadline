@@ -5,11 +5,12 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import re,operator
+import re,operator,sys
 
 import wordmatcher
 import pyreadline.clipboard as clipboard
 from pyreadline.logger import  log,log_sock
+from pyreadline.unicode_helper import ensure_unicode
 class NotAWordError(IndexError):
     pass
 
@@ -241,11 +242,13 @@ class TextLine(object):
     def quoted_text(self):
         quoted = [ quote_char(c) for c in self.line_buffer ]
         self.line_char_width = [ len(c) for c in quoted ]
-        return ''.join(quoted)
+        return u''.join(map(ensure_unicode,quoted))
 
     def get_line_text(self):
-        return ''.join(self.line_buffer)
-
+        buf=self.line_buffer
+        buf=map(ensure_unicode,buf)
+        return u''.join(buf)
+            
     def set_line(self, text, cursor=None):
         self.line_buffer = [ c for c in str(text) ]
         if cursor is None:
