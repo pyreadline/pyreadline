@@ -19,3 +19,9 @@ def ensure_unicode(text):
     if isinstance(text, str):
         return text.decode(pyreadline_codepage, "replace")
     return text
+
+def ensure_text(text):
+    """Convert unicode to str using pyreadline_codepage"""
+    if isinstance(text, str):
+        return text.encode(pyreadline_codepage, "replace")
+    return text

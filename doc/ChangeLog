@@ -1,4 +1,9 @@
 2007-11-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Fixes to make clipboard play nice with unicode. Quick that treats the clipboard as
+	  being str with pyreadline_encoding data. Thus convert to unicode when pasting and
+	  converting to str when copying.
+
+2007-11-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* More fixes to ensure unicode works when completing on filepaths with non ascii symbols. 
 	  This fix assumes sys.stdout.encoding is valid for the filesystem. A more correct fix
 	  must be applied to the completer code which is outside pyreadline.

@@ -717,7 +717,7 @@ class ReadLineTextBuffer(TextLine):
                 begin=min(cursor,mark)
                 end=max(cursor,mark)
                 toclipboard="".join(self.line_buffer[begin:end])
-                clipboard.SetClipboardText(str(toclipboard))
+                clipboard.SetClipboardText(toclipboard)
 
     def copy_selection_to_clipboard(self): # ()
         '''Copy the text in the region to the windows clipboard.'''
@@ -729,7 +729,7 @@ class ReadLineTextBuffer(TextLine):
                 begin=min(cursor,selection_mark)
                 end=max(cursor,selection_mark)
                 toclipboard="".join(self.line_buffer[begin:end])
-                clipboard.SetClipboardText(str(toclipboard))
+                clipboard.SetClipboardText(toclipboard)
 
 
     def cut_selection_to_clipboard(self): # ()
