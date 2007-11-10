@@ -14,6 +14,8 @@ import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import basemode
 import string
+from pyreadline.unicode_helper import ensure_unicode
+
 def format(keyinfo):
     if len(keyinfo[-1])!=1:
         k=keyinfo+(-1,)
@@ -45,9 +47,10 @@ class EmacsMode(basemode.BaseMode):
         while 1:
             self._update_line()
             lbuf=self.l_buffer
-            log_sock("point:%s mark:%s selection_mark:%s"%(lbuf.point,lbuf.mark,lbuf.selection_mark))
+            log_sock("point:%d mark:%d selection_mark:%d"%(lbuf.point,lbuf.mark,lbuf.selection_mark))
             try:
                 event = c.getkeypress()
+                log_sock(u">>%s"%event)
             except KeyboardInterrupt:
                 from pyreadline.keysyms.common import KeyPress
                 from pyreadline.console.event import Event
@@ -81,7 +84,7 @@ class EmacsMode(basemode.BaseMode):
             dispatch_func = self.key_dispatch.get(keyinfo,default)
             
             log("readline from keyboard:%s,%s"%(keyinfo,dispatch_func))
-            log_sock(("%s|%s"%(format(keyinfo),dispatch_func.__name__)).encode(sys.stdout.encoding),"bound_function")
+            log_sock((u"%s|%s"%(ensure_unicode(format(keyinfo)),dispatch_func.__name__)),"bound_function")
             r = None
             if dispatch_func:
                 r = dispatch_func(event)
@@ -157,7 +160,6 @@ class EmacsMode(basemode.BaseMode):
     def _i_search(self, searchfun, direction, init_event):
         c = self.console
         line = self.l_buffer.get_line_text()
-        log_sock(str(line))
         query = ''
         if (self.previous_func != self.history_search_forward and
                 self.previous_func != self.history_search_backward):
@@ -405,10 +407,8 @@ class EmacsMode(basemode.BaseMode):
                 else:
                     default=self.self_insert
                 dispatch_func = self.key_dispatch.get(keyinfo,default)
-                log_sock("%s|%s"%(dispatch_func,str(keyinfo)))
                 dispatch_func(event)
                 break
-        log_sock("END arg=%s"%(self.argument))
         self.prompt=oldprompt
         x, y = self.prompt_end_pos
         c.pos(0, y)

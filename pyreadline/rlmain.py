@@ -352,6 +352,12 @@ class Readline(object):
             if keyinfo in modes[mode].exit_dispatch:
                 del modes[mode].exit_dispatch[keyinfo]
 
+
+
+        def setkill_ring_to_clipboard(killring):
+            import pyreadline.lineeditor.lineobj 
+            pyreadline.lineeditor.lineobj.kill_ring_to_clipboard=killring
+            
         def sethistoryfilename(filename):
             self._history.history_filename=os.path.expanduser(filename)
         def setbellstyle(mode):
@@ -404,6 +410,7 @@ class Readline(object):
              "set_input_color":set_input_color,
              "allow_ctrl_c":allow_ctrl_c,
              "ctrl_c_tap_time_interval":ctrl_c_tap_time_interval,
+             "kill_ring_to_clipboard":setkill_ring_to_clipboard,
              }
         if os.path.isfile(inputrcpath): 
             try:

@@ -11,6 +11,10 @@ import wordmatcher
 import pyreadline.clipboard as clipboard
 from pyreadline.logger import  log,log_sock
 from pyreadline.unicode_helper import ensure_unicode
+
+kill_ring_to_clipboard=False #set to true to copy every addition to kill ring to clipboard
+
+
 class NotAWordError(IndexError):
     pass
 
@@ -397,6 +401,7 @@ class ReadLineTextBuffer(TextLine):
         self.selection_mark=-1
         self.enable_selection=True
         self.kill_ring=[]
+
     def __repr__(self):
         return 'ReadLineTextBuffer("%s",point=%s,mark=%s,selection_mark=%s)'%(self.line_buffer,self.point,self.mark,self.selection_mark)
 
@@ -741,7 +746,9 @@ class ReadLineTextBuffer(TextLine):
 ############## Kill ring
     def add_to_kill_ring(self,txt):
         self.kill_ring=[txt]
-        
+        if kill_ring_to_clipboard:
+            clipboard.SetClipboardText(txt.get_line_text())
+
 
     def paste_from_kill_ring(self):
         if self.kill_ring:

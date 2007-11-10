@@ -1,4 +1,7 @@
 2007-11-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* More fixes to unicode handling.
+
+2007-11-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Fixes to make clipboard play nice with unicode. Quick that treats the clipboard as
 	  being str with pyreadline_encoding data. Thus convert to unicode when pasting and
 	  converting to str when copying.

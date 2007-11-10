@@ -432,7 +432,6 @@ class Console(object):
 
     def rectangle(self, rect, attr=None, fill=' '):
         '''Fill Rectangle.'''
-        log_sock("rect:%s"%[rect])
         x0, y0, x1, y1 = rect
         n = c_int(0)
         if attr is None:
@@ -495,7 +494,7 @@ class Console(object):
             status = self.ReadConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
             if status and count.value == 1:
                 e = event(self, Cevent)
-                log_sock(unicode(e.keyinfo),"keypress")
+                log_sock(ensure_unicode(e.keyinfo),"keypress")
                 return e
 
     def getkeypress(self):
@@ -533,7 +532,6 @@ class Console(object):
         Cevent = INPUT_RECORD()
         count = c_int(0)
         status = self.PeekConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
-        log_sock("%s %s %s"%(status,count,Cevent))
         if status and count == 1:
             return event(self, Cevent)
 
@@ -753,5 +751,6 @@ if __name__ == '__main__':
     c.write('hi there')
     print 'some printed output'
     for i in range(10):
-        c.getkeypress()
+        q=c.getkeypress()
+        print q
     del c

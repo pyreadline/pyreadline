@@ -13,7 +13,7 @@ try:
 except NameError:
     from sets import Set as set
     
-
+from pyreadline.unicode_helper import ensure_unicode
 
 validkey =set(['cancel',     'backspace',    'tab',          'clear',
               'return',      'shift_l',      'control_l',    'alt_l',
@@ -61,7 +61,7 @@ class KeyPress(object):
     keyname=create("keyname")
         
     def __repr__(self):
-        return "(%s,%s,%s,%s)"%self.tuple()
+        return u"(%s,%s,%s,%s)"%tuple(map(ensure_unicode,self.tuple()))
 
     def tuple(self):
         if self.keyname:
