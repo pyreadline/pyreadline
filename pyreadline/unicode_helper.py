@@ -20,7 +20,7 @@ def ensure_unicode(text):
         return text.decode(pyreadline_codepage, "replace")
     return text
 
-def ensure_text(text):
+def ensure_str(text):
     """Convert unicode to str using pyreadline_codepage"""
     if isinstance(text, unicode):
         return text.encode(pyreadline_codepage, "replace")

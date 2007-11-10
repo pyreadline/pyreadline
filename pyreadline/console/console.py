@@ -17,7 +17,7 @@ import sys
 import traceback
 import re
 from pyreadline.logger import log,log_sock
-from pyreadline.unicode_helper import ensure_unicode
+from pyreadline.unicode_helper import ensure_unicode,ensure_str
 import pyreadline.unicode_helper as unicode_helper
 try:
     from ctypes import *
@@ -348,7 +348,7 @@ class Console(object):
             if attr is None:
                 attr = self.attr
             self.SetConsoleTextAttribute(self.hout, attr)
-            #self.WriteConsoleW(self.hout, ensure_text(chunk), len(chunk), byref(junk), None)
+            #self.WriteConsoleW(self.hout, ensure_str(chunk), len(chunk), byref(junk), None)
         return n
 
     def write_color(self, text, attr=None):
@@ -675,7 +675,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:
         # call the Python hook
-        res = readline_hook(prompt).encode(unicode_helper.pyreadline_codepage)
+        res = ensure_str(readline_hook(prompt))
         # make sure it returned the right sort of thing
         if res and not isinstance(res, str):
             raise TypeError, 'readline must return a string.'
@@ -699,7 +699,7 @@ def hook_wrapper(prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:
         # call the Python hook
-        res = readline_hook(prompt).encode(unicode_helper.pyreadline_codepage)
+        res = ensure_str(readline_hook(prompt))
         # make sure it returned the right sort of thing
         if res and not isinstance(res, str):
             raise TypeError, 'readline must return a string.'

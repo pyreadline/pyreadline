@@ -9,6 +9,7 @@ import re,operator,string,sys,os
 
 #import wordmatcher
 #import pyreadline.clipboard as clipboard
+from pyreadline.unicode_helper import ensure_unicode,ensure_str
 if "pyreadline" in sys.modules:
     pyreadline= sys.modules["pyreadline"]
 else:
@@ -66,7 +67,7 @@ class LineHistory(object):
             filename=self.history_filename
         try:
             for line in open(filename, 'r'):
-                self.add_history(lineobj.ReadLineTextBuffer(line.rstrip().decode("utf8")))
+                self.add_history(lineobj.ReadLineTextBuffer(ensure_unicode(line.rstrip())))
         except IOError:
             self.history = []
             self.history_cursor = 0
@@ -77,7 +78,7 @@ class LineHistory(object):
             filename=self.history_filename
         fp = open(filename, 'wb')
         for line in self.history[-self.history_length:]:
-            fp.write(line.get_line_text().encode("utf8"))
+            fp.write(ensure_str(line.get_line_text()))
             fp.write('\n')
         fp.close()
 

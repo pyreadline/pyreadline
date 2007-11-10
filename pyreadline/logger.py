@@ -7,7 +7,7 @@
 #*****************************************************************************
 
 import socket
-from pyreadline.unicode_helper import ensure_text
+from pyreadline.unicode_helper import ensure_str
 _logfile=False
 
 def start_log(on,filename):
@@ -37,9 +37,9 @@ def log_sock(s,event_type=None):
         pass
     else:
         if event_type is None:
-            logsocket.sendto(ensure_text(s),(host,port))
+            logsocket.sendto(ensure_str(s),(host,port))
         elif event_type in show_event:
-            logsocket.sendto(ensure_text(s),(host,port))
+            logsocket.sendto(ensure_str(s),(host,port))
         else:
             pass
 

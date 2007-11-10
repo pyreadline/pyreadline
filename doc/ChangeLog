@@ -1,4 +1,8 @@
 2007-11-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* make all conversion is done by ensure_unicode or ensure_str to ensure uniform
+	  handling of unicode issues.
+
+2007-11-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* More fixes to unicode handling.
 
 2007-11-09 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
