@@ -307,6 +307,7 @@ class Readline(object):
 
     def _update_line(self):
         c=self.console
+        c.cursor(0)         #Hide cursor avoiding flicking
         c.pos(*self.prompt_end_pos)
         ltext = self.l_buffer.quoted_text()
         if self.l_buffer.enable_selection and self.l_buffer.selection_mark>=0:
@@ -319,11 +320,20 @@ class Readline(object):
             n = c.write_scrolling(ltext[stop:], self.command_color)
         else:
             n = c.write_scrolling(ltext, self.command_color)
+
+        x,y = c.pos()       #Preserve one line for Asian IME(Input Method Editor) statusbar
+        w,h = c.size()
+        if y >= h - 1 or n > 0:
+            c.scroll_window(-1)
+            c.scroll((0,0,w,h),0,-1)
+            n += 1
+
         self._update_prompt_pos(n)
         if hasattr(c,"clear_to_end_of_window"): #Work around function for ironpython due 
             c.clear_to_end_of_window()          #to System.Console's lack of FillFunction
         else:
             self._clear_after()
+        c.cursor(1)         #Show cursor
         self._set_cursor()
     
     def readline(self, prompt=''):

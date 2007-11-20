@@ -359,13 +359,6 @@ class Console(object):
             log(unicode(attr))
             log(unicode(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)
-            x,y = self.pos()
-            x1,y1 = self.size()
-            if y == y1 - 1:
-                self.scroll_window(-1)
-                self.scroll((0,0,x1,y1),0,-1)
-                self.pos(x,y-1)
-            
             self.WriteConsoleW(self.hout, chunk, len(chunk), byref(junk), None)
         return n
 

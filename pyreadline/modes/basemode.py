@@ -14,6 +14,7 @@ import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
 from pyreadline.error import ReadlineError,GetSetError
+from pyreadline.unicode_helper import ensure_str, ensure_unicode
 in_ironpython="IronPython" in sys.version
 
 class BaseMode(object):
@@ -127,12 +128,12 @@ class BaseMode(object):
                 if buf[self.begidx] in self.completer_delims:
                     self.begidx += 1
                     break
-            text = ''.join(buf[self.begidx:self.endidx])
+            text = ensure_str(''.join(buf[self.begidx:self.endidx]))
             log('complete text="%s"' % text)
             i = 0
             while 1:
                 try:
-                    r = self.completer(text, i)
+                    r = ensure_unicode(self.completer(text, i))
                 except:
                     break
                 i += 1
@@ -148,9 +149,9 @@ class BaseMode(object):
                 if buf[self.begidx] in ' \t\n':
                     self.begidx += 1
                     break
-            text = ''.join(buf[self.begidx:self.endidx])
+            text = ensure_str(''.join(buf[self.begidx:self.endidx]))
             log('file complete text="%s"' % text)
-            completions = glob.glob(os.path.expanduser(text) + '*')
+            completions = map(ensure_unicode, glob.glob(os.path.expanduser(text) + '*'))
             if self.mark_directories == 'on':
                 mc = []
                 for f in completions:

@@ -19,6 +19,7 @@ def start_log(on,filename):
         
 def log(s):
     if _logfile:
+        s = ensure_str(s)
         print >>_logfile, s
         _logfile.flush()
 
