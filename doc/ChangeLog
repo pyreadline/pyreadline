@@ -1,3 +1,7 @@
+2007-11-28 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Warning messages for failed calls to parse_and_bind now disabled by default 
+	  Can be enabled by call to debug_output("on_nologfile") in pyreadlineconfig.ini
+
 2007-11-20 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Applying patch from pan to fix flickering cursor problem when doing input
 	  of chinese.

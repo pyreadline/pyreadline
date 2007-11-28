@@ -56,6 +56,7 @@ class Readline(object):
         self.tabstop = 4
         self.allow_ctrl_c=False
         self.ctrl_c_tap_time_interval=0.3
+        self.debug=False
 
         self.begidx = 0
         self.endidx = 0
@@ -133,7 +134,8 @@ class Readline(object):
                     func = getattr(self.mode, py_name)
                 except AttributeError:
                     log('unknown func key="%s" func="%s"' % (key, func_name))
-                    print 'pyeadline parse_and_bind error, unknown function to bind: "%s"' % func_name
+                    if self.debug:
+                        print 'pyreadline parse_and_bind error, unknown function to bind: "%s"' % func_name
                     return
                 self.mode._bind_key(key, func)
         except:
@@ -362,12 +364,9 @@ class Readline(object):
             if keyinfo in modes[mode].exit_dispatch:
                 del modes[mode].exit_dispatch[keyinfo]
 
-
-
         def setkill_ring_to_clipboard(killring):
             import pyreadline.lineeditor.lineobj 
             pyreadline.lineeditor.lineobj.kill_ring_to_clipboard=killring
-            
         def sethistoryfilename(filename):
             self._history.history_filename=os.path.expanduser(filename)
         def setbellstyle(mode):
@@ -388,6 +387,8 @@ class Readline(object):
         def completer_delims(mode):
             self.completer_delims=mode
         def debug_output(on,filename="pyreadline_debug_log.txt"):  #Not implemented yet
+            if on in ["on","on_nologfile"]:
+                self.debug=True
             logger.start_log(on,filename)
             logger.log("STARTING LOG")
 #            print release.branch

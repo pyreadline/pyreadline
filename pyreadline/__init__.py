@@ -8,6 +8,7 @@
 #*****************************************************************************
 import unicode_helper,logger,clipboard,lineeditor,modes
 from rlmain import *
+import rlmain
 __all__ = [ 'parse_and_bind',
             'get_line_buffer',
             'insert_text',
@@ -26,6 +27,8 @@ __all__ = [ 'parse_and_bind',
             'set_completer_delims',
             'get_completer_delims',
             'add_history',
-            'GetOutputFile']
+            'GetOutputFile',
+            'rl',
+            'rlmain']
 
 import release 
