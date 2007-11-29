@@ -22,8 +22,7 @@ name = 'pyreadline'
 
 branch = ''
 
-#version = '1.5.svn'
-version = '1.5'
+version = '1.6.svn'
 
 revision = '$Revision$'
 
