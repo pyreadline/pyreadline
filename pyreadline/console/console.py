@@ -154,6 +154,11 @@ key_modifiers = { VK_SHIFT:1,
                   0x5b:1, # windows key
                  }
 
+def split_block(text,size=1000):
+    return [text[start:start+size] for start in range(0, len(text), size)]
+
+
+
 class Console(object):
     '''Console driver for Windows.
 
@@ -329,29 +334,6 @@ class Console(object):
         return scroll
 
     def write_color(self, text, attr=None):
-        '''write text at current cursor position and interpret color escapes.
-
-        return the number of characters written.
-        '''
-        log('write_color("%s", %s)' % (text, attr))
-        chunks = self.terminal_escape.split(text)
-        log('chunks=%s' % repr(chunks))
-        junk = c_int(0)
-        n = 0 # count the characters we actually write, omitting the escapes
-        for chunk in chunks:
-            m = self.escape_parts.match(chunk)
-            if m:
-                attr = self.escape_to_color[m.group(1)]
-                continue
-            n += len(chunk)
-            log('attr=%s' % attr)
-            if attr is None:
-                attr = self.attr
-            self.SetConsoleTextAttribute(self.hout, attr)
-            #self.WriteConsoleW(self.hout, ensure_str(chunk), len(chunk), byref(junk), None)
-        return n
-
-    def write_color(self, text, attr=None):
         text = ensure_unicode(text)
         n,res= self.ansiwriter.write_color(text,attr)
         junk = c_int(0)
@@ -359,7 +341,8 @@ class Console(object):
             log(unicode(attr))
             log(unicode(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)
-            self.WriteConsoleW(self.hout, chunk, len(chunk), byref(junk), None)
+            for short_chunk in split_block(chunk):
+                self.WriteConsoleW(self.hout, short_chunk, len(short_chunk), byref(junk), None)
         return n
 
 
@@ -370,7 +353,8 @@ class Console(object):
             attr = self.attr
         n = c_int(0)
         self.SetConsoleTextAttribute(self.hout, attr)
-        self.WriteConsoleW(self.hout, ensure_unicode(chunk), len(chunk), byref(junk), None)
+        for short_chunk in split_block(chunk):
+            self.WriteConsoleW(self.hout, ensure_unicode(short_chunk), len(short_chunk), byref(junk), None)
         return len(text)
 
     # make this class look like a file object
