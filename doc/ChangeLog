@@ -1,3 +1,7 @@
+2008-01-07 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Reintroduced code to make pyreadline work with emacs. Not tested.
+	  Requested by Frank Wang.
+
 2008-01-04 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Chunking calls to WriteConsoleW to ensure not exceeding 64k limit
 

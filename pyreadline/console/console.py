@@ -13,7 +13,7 @@ This was modeled after the C extension of the same name by Fredrik Lundh.
 
 # primitive debug printing that won't interfere with the screen
 
-import sys
+import sys,os
 import traceback
 import re
 from pyreadline.logger import log,log_sock
@@ -145,6 +145,7 @@ funcs = [
     'SetConsoleWindowInfo',
     'WriteConsoleW',
     'WriteConsoleOutputCharacterW',
+    'WriteFile',
     ]
 
 # I don't want events for these keys, they are just a bother for my application
@@ -345,7 +346,6 @@ class Console(object):
                 self.WriteConsoleW(self.hout, short_chunk, len(short_chunk), byref(junk), None)
         return n
 
-
     def write_plain(self, text, attr=None):
         '''write text at current cursor position.'''
         log('write("%s", %s)' %(text,attr))
@@ -356,6 +356,15 @@ class Console(object):
         for short_chunk in split_block(chunk):
             self.WriteConsoleW(self.hout, ensure_unicode(short_chunk), len(short_chunk), byref(junk), None)
         return len(text)
+
+    #This function must be used to ensure functioning with EMACS
+    #Emacs sets the EMACS environment variable
+    if os.environ.has_key("EMACS"):
+        def write_color(self, text, attr=None):
+            junk = c_int(0)
+            self.WriteFile(self.hout, text, len(text), byref(junk),None)
+            return len(text)
+        write_plain = write_color
 
     # make this class look like a file object
     def write(self, text):
