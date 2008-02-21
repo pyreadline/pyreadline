@@ -17,11 +17,17 @@ except AttributeError:        #This error occurs when pdb imports readline and d
 def ensure_unicode(text):
     """helper to ensure that text passed to WriteConsoleW is unicode"""
     if isinstance(text, str):
-        return text.decode(pyreadline_codepage, "replace")
+        try:
+            return text.decode(pyreadline_codepage, "replace")
+        except (LookupError, TypeError):
+            return text.decode("ascii", "replace")
     return text
 
 def ensure_str(text):
     """Convert unicode to str using pyreadline_codepage"""
     if isinstance(text, unicode):
-        return text.encode(pyreadline_codepage, "replace")
+        try:
+            return text.encode(pyreadline_codepage, "replace")
+        except (LookupError, TypeError):
+            return text.encode("ascii", "replace")
     return text

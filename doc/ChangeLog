@@ -1,3 +1,8 @@
+2008-02-21 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* unicodehelper functions now defaults to ascii if supplied pyreadline_encoding is 
+	  not a valid encoding. This is a brute force solution to ticket #228 it fixes 
+	  immediate symptom but may not be the correct solution to the underlying problem.
+	
 2008-01-07 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* Reintroduced code to make pyreadline work with emacs. Not tested.
 	  Requested by Frank Wang.
