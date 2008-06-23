@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import os,re,math,glob,sys
+import os,re,math,glob,sys,time
 import pyreadline.logger as logger
 from   pyreadline.logger import log,log_sock
 from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
@@ -87,7 +87,75 @@ class BaseMode(object):
         raise NotImplementedError
 
     def readline(self, prompt=''):
-        raise NotImplementedError
+        '''Try to act like GNU readline.'''
+        # handle startup_hook
+        self.ctrl_c_timeout=time.time()
+        self.l_buffer.selection_mark=-1
+        if self.first_prompt:
+            self.first_prompt = False
+            if self.startup_hook:
+                try:
+                    self.startup_hook()
+                except:
+                    print 'startup hook failed'
+                    traceback.print_exc()
+
+        c = self.console
+        self.l_buffer.reset_line()
+        self.prompt = prompt
+        self._print_prompt()
+
+        if self.pre_input_hook:
+            try:
+                self.pre_input_hook()
+            except:
+                print 'pre_input_hook failed'
+                traceback.print_exc()
+                self.pre_input_hook = None
+
+        log("in readline: %s"%self.paste_line_buffer)
+        if len(self.paste_line_buffer)>0:
+            self.l_buffer=lineobj.ReadLineTextBuffer(self.paste_line_buffer[0])
+            self._update_line()
+            self.paste_line_buffer=self.paste_line_buffer[1:]
+            c.write('\r\n')
+        else:
+            while 1:
+                self._update_line()
+                lbuf=self.l_buffer
+                log_sock("point:%d mark:%d selection_mark:%d"%(lbuf.point,lbuf.mark,lbuf.selection_mark))
+                try:
+                    event = c.getkeypress()
+                    log_sock(u">>%s"%event)
+                except KeyboardInterrupt:
+                    from pyreadline.keysyms.common import KeyPress
+                    from pyreadline.console.event import Event
+                    event=Event(0,0)
+                    event.char="c"
+                    event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
+                    log_sock("KBDIRQ")
+                    if self.allow_ctrl_c:
+                        now=time.time()
+                        if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
+                            raise
+                        else:
+                            self.ctrl_c_timeout=now
+                        pass
+                    else:
+                        raise
+                if self.next_meta:
+                    self.next_meta = False
+                    control, meta, shift, code = event.keyinfo
+                    event.keyinfo = (control, True, shift, code)
+                if self._process_keyevent(event.keyinfo):
+                    break
+            c.write('\r\n')
+
+        self.add_history(self.l_buffer.copy())
+
+        log('returning(%s)' % self.l_buffer.get_line_text())
+        return self.l_buffer.get_line_text() + '\n'
+
 
     #Create key bindings:
 

@@ -33,110 +33,51 @@ class EmacsMode(basemode.BaseMode):
         self._keylog=(lambda x,y: None)
         self.previous_func=None
         self.prompt=">>>"
+        self._insert_verbatim=False
+        
     def __repr__(self):
         return "<EmacsMode>"
 
     def add_key_logger(self,logfun):
         """logfun should be function that takes disp_fun and line_buffer object """
         self._keylog=logfun
-        
-    def _readline_from_keyboard(self):
-        c=self.console
+
+    def _process_keyevent(self, keyinfo):
+        """return True when line is final
+        """
+        #Process exit keys. Only exit on empty line
         def nop(e):
             pass
-        while 1:
-            self._update_line()
-            lbuf=self.l_buffer
-            log_sock("point:%d mark:%d selection_mark:%d"%(lbuf.point,lbuf.mark,lbuf.selection_mark))
-            try:
-                event = c.getkeypress()
-                log_sock(u">>%s"%event)
-            except KeyboardInterrupt:
-                from pyreadline.keysyms.common import KeyPress
-                from pyreadline.console.event import Event
-                event=Event(0,0)
-                event.char="c"
-                event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
-                log_sock("KBDIRQ")
-                if self.allow_ctrl_c:
-                    now=time.time()
-                    if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
-                        raise
-                    else:
-                        self.ctrl_c_timeout=now
-                    pass
-                else:
-                    raise
-            if self.next_meta:
-                self.next_meta = False
-                control, meta, shift, code = event.keyinfo
-                event.keyinfo = (control, True, shift, code)
-
-            #Process exit keys. Only exit on empty line
-            keyinfo=event.keyinfo.tuple()
-            if keyinfo in self.exit_dispatch:
-                if lineobj.EndOfLine(self.l_buffer) == 0:
-                    raise EOFError
-            if len(keyinfo[-1])>1:
-                default=nop
-            else:
-                default=self.self_insert
-            dispatch_func = self.key_dispatch.get(keyinfo,default)
-            
-            log("readline from keyboard:%s,%s"%(keyinfo,dispatch_func))
-            log_sock((u"%s|%s"%(ensure_unicode(format(keyinfo)),dispatch_func.__name__)),"bound_function")
-            r = None
-            if dispatch_func:
-                r = dispatch_func(event)
-                self._keylog(dispatch_func,self.l_buffer)
-                self.l_buffer.push_undo()
-
-            self.previous_func = dispatch_func
-            if r:
-                self._update_line()
-                break
-
-    def readline(self, prompt=''):
-        '''Try to act like GNU readline.'''
-        # handle startup_hook
-        self.ctrl_c_timeout=time.time()
-        self.l_buffer.selection_mark=-1
-        if self.first_prompt:
-            self.first_prompt = False
-            if self.startup_hook:
-                try:
-                    self.startup_hook()
-                except:
-                    print 'startup hook failed'
-                    traceback.print_exc()
-
-        c = self.console
-        self.l_buffer.reset_line()
-        self.prompt = prompt
-        self._print_prompt()
-
-        if self.pre_input_hook:
-            try:
-                self.pre_input_hook()
-            except:
-                print 'pre_input_hook failed'
-                traceback.print_exc()
-                self.pre_input_hook = None
-
-        log("in readline: %s"%self.paste_line_buffer)
-        if len(self.paste_line_buffer)>0:
-            self.l_buffer=lineobj.ReadLineTextBuffer(self.paste_line_buffer[0])
-            self._update_line()
-            self.paste_line_buffer=self.paste_line_buffer[1:]
-            c.write('\r\n')
+        keytuple=keyinfo.tuple()
+        
+        if self._insert_verbatim:
+            self.insert_text(keyinfo)
+            self._insert_verbatim=False
+            return False
+        
+        if keytuple in self.exit_dispatch:
+            if lineobj.EndOfLine(self.l_buffer) == 0:
+                raise EOFError
+        if keyinfo.keyname:
+            default=nop
         else:
-            self._readline_from_keyboard()
-            c.write('\r\n')
+            default=self.self_insert
+        dispatch_func = self.key_dispatch.get(keytuple, default)
 
-        self.add_history(self.l_buffer.copy())
+        log("readline from keyboard:%s,%s"%(keytuple, dispatch_func))
+        log_sock((u"%s|%s"%(ensure_unicode(format(keytuple)),dispatch_func.__name__)),"bound_function")
+        r = None
+        if dispatch_func:
+            r = dispatch_func(keyinfo)
+            self._keylog(dispatch_func,self.l_buffer)
+            self.l_buffer.push_undo()
 
-        log('returning(%s)' % self.l_buffer.get_line_text())
-        return self.l_buffer.get_line_text() + '\n'
+        self.previous_func = dispatch_func
+        if r:
+            self._update_line()
+            return True
+        return False
+
 
 #########  History commands
     def previous_history(self, e): # (C-p)
@@ -278,8 +219,7 @@ class EmacsMode(basemode.BaseMode):
     def quoted_insert(self, e): # (C-q or C-v)
         '''Add the next character typed to the line verbatim. This is how to
         insert key sequences like C-q, for example.'''
-        e = self.console.getkeypress()
-        self.insert_text(e.char)
+        self._insert_verbatim=True
 
     def tab_insert(self, e): # (M-TAB)
         '''Insert a tab character. '''
