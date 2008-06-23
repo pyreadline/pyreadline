@@ -34,7 +34,7 @@ class EmacsMode(basemode.BaseMode):
         self.previous_func=None
         self.prompt=">>>"
         self._insert_verbatim=False
-        
+
     def __repr__(self):
         return "<EmacsMode>"
 
@@ -56,6 +56,7 @@ class EmacsMode(basemode.BaseMode):
             return False
         
         if keytuple in self.exit_dispatch:
+            log_sock("exit_dispatch:%s, %s"%(self.l_buffer,lineobj.EndOfLine(self.l_buffer)))
             if lineobj.EndOfLine(self.l_buffer) == 0:
                 raise EOFError
         if keyinfo.keyname:
@@ -77,7 +78,6 @@ class EmacsMode(basemode.BaseMode):
             self._update_line()
             return True
         return False
-
 
 #########  History commands
     def previous_history(self, e): # (C-p)
