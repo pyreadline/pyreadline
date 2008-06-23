@@ -25,6 +25,8 @@ class BaseMode(object):
         self.key_dispatch = {}
         self.argument=1
         self.prevargument=None
+        self.l_buffer=lineobj.ReadLineTextBuffer("")
+        self._history=history.LineHistory()
         
     def __repr__(self):
         return "<BaseMode>"
@@ -47,9 +49,11 @@ class BaseMode(object):
         return val
     argument_reset=property(_argreset)
         
+#    _history=property(_g("_history"))
+#    l_buffer=property(*_gs("l_buffer"))
+
     ctrl_c_tap_time_interval=property(*_gs("ctrl_c_tap_time_interval"))
     allow_ctrl_c=property(*_gs("allow_ctrl_c"))
-    l_buffer=property(*_gs("l_buffer"))
     next_meta=property(*_gs("next_meta"))
     first_prompt=property(*_gs("first_prompt"))
     prompt=property(*_gs("prompt"))
@@ -77,7 +81,6 @@ class BaseMode(object):
     enable_ipython_paste_list_of_lists=property(_g("enable_ipython_paste_list_of_lists"))
     enable_ipython_paste_for_paths=property(_g("enable_ipython_paste_for_paths"))
     _bell=property(_g("_bell"))
-    _history=property(_g("_history"))
     prompt_end_pos=property(_g("prompt_end_pos"))
     prompt_begin_pos=property(_g("prompt_begin_pos"))
 

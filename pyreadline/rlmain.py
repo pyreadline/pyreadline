@@ -66,8 +66,6 @@ class Readline(object):
         self.mark_directories = 'on'
         self.bell_style = 'none'
         self.mark=-1
-        self.l_buffer=lineobj.ReadLineTextBuffer("")
-        self._history=history.LineHistory()
 
         # this code needs to follow l_buffer and history creation
         self.editingmodes=[mode(self) for mode in editingmodes]
@@ -144,11 +142,11 @@ class Readline(object):
 
     def get_line_buffer(self):
         '''Return the current contents of the line buffer.'''
-        return self.l_buffer.get_line_text()
+        return self.l_buffer.mode.get_line_text()
 
     def insert_text(self, string):
         '''Insert text into the command line.'''
-        self.l_buffer.insert_text(string)
+        self.mode.l_buffer.insert_text(string)
         
     def read_init_file(self, filename=None): 
         '''Parse a readline initialization file. The default filename is the last filename used.'''
@@ -158,13 +156,13 @@ class Readline(object):
     
     def add_history(self, line):
         '''Append a line to the history buffer, as if it was the last line typed.'''
-        self._history.add_history(line)
+        self.mode._history.add_history(line)
 
     def get_history_length(self ):
         '''Return the desired length of the history file.
 
         Negative values imply unlimited history file size.'''
-        return self._history.get_history_length()
+        return self.mode._history.get_history_length()
 
     def set_history_length(self, length): 
         '''Set the number of lines to save in the history file.
@@ -172,19 +170,22 @@ class Readline(object):
         write_history_file() uses this value to truncate the history file
         when saving. Negative values imply unlimited history file size.
         '''
-        self._history.set_history_length(length)
+        self.mode._history.set_history_length(length)
 
     def clear_history(self):
         '''Clear readline history'''
-        self._history.clear_history()
+        self.mode._history.clear_history()
 
     def read_history_file(self, filename=None): 
         '''Load a readline history file. The default filename is ~/.history.'''
-        self._history.read_history_file(filename)
+        if filename is None:
+            filename=self.mode._history.history_filename
+        log_sock("read_history_file from %s"%filename)
+        self.mode._history.read_history_file(filename)
 
     def write_history_file(self, filename=None): 
         '''Save a readline history file. The default filename is ~/.history.'''
-        self._history.write_history_file(filename)
+        self.mode._history.write_history_file(filename)
 
     #Completer functions
 
@@ -285,7 +286,7 @@ class Readline(object):
         c = self.console
         xc, yc = self.prompt_end_pos
         w, h = c.size()
-        xc += self.l_buffer.visible_line_width()
+        xc += self.mode.l_buffer.visible_line_width()
         while(xc >= w):
             xc -= w
             yc += 1
@@ -309,12 +310,13 @@ class Readline(object):
 
     def _update_line(self):
         c=self.console
+        l_buffer=self.mode.l_buffer
         c.cursor(0)         #Hide cursor avoiding flicking
         c.pos(*self.prompt_end_pos)
-        ltext = self.l_buffer.quoted_text()
-        if self.l_buffer.enable_selection and self.l_buffer.selection_mark>=0:
-            start=len(self.l_buffer[:self.l_buffer.selection_mark].quoted_text())
-            stop=len(self.l_buffer[:self.l_buffer.point].quoted_text())
+        ltext = l_buffer.quoted_text()
+        if l_buffer.enable_selection and l_buffer.selection_mark>=0:
+            start=len(l_buffer[:l_buffer.selection_mark].quoted_text())
+            stop=len(l_buffer[:l_buffer.point].quoted_text())
             if start>stop:
                 stop,start=start,stop
             n = c.write_scrolling(ltext[:start], self.command_color)
@@ -368,11 +370,11 @@ class Readline(object):
             import pyreadline.lineeditor.lineobj 
             pyreadline.lineeditor.lineobj.kill_ring_to_clipboard=killring
         def sethistoryfilename(filename):
-            self._history.history_filename=os.path.expanduser(filename)
+            self.mode._history.history_filename=os.path.expanduser(filename)
         def setbellstyle(mode):
             self.bell_style=mode
         def sethistorylength(length):
-            self._history.history_length=int(length)
+            self.mode._history.history_length=int(length)
         def allow_ctrl_c(mode):
             log_sock("allow_ctrl_c:%s:%s"%(self.allow_ctrl_c,mode))
             self.allow_ctrl_c=mode
