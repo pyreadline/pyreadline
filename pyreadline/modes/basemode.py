@@ -147,7 +147,7 @@ class BaseMode(object):
                     self.next_meta = False
                     control, meta, shift, code = event.keyinfo
                     event.keyinfo = (control, True, shift, code)
-                if self._process_keyevent(event.keyinfo):
+                if self.process_keyevent(event.keyinfo):
                     break
             c.write('\r\n')
 

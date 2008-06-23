@@ -42,7 +42,7 @@ class EmacsMode(basemode.BaseMode):
         """logfun should be function that takes disp_fun and line_buffer object """
         self._keylog=logfun
 
-    def _process_keyevent(self, keyinfo):
+    def process_keyevent(self, keyinfo):
         """return True when line is final
         """
         #Process exit keys. Only exit on empty line
