@@ -27,7 +27,13 @@ class BaseMode(object):
         self.prevargument=None
         self.l_buffer=lineobj.ReadLineTextBuffer("")
         self._history=history.LineHistory()
-        
+        self.completer_delims = " \t\n\"\\'`@$><=;|&{("
+        self.show_all_if_ambiguous = 'off'
+        self.mark_directories = 'on'
+        self.completer = None
+        self.begidx = 0
+        self.endidx = 0
+
     def __repr__(self):
         return "<BaseMode>"
 
@@ -67,13 +73,9 @@ class BaseMode(object):
     console=property(_g("console"))
 
 #used in completer _completions
-    completer_delims=property(*_gs("completer_delims"))
-    show_all_if_ambiguous=property(*_gs("show_all_if_ambiguous"))
-    mark_directories=property(*_gs("mark_directories"))
-    completer=property(*_gs("completer"))
-    begidx=property(*_gs("begidx"))
-    endidx=property(*_gs("endidx"))
+#    completer_delims=property(*_gs("completer_delims"))
     _bell=property(_g("_bell"))
+    bell_style=property(_g("bell_style"))
 
     rl_settings_to_string=property(_g("rl_settings_to_string"))
 
@@ -88,8 +90,6 @@ class BaseMode(object):
 
 
 #not used in basemode or emacs
-
-
 
     def _readline_from_keyboard(self):
         raise NotImplementedError
@@ -171,6 +171,19 @@ class BaseMode(object):
 
 
     #Create key bindings:
+    def rl_settings_to_string(self):
+        out=["%-20s: %s"%("show all if ambigous",self.show_all_if_ambiguous)]
+        out.append("%-20s: %s"%("mark_directories",self.mark_directories))
+        out.append("%-20s: %s"%("bell_style",self.bell_style))
+        out.append("------------- key bindings ------------")
+        tablepat="%-7s %-7s %-7s %-15s %-15s "
+        out.append(tablepat%("Control","Meta","Shift","Keycode/char","Function"))
+        bindings=[(k[0],k[1],k[2],k[3],v.__name__) for k,v in self.key_dispatch.iteritems()]
+        bindings.sort()
+        for key in bindings:
+            out.append(tablepat%(key))
+        return out
+    
 
     def _bind_key(self, key, func):
         '''setup the mapping from key to call the function.'''
@@ -194,9 +207,7 @@ class BaseMode(object):
 #completion commands    
     
     def _get_completions(self):
-       
         '''Return a list of possible completions for the string ending at the point.
-
         Also set begidx and endidx in the process.'''
         completions = []
         self.begidx = self.l_buffer.point
@@ -244,7 +255,7 @@ class BaseMode(object):
             log('fnames=%s' % completions)
         return completions
 
-       
+
     def _display_completions(self, completions):
         if not completions:
             return
@@ -263,6 +274,7 @@ class BaseMode(object):
         if in_ironpython:
             self.prompt=sys.ps1
         self._print_prompt()
+
 
     def complete(self, e): # (TAB)
         '''Attempt to perform completion on the text before point. The
@@ -320,7 +332,6 @@ class BaseMode(object):
     def insert_text(self, string):
         '''Insert text into the command line.'''
         self.l_buffer.insert_text(string)
-
 
     def beginning_of_line(self, e): # (C-a)
         '''Move to the start of the current line. '''

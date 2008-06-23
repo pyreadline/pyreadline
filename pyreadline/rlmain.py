@@ -42,8 +42,6 @@ class Readline(object):
     def __init__(self):
         self.startup_hook = None
         self.pre_input_hook = None
-        self.completer = None
-        self.completer_delims = " \t\n\"\\'`@$><=;|&{("
         self.console = console.Console()
         self.size = self.console.size()
         self.prompt_color = None
@@ -58,12 +56,7 @@ class Readline(object):
         self.ctrl_c_tap_time_interval=0.3
         self.debug=False
 
-        self.begidx = 0
-        self.endidx = 0
-
         # variables you can control with parse_and_bind
-        self.show_all_if_ambiguous = 'off'
-        self.mark_directories = 'on'
         self.bell_style = 'none'
         self.mark=-1
 
@@ -74,7 +67,7 @@ class Readline(object):
         self.mode=self.editingmodes[0]
 
         self.read_inputrc()
-        log("\n".join(self.rl_settings_to_string()))
+        log("\n".join(self.mode.rl_settings_to_string()))
 
         #Paste settings    
         #assumes data on clipboard is path if shorter than 300 characters and doesn't contain \t or \n
@@ -200,30 +193,30 @@ class Readline(object):
         starting with text.
         '''
         log('set_completer')
-        self.completer = function
+        self.mode.completer = function
 
     def get_completer(self): 
         '''Get the completer function. 
         ''' 
 
         log('get_completer') 
-        return self.completer 
+        return self.mode.completer 
 
     def get_begidx(self):
         '''Get the beginning index of the readline tab-completion scope.'''
-        return self.begidx
+        return self.mode.begidx
 
     def get_endidx(self):
         '''Get the ending index of the readline tab-completion scope.'''
-        return self.endidx
+        return self.mode.endidx
 
     def set_completer_delims(self, string):
         '''Set the readline word delimiters for tab-completion.'''
-        self.completer_delims = string
+        self.mode.completer_delims = string
 
     def get_completer_delims(self):
         '''Get the readline word delimiters for tab-completion.'''
-        return self.completer_delims
+        return self.mode.completer_delims
 
     def set_startup_hook(self, function=None): 
         '''Set or remove the startup_hook function.
@@ -250,20 +243,6 @@ class Readline(object):
 
 ##  Internal functions
 
-    def rl_settings_to_string(self):
-        out=["%-20s: %s"%("show all if ambigous",self.show_all_if_ambiguous)]
-        out.append("%-20s: %s"%("mark_directories",self.mark_directories))
-        out.append("%-20s: %s"%("bell_style",self.bell_style))
-        out.append("%-20s: %s"%("mark_directories",self.mark_directories))
-        out.append("------------- key bindings ------------")
-        tablepat="%-7s %-7s %-7s %-15s %-15s "
-        out.append(tablepat%("Control","Meta","Shift","Keycode/char","Function"))
-        bindings=[(k[0],k[1],k[2],k[3],v.__name__) for k,v in self.mode.key_dispatch.iteritems()]
-        bindings.sort()
-        for key in bindings:
-            out.append(tablepat%(key))
-        return out
-    
     def _bell(self):
         '''ring the bell if requested.'''
         if self.bell_style == 'none':
@@ -381,13 +360,13 @@ class Readline(object):
         def setbellstyle(mode):
             self.bell_style=mode
         def show_all_if_ambiguous(mode):
-            self.show_all_if_ambiguous=mode
+            self.mode.show_all_if_ambiguous=mode
         def ctrl_c_tap_time_interval(mode):
             self.ctrl_c_tap_time_interval=mode
         def mark_directories(mode):
-            self.mark_directories=mode
-        def completer_delims(mode):
-            self.completer_delims=mode
+            self.mode.mark_directories=mode
+        def completer_delims(delims):
+            self.mode.completer_delims=delims
         def debug_output(on,filename="pyreadline_debug_log.txt"):  #Not implemented yet
             if on in ["on","on_nologfile"]:
                 self.debug=True
