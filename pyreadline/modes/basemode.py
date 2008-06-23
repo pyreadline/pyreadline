@@ -52,39 +52,44 @@ class BaseMode(object):
 #    _history=property(_g("_history"))
 #    l_buffer=property(*_gs("l_buffer"))
 
+
+#used in readline
     ctrl_c_tap_time_interval=property(*_gs("ctrl_c_tap_time_interval"))
     allow_ctrl_c=property(*_gs("allow_ctrl_c"))
     next_meta=property(*_gs("next_meta"))
     first_prompt=property(*_gs("first_prompt"))
     prompt=property(*_gs("prompt"))
     paste_line_buffer=property(*_gs("paste_line_buffer"))
+    startup_hook=property(*_gs("startup_hook"))
+    pre_input_hook=property(*_gs("pre_input_hook"))
+    _print_prompt=property(_g("_print_prompt"))
+    _update_line=property(_g("_update_line"))
+    console=property(_g("console"))
+
+#used in completer _completions
     completer_delims=property(*_gs("completer_delims"))
     show_all_if_ambiguous=property(*_gs("show_all_if_ambiguous"))
     mark_directories=property(*_gs("mark_directories"))
     completer=property(*_gs("completer"))
     begidx=property(*_gs("begidx"))
-    startup_hook=property(*_gs("startup_hook"))
-    pre_input_hook=property(*_gs("pre_input_hook"))
     endidx=property(*_gs("endidx"))
-    
-    console=property(_g("console"))
-    insert_text=property(_g("insert_text"))
-    _print_prompt=property(_g("_print_prompt"))
-    _update_line=property(_g("_update_line"))
-    add_history=property(_g("add_history"))
     _bell=property(_g("_bell"))
+
+    rl_settings_to_string=property(_g("rl_settings_to_string"))
+
+#used in emacs
     _clear_after=property(_g("_clear_after"))
-    _set_cursor=property(_g("_set_cursor"))
     _update_prompt_pos=property(_g("_update_prompt_pos"))
-    _update_line=property(_g("_update_line"))
+
+
     enable_win32_clipboard=property(_g("enable_win32_clipboard"))
     enable_ipython_paste_list_of_lists=property(_g("enable_ipython_paste_list_of_lists"))
     enable_ipython_paste_for_paths=property(_g("enable_ipython_paste_for_paths"))
-    _bell=property(_g("_bell"))
-    prompt_end_pos=property(_g("prompt_end_pos"))
-    prompt_begin_pos=property(_g("prompt_begin_pos"))
 
-    rl_settings_to_string=property(_g("rl_settings_to_string"))
+
+#not used in basemode or emacs
+
+
 
     def _readline_from_keyboard(self):
         raise NotImplementedError
@@ -158,6 +163,11 @@ class BaseMode(object):
 
         log('returning(%s)' % self.l_buffer.get_line_text())
         return self.l_buffer.get_line_text() + '\n'
+
+
+
+    def add_history(self, text):
+        self._history.add_history(text)
 
 
     #Create key bindings:
@@ -305,6 +315,12 @@ class BaseMode(object):
         pass
 
     ### Methods below here are bindable emacs functions
+
+
+    def insert_text(self, string):
+        '''Insert text into the command line.'''
+        self.l_buffer.insert_text(string)
+
 
     def beginning_of_line(self, e): # (C-a)
         '''Move to the start of the current line. '''

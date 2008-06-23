@@ -146,7 +146,7 @@ class Readline(object):
 
     def insert_text(self, string):
         '''Insert text into the command line.'''
-        self.mode.l_buffer.insert_text(string)
+        self.mode.insert_text(string)
         
     def read_init_file(self, filename=None): 
         '''Parse a readline initialization file. The default filename is the last filename used.'''

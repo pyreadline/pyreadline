@@ -56,7 +56,7 @@ class EmacsMode(basemode.BaseMode):
             return False
         
         if keytuple in self.exit_dispatch:
-            log_sock("exit_dispatch:%s, %s"%(self.l_buffer,lineobj.EndOfLine(self.l_buffer)))
+            log_sock("exit_dispatch:%s, %s"%(self.l_buffer, lineobj.EndOfLine(self.l_buffer)))
             if lineobj.EndOfLine(self.l_buffer) == 0:
                 raise EOFError
         if keyinfo.keyname:
