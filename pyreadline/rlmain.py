@@ -79,6 +79,7 @@ class Readline(object):
         self.enable_win32_clipboard=True
 
         self.paste_line_buffer=[]
+        self.callback = None
 
     #Below is for refactoring, raise errors when using old style attributes 
     #that should be refactored out
@@ -135,7 +136,7 @@ class Readline(object):
 
     def get_line_buffer(self):
         '''Return the current contents of the line buffer.'''
-        return self.l_buffer.mode.get_line_text()
+        return self.mode.l_buffer.get_line_text()
 
     def insert_text(self, string):
         '''Insert text into the command line.'''
@@ -318,9 +319,49 @@ class Readline(object):
             self._clear_after()
         c.cursor(1)         #Show cursor
         self._set_cursor()
+
+#
+# Standard call
+#
     
     def readline(self, prompt=''):
         return self.mode.readline(prompt)
+
+#
+# Callback interface
+#
+
+    def event_available(self):
+        return self.mode.readline_event_available()
+
+    def setup(self,prompt=""):
+        return self.mode.readline_setup(prompt)
+
+    def keyboard_poll(self):
+        return self.mode._readline_from_keyboard_poll()
+
+    def callback_handler_install(self, prompt, callback):
+        '''bool readline_callback_handler_install ( string prompt, callback callback)
+        Initializes the readline callback interface and terminal, prints the prompt and returns immediately
+        '''
+        self.callback = callback
+        self.mode.readline_setup(prompt)
+
+    def callback_handler_remove(self):
+        '''Removes a previously installed callback handler and restores terminal settings'''
+        self.callback = None
+
+    def callback_read_char(self):
+        '''Reads a character and informs the readline callback interface when a line is received'''
+        if self.keyboard_poll():
+            line = self.get_line_buffer() + '\n'
+            self.console.write('\r\n') # this is the newline terminating input
+            # however there is another newline added by
+            # self.mode.readline_setup(prompt) which is called by callback_handler_install
+            # this differs from GNU readline
+            self.add_history(self.mode.l_buffer)
+            # TADA:
+            self.callback(line)
 
     def read_inputrc(self,inputrcpath=os.path.expanduser("~/pyreadlineconfig.ini")):
         modes=dict([(x.mode,x) for x in self.editingmodes])
@@ -451,6 +492,9 @@ set_completer_delims = rl.set_completer_delims
 get_completer_delims = rl.get_completer_delims
 set_startup_hook = rl.set_startup_hook
 set_pre_input_hook = rl.set_pre_input_hook
+callback_handler_install=rl.callback_handler_install
+callback_handler_remove=rl.callback_handler_remove
+callback_read_char=rl.callback_read_char
 
 if __name__ == '__main__':
     res = [ rl.readline('In[%d] ' % i) for i in range(3) ]

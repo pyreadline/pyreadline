@@ -55,10 +55,6 @@ class BaseMode(object):
         return val
     argument_reset=property(_argreset)
         
-#    _history=property(_g("_history"))
-#    l_buffer=property(*_gs("l_buffer"))
-
-
 #used in readline
     ctrl_c_tap_time_interval=property(*_gs("ctrl_c_tap_time_interval"))
     allow_ctrl_c=property(*_gs("allow_ctrl_c"))
@@ -77,8 +73,6 @@ class BaseMode(object):
     _bell=property(_g("_bell"))
     bell_style=property(_g("bell_style"))
 
-    rl_settings_to_string=property(_g("rl_settings_to_string"))
-
 #used in emacs
     _clear_after=property(_g("_clear_after"))
     _update_prompt_pos=property(_g("_update_prompt_pos"))
@@ -91,12 +85,65 @@ class BaseMode(object):
 
 #not used in basemode or emacs
 
+    def readline_event_available(self):
+        return self.console.peek() or (len(self.paste_line_buffer)>0)
+        
     def _readline_from_keyboard(self):
-        raise NotImplementedError
+        while 1:
+            if self._readline_from_keyboard_poll():
+                break
+
+    def _readline_from_keyboard_poll(self):
+        if len(self.paste_line_buffer)>0:
+            #paste first line in multiline paste buffer
+            self.l_buffer=lineobj.ReadLineTextBuffer(self.paste_line_buffer[0])
+            self._update_line()
+            self.paste_line_buffer=self.paste_line_buffer[1:]
+            return True
+
+        c=self.console
+        def nop(e):
+            pass
+        try:
+            event = c.getkeypress()
+        except KeyboardInterrupt:
+            event=self.handle_ctrl_c()
+
+        if self.next_meta:
+            self.next_meta = False
+            control, meta, shift, code = event.keyinfo
+            event.keyinfo = (control, True, shift, code)
+        result=self.process_keyevent(event.keyinfo)
+        self._update_line()
+        return result
 
     def readline(self, prompt=''):
-        '''Try to act like GNU readline.'''
-        # handle startup_hook
+        self.readline_setup(prompt)
+        self._readline_from_keyboard()
+        self.console.write('\r\n')
+        log('returning(%s)' % self.l_buffer.get_line_text())
+        return self.l_buffer.get_line_text() + '\n'
+
+    def handle_ctrl_c(self):
+        from pyreadline.keysyms.common import KeyPress
+        from pyreadline.console.event import Event
+        log_sock("KBDIRQ")
+        event=Event(0,0)
+        event.char="c"
+        event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
+        if self.allow_ctrl_c:
+            now=time.time()
+            if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
+                log_sock("Raise KeyboardInterrupt")
+                raise KeyboardInterrupt
+            else:
+                self.ctrl_c_timeout=now
+        else:
+            raise KeyboardInterrupt
+        return event
+
+
+    def readline_setup(self, prompt=''):
         self.ctrl_c_timeout=time.time()
         self.l_buffer.selection_mark=-1
         if self.first_prompt:
@@ -120,49 +167,10 @@ class BaseMode(object):
                 print 'pre_input_hook failed'
                 traceback.print_exc()
                 self.pre_input_hook = None
+        self._update_line()
 
-        log("in readline: %s"%self.paste_line_buffer)
-        if len(self.paste_line_buffer)>0:
-            self.l_buffer=lineobj.ReadLineTextBuffer(self.paste_line_buffer[0])
-            self._update_line()
-            self.paste_line_buffer=self.paste_line_buffer[1:]
-            c.write('\r\n')
-        else:
-            while 1:
-                self._update_line()
-                lbuf=self.l_buffer
-                log_sock("point:%d mark:%d selection_mark:%d"%(lbuf.point,lbuf.mark,lbuf.selection_mark))
-                try:
-                    event = c.getkeypress()
-                    log_sock(u">>%s"%event)
-                except KeyboardInterrupt:
-                    from pyreadline.keysyms.common import KeyPress
-                    from pyreadline.console.event import Event
-                    event=Event(0,0)
-                    event.char="c"
-                    event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
-                    log_sock("KBDIRQ")
-                    if self.allow_ctrl_c:
-                        now=time.time()
-                        if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
-                            raise
-                        else:
-                            self.ctrl_c_timeout=now
-                        pass
-                    else:
-                        raise
-                if self.next_meta:
-                    self.next_meta = False
-                    control, meta, shift, code = event.keyinfo
-                    event.keyinfo = (control, True, shift, code)
-                if self.process_keyevent(event.keyinfo):
-                    break
-            c.write('\r\n')
 
-        self.add_history(self.l_buffer.copy())
-
-        log('returning(%s)' % self.l_buffer.get_line_text())
-        return self.l_buffer.get_line_text() + '\n'
+####################################
 
 
 
@@ -529,7 +537,6 @@ class BaseMode(object):
         '''Copy the text in the region to the windows clipboard.'''
         self.l_buffer.cut_selection_to_clipboard()
 
-
     def dump_functions(self, e): # ()
         '''Print all of the functions and their key bindings to the Readline
         output stream. If a numeric argument is supplied, the output is
@@ -539,9 +546,6 @@ class BaseMode(object):
         txt="\n".join(self.rl_settings_to_string())
         print txt
         self._print_prompt()
-
-
-
 
 def commonprefix(m):
     "Given a list of pathnames, returns the longest common leading component"

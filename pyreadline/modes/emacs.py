@@ -76,6 +76,7 @@ class EmacsMode(basemode.BaseMode):
         self.previous_func = dispatch_func
         if r:
             self._update_line()
+            self.add_history(self.l_buffer.copy())
             return True
         return False
 
