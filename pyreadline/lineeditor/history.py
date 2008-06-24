@@ -7,8 +7,6 @@
 #*****************************************************************************
 import re,operator,string,sys,os
 
-#import wordmatcher
-#import pyreadline.clipboard as clipboard
 from pyreadline.unicode_helper import ensure_unicode,ensure_str
 if "pyreadline" in sys.modules:
     pyreadline= sys.modules["pyreadline"]

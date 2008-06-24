@@ -40,8 +40,6 @@ def inword(buffer,point):
 
 class Readline(object):
     def __init__(self):
-        self.startup_hook = None
-        self.pre_input_hook = None
         self.console = console.Console()
         self.size = self.console.size()
         self.prompt_color = None
@@ -49,9 +47,7 @@ class Readline(object):
         self.selection_color = self.console.saveattr<<4
         self.key_dispatch = {}
         self.previous_func = None
-        self.first_prompt = True
-        self.next_meta = False # True to force meta on next character
-        self.tabstop = 4
+
         self.allow_ctrl_c=False
         self.ctrl_c_tap_time_interval=0.3
         self.debug=False
@@ -69,33 +65,7 @@ class Readline(object):
         self.read_inputrc()
         log("\n".join(self.mode.rl_settings_to_string()))
 
-        #Paste settings    
-        #assumes data on clipboard is path if shorter than 300 characters and doesn't contain \t or \n
-        #and replace \ with / for easier use in ipython
-        self.enable_ipython_paste_for_paths=True
-
-        #automatically convert tabseparated data to list of lists or array constructors
-        self.enable_ipython_paste_list_of_lists=True
-        self.enable_win32_clipboard=True
-
-        self.paste_line_buffer=[]
         self.callback = None
-
-    #Below is for refactoring, raise errors when using old style attributes 
-    #that should be refactored out
-    def _g(x):
-        def g(self):
-            raise GetSetError("GET %s"%x)
-        def s(self,q):
-            raise GetSetError("SET %s"%x)
-        return g,s
-    line_buffer=property(*_g("line_buffer"))
-    line_cursor=property(*_g("line_buffer"))
-    undo_stack =property(*_g("undo_stack")) # each entry is a tuple with cursor_position and line_text
-    history_length =property(*_g("history_length")) # each entry is a tuple with cursor_position and line_text
-    history =property(*_g("history")) # each entry is a tuple with cursor_position and line_text
-    history_cursor =property(*_g("history_cursor")) # each entry is a tuple with cursor_position and line_text
-
 
 #  To export as readline interface
 
@@ -133,6 +103,15 @@ class Readline(object):
         except:
             log('error')
             raise
+
+    def _set_prompt(self, prompt):
+        self.mode.prompt=prompt
+        
+    def _get_prompt(self):
+        return self.mode.prompt
+    
+    prompt=property(_get_prompt, _set_prompt)
+
 
     def get_line_buffer(self):
         '''Return the current contents of the line buffer.'''
@@ -228,7 +207,7 @@ class Readline(object):
         before readline prints the first prompt.
 
         '''
-        self.startup_hook = function
+        self.mode.startup_hook = function
 
     def set_pre_input_hook(self, function=None):
         '''Set or remove the pre_input_hook function.
@@ -240,7 +219,7 @@ class Readline(object):
         starts reading input characters.
 
         '''
-        self.pre_input_hook = function
+        self.mode.pre_input_hook = function
 
 ##  Internal functions
 

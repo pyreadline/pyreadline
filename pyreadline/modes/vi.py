@@ -112,8 +112,6 @@ class ViMode(basemode.BaseMode):
             else:
                 self._vi_command = ViCommand (self)
             self.vi_set_insert_mode (False)
-#            if self.line_cursor > 0:
-#                self.line_cursor -= 1
             self.l_buffer.point=lineobj.PrevChar
         elif self._vi_command and self._vi_command.is_replace_one:
             self._vi_command.add_char (e.char)
@@ -358,7 +356,7 @@ class ViCommand:
             if char == '\x1b':  # escape
                 self.escape (char)
             elif char == '\x09':  # tab
-                ts = self.readline.tabstop
+                ts = self.tabstop
                 ws = ' ' * (ts - (self.readline.l_buffer.point%ts))
                 self.set_text (ws)
             elif char == '\x08':  # backspace

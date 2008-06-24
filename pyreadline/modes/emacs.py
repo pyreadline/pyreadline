@@ -34,6 +34,7 @@ class EmacsMode(basemode.BaseMode):
         self.previous_func=None
         self.prompt=">>>"
         self._insert_verbatim=False
+        self.next_meta = False # True to force meta on next character
 
     def __repr__(self):
         return "<EmacsMode>"
@@ -48,6 +49,9 @@ class EmacsMode(basemode.BaseMode):
         #Process exit keys. Only exit on empty line
         def nop(e):
             pass
+        if self.next_meta:
+            self.next_meta = False
+            keyinfo.meta=True
         keytuple=keyinfo.tuple()
         
         if self._insert_verbatim:
@@ -224,7 +228,7 @@ class EmacsMode(basemode.BaseMode):
 
     def tab_insert(self, e): # (M-TAB)
         '''Insert a tab character. '''
-        ws = ' ' * (self.tabstop - (self.line_cursor%self.tabstop))
+        ws = ' ' * (self.tabstop - (self.l_buffer.point%self.tabstop))
         self.insert_text(ws)
 
     def transpose_chars(self, e): # (C-t)

@@ -33,6 +33,23 @@ class BaseMode(object):
         self.completer = None
         self.begidx = 0
         self.endidx = 0
+        self.tabstop = 4
+        self.startup_hook = None
+        self.pre_input_hook = None
+        self.first_prompt = True
+        
+        self.prompt = ">>>"
+        
+        #Paste settings    
+        #assumes data on clipboard is path if shorter than 300 characters and doesn't contain \t or \n
+        #and replace \ with / for easier use in ipython
+        self.enable_ipython_paste_for_paths=True
+
+        #automatically convert tabseparated data to list of lists or array constructors
+        self.enable_ipython_paste_list_of_lists=True
+        self.enable_win32_clipboard=True
+
+        self.paste_line_buffer=[]
 
     def __repr__(self):
         return "<BaseMode>"
@@ -58,12 +75,6 @@ class BaseMode(object):
 #used in readline
     ctrl_c_tap_time_interval=property(*_gs("ctrl_c_tap_time_interval"))
     allow_ctrl_c=property(*_gs("allow_ctrl_c"))
-    next_meta=property(*_gs("next_meta"))
-    first_prompt=property(*_gs("first_prompt"))
-    prompt=property(*_gs("prompt"))
-    paste_line_buffer=property(*_gs("paste_line_buffer"))
-    startup_hook=property(*_gs("startup_hook"))
-    pre_input_hook=property(*_gs("pre_input_hook"))
     _print_prompt=property(_g("_print_prompt"))
     _update_line=property(_g("_update_line"))
     console=property(_g("console"))
@@ -76,12 +87,6 @@ class BaseMode(object):
 #used in emacs
     _clear_after=property(_g("_clear_after"))
     _update_prompt_pos=property(_g("_update_prompt_pos"))
-
-
-    enable_win32_clipboard=property(_g("enable_win32_clipboard"))
-    enable_ipython_paste_list_of_lists=property(_g("enable_ipython_paste_list_of_lists"))
-    enable_ipython_paste_for_paths=property(_g("enable_ipython_paste_for_paths"))
-
 
 #not used in basemode or emacs
 
@@ -109,10 +114,6 @@ class BaseMode(object):
         except KeyboardInterrupt:
             event=self.handle_ctrl_c()
 
-        if self.next_meta:
-            self.next_meta = False
-            control, meta, shift, code = event.keyinfo
-            event.keyinfo = (control, True, shift, code)
         result=self.process_keyevent(event.keyinfo)
         self._update_line()
         return result
