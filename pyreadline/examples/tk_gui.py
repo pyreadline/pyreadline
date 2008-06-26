@@ -10,64 +10,56 @@
 
 
 """
-
-import Tkinter
-
-class KeyEvent(object):
-    def __init__(self, char, shift, control, meta, keyname):
-        self.char=char
-        self.shift=shift
-        self.control=control
-        self.meta=meta
-        self.keyname=keyname
+from pyreadline.rlmain import BaseReadline
+from pyreadline.keysyms.common import KeyPress
+import pyreadline.logger as log
+log.sock_silent=False
+import Tkinter,sys
 
 
-class DumbReadLine(object):
-    def __init__(self):
-        self._text=[]
-
-
-    def ProcKeyEvent(self, event):
+def KeyPress_from_event(event):
+    if len(event.keysym)>1:
+        keysym=event.keysym.lower()
         char=event.char
-        if event.keyname=="backspace":
-            self._text=self._text[:-1]
-        elif event.keyname=="return":
-            return True
-        elif len(event.char)==1:
-            self._text.append(event.char)
-        return False
+    else:
+        keysym=""
+        char=event.keysym
+    return KeyPress(char, event.state&1!=0, event.state&4!=0, event.state&(131072)!=0, keysym)
 
-    def get_line(self):
-        return "".join(self._text)
-
-    def new_line(self):
-        self._text=[]
 
 class App:
     def __init__(self, master):
+        self.frame=frame=Tkinter.Frame(master)
+        frame.pack()
         self.lines=["Hello"]
-        self.RL=DumbReadLine()
+        self.RL=BaseReadline()
+        self.RL.read_inputrc()
+        self.prompt=">>>"
+        self.readline_setup(self.prompt)
         self.textvar = Tkinter.StringVar()
         self._update_line()
-        self.text=Tkinter.Label(master, textvariable=self.textvar,width=50,height=40,justify=Tkinter.LEFT,anchor=Tkinter.NW)
+        self.text=Tkinter.Label(frame, textvariable=self.textvar,width=50,height=40,justify=Tkinter.LEFT,anchor=Tkinter.NW)
         self.text.pack(side=Tkinter.LEFT)
         master.bind("<Key>",self.handler)
         
     def handler(self, event):
-        if len(event.keysym)>1:
-            keysym=event.keysym.lower()
-        else:
-            keysym=""
-        keyevent=KeyEvent(event.char, False, False, False, keysym)
-        result=self.RL.ProcKeyEvent(keyevent)
+        keyevent=KeyPress_from_event(event)
+        try:
+            result=self.RL.process_keyevent(keyevent)
+        except EOFError:
+            self.frame.quit()
+            return
         if result:
-            self.lines.append(self.RL.get_line())
-            self.RL.new_line()
+            self.lines.append(self.RL.get_line_buffer())
+            self.readline_setup(self.prompt)
         self._update_line()
         
+
+    def readline_setup(self, prompt=''):
+        self.RL.readline_setup(prompt)
         
     def _update_line(self):
-        self.textvar.set("\n".join(self.lines+[self.RL.get_line()]))
+        self.textvar.set("\n".join(self.lines+[self.prompt+" "+self.RL.get_line_buffer()]))
         
         
         

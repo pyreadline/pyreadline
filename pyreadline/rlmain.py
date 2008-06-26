@@ -7,7 +7,7 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 ''' an attempt to implement readline for Python in Python using ctypes'''
-import sys,os,re
+import sys,os,re,time
 from glob import glob
 
 import clipboard,logger,console
@@ -30,32 +30,26 @@ else:
     import pdb
 
 
-def quote_char(c):
-    if ord(c)>0:
-        return c
+class MockConsoleError(Exception):
+    pass
+class MockConsole(object):
+    """object used during refactoring. Should raise errors when someone tries to use it.
+    """
+    def __setattr__(self,x):
+        raise MockConsoleError("Should not try to get attributes from MockConsole")
 
-def inword(buffer,point):
-    return buffer[point:point+1] in [A-Za-z0-9]
+    def cursor(self,size=50):
+        pass
 
-
-class Readline(object):
+class BaseReadline(object):
     def __init__(self):
-        self.console = console.Console()
-        self.size = self.console.size()
-        self.prompt_color = None
-        self.command_color = None
-        self.selection_color = self.console.saveattr<<4
-        self.key_dispatch = {}
-        self.previous_func = None
-
         self.allow_ctrl_c=False
         self.ctrl_c_tap_time_interval=0.3
-        self.debug=False
 
-        # variables you can control with parse_and_bind
+        self.debug=False
         self.bell_style = 'none'
         self.mark=-1
-
+        self.console=MockConsole()
         # this code needs to follow l_buffer and history creation
         self.editingmodes=[mode(self) for mode in editingmodes]
         for mode in self.editingmodes:
@@ -67,7 +61,6 @@ class Readline(object):
 
         self.callback = None
 
-#  To export as readline interface
 
     def parse_and_bind(self, string):
         '''Parse and execute single line of a readline init file.'''
@@ -221,99 +214,25 @@ class Readline(object):
         '''
         self.mode.pre_input_hook = function
 
-##  Internal functions
+#Functions that are not relevant for all Readlines but should at least have a NOP
 
     def _bell(self):
-        '''ring the bell if requested.'''
-        if self.bell_style == 'none':
-            pass
-        elif self.bell_style == 'visible':
-            raise NotImplementedError("Bellstyle visible is not implemented yet.")
-        elif self.bell_style == 'audible':
-            self.console.bell()
-        else:
-            raise ReadlineError("Bellstyle %s unknown."%self.bell_style)
-
-    def _clear_after(self):
-        c = self.console
-        x, y = c.pos()
-        w, h = c.size()
-        c.rectangle((x, y, w+1, y+1))
-        c.rectangle((0, y+1, w, min(y+3,h)))
-
-    def _set_cursor(self):
-        c = self.console
-        xc, yc = self.prompt_end_pos
-        w, h = c.size()
-        xc += self.mode.l_buffer.visible_line_width()
-        while(xc >= w):
-            xc -= w
-            yc += 1
-        c.pos(xc, yc)
-
-    def _print_prompt(self):
-        c = self.console
-        x, y = c.pos()
-        
-        n = c.write_scrolling(self.prompt, self.prompt_color)
-        self.prompt_begin_pos = (x, y - n)
-        self.prompt_end_pos = c.pos()
-        self.size = c.size()
-
-    def _update_prompt_pos(self, n):
-        if n != 0:
-            bx, by = self.prompt_begin_pos
-            ex, ey = self.prompt_end_pos
-            self.prompt_begin_pos = (bx, by - n)
-            self.prompt_end_pos = (ex, ey - n)
-
-    def _update_line(self):
-        c=self.console
-        l_buffer=self.mode.l_buffer
-        c.cursor(0)         #Hide cursor avoiding flicking
-        c.pos(*self.prompt_end_pos)
-        ltext = l_buffer.quoted_text()
-        if l_buffer.enable_selection and l_buffer.selection_mark>=0:
-            start=len(l_buffer[:l_buffer.selection_mark].quoted_text())
-            stop=len(l_buffer[:l_buffer.point].quoted_text())
-            if start>stop:
-                stop,start=start,stop
-            n = c.write_scrolling(ltext[:start], self.command_color)
-            n = c.write_scrolling(ltext[start:stop], self.selection_color)
-            n = c.write_scrolling(ltext[stop:], self.command_color)
-        else:
-            n = c.write_scrolling(ltext, self.command_color)
-
-        x,y = c.pos()       #Preserve one line for Asian IME(Input Method Editor) statusbar
-        w,h = c.size()
-        if y >= h - 1 or n > 0:
-            c.scroll_window(-1)
-            c.scroll((0,0,w,h),0,-1)
-            n += 1
-
-        self._update_prompt_pos(n)
-        if hasattr(c,"clear_to_end_of_window"): #Work around function for ironpython due 
-            c.clear_to_end_of_window()          #to System.Console's lack of FillFunction
-        else:
-            self._clear_after()
-        c.cursor(1)         #Show cursor
-        self._set_cursor()
+        pass
 
 #
-# Standard call
+# Standard call, not available for all implementations
 #
     
     def readline(self, prompt=''):
-        return self.mode.readline(prompt)
+        raise NotImplementedError
 
 #
 # Callback interface
 #
-
-    def event_available(self):
-        return self.mode.readline_event_available()
-
-    def setup(self,prompt=""):
+    def process_keyevent(self, keyinfo):
+        return self.mode.process_keyevent(keyinfo)
+        
+    def readline_setup(self,prompt=""):
         return self.mode.readline_setup(prompt)
 
     def keyboard_poll(self):
@@ -324,7 +243,7 @@ class Readline(object):
         Initializes the readline callback interface and terminal, prints the prompt and returns immediately
         '''
         self.callback = callback
-        self.mode.readline_setup(prompt)
+        self.readline_setup(prompt)
 
     def callback_handler_remove(self):
         '''Removes a previously installed callback handler and restores terminal settings'''
@@ -334,7 +253,6 @@ class Readline(object):
         '''Reads a character and informs the readline callback interface when a line is received'''
         if self.keyboard_poll():
             line = self.get_line_buffer() + '\n'
-            self.console.write('\r\n') # this is the newline terminating input
             # however there is another newline added by
             # self.mode.readline_setup(prompt) which is called by callback_handler_install
             # this differs from GNU readline
@@ -438,15 +356,185 @@ class Readline(object):
 
 
 
+class Readline(BaseReadline):
+    """Baseclass for readline based on a console
+    """
+    def __init__(self):
+        BaseReadline.__init__(self)
+        self.console = console.Console()
+        self.size = self.console.size()
+        self.prompt_color = None
+        self.command_color = None
+        self.selection_color = self.console.saveattr<<4
 
-def CTRL(c):
-    '''make a control character'''
-    assert '@' <= c <= '_'
-    return chr(ord(c) - ord('@'))
+        # variables you can control with parse_and_bind
+
+#  To export as readline interface
+
+
+##  Internal functions
+
+    def _bell(self):
+        '''ring the bell if requested.'''
+        if self.bell_style == 'none':
+            pass
+        elif self.bell_style == 'visible':
+            raise NotImplementedError("Bellstyle visible is not implemented yet.")
+        elif self.bell_style == 'audible':
+            self.console.bell()
+        else:
+            raise ReadlineError("Bellstyle %s unknown."%self.bell_style)
+
+    def _clear_after(self):
+        c = self.console
+        x, y = c.pos()
+        w, h = c.size()
+        c.rectangle((x, y, w+1, y+1))
+        c.rectangle((0, y+1, w, min(y+3,h)))
+
+    def _set_cursor(self):
+        c = self.console
+        xc, yc = self.prompt_end_pos
+        w, h = c.size()
+        xc += self.mode.l_buffer.visible_line_width()
+        while(xc >= w):
+            xc -= w
+            yc += 1
+        c.pos(xc, yc)
+
+    def _print_prompt(self):
+        c = self.console
+        x, y = c.pos()
+        
+        n = c.write_scrolling(self.prompt, self.prompt_color)
+        self.prompt_begin_pos = (x, y - n)
+        self.prompt_end_pos = c.pos()
+        self.size = c.size()
+
+    def _update_prompt_pos(self, n):
+        if n != 0:
+            bx, by = self.prompt_begin_pos
+            ex, ey = self.prompt_end_pos
+            self.prompt_begin_pos = (bx, by - n)
+            self.prompt_end_pos = (ex, ey - n)
+
+    def _update_line(self):
+        c=self.console
+        l_buffer=self.mode.l_buffer
+        c.cursor(0)         #Hide cursor avoiding flicking
+        c.pos(*self.prompt_end_pos)
+        ltext = l_buffer.quoted_text()
+        if l_buffer.enable_selection and l_buffer.selection_mark>=0:
+            start=len(l_buffer[:l_buffer.selection_mark].quoted_text())
+            stop=len(l_buffer[:l_buffer.point].quoted_text())
+            if start>stop:
+                stop,start=start,stop
+            n = c.write_scrolling(ltext[:start], self.command_color)
+            n = c.write_scrolling(ltext[start:stop], self.selection_color)
+            n = c.write_scrolling(ltext[stop:], self.command_color)
+        else:
+            n = c.write_scrolling(ltext, self.command_color)
+
+        x,y = c.pos()       #Preserve one line for Asian IME(Input Method Editor) statusbar
+        w,h = c.size()
+        if y >= h - 1 or n > 0:
+            c.scroll_window(-1)
+            c.scroll((0,0,w,h),0,-1)
+            n += 1
+
+        self._update_prompt_pos(n)
+        if hasattr(c,"clear_to_end_of_window"): #Work around function for ironpython due 
+            c.clear_to_end_of_window()          #to System.Console's lack of FillFunction
+        else:
+            self._clear_after()
+        c.cursor(1)         #Show cursor
+        self._set_cursor()
+
+
+    def callback_read_char(self):
+        #Override base to get automatic newline
+        '''Reads a character and informs the readline callback interface when a line is received'''
+        if self.keyboard_poll():
+            line = self.get_line_buffer() + '\n'
+            self.console.write("\r\n")
+            # however there is another newline added by
+            # self.mode.readline_setup(prompt) which is called by callback_handler_install
+            # this differs from GNU readline
+            self.add_history(self.mode.l_buffer)
+            # TADA:
+            self.callback(line)
+
+
+    def event_available(self):
+        return self.console.peek() or (len(self.paste_line_buffer)>0)
+
+        
+    def _readline_from_keyboard(self):
+        while 1:
+            if self._readline_from_keyboard_poll():
+                break
+
+    def _readline_from_keyboard_poll(self):
+        pastebuffer=self.mode.paste_line_buffer
+        if len(pastebuffer)>0:
+            #paste first line in multiline paste buffer
+            self.l_buffer=lineobj.ReadLineTextBuffer(pastebuffer[0])
+            self._update_line()
+            self.mode.paste_line_buffer=pastebuffer[1:]
+            return True
+
+        c=self.console
+        def nop(e):
+            pass
+        try:
+            event = c.getkeypress()
+        except KeyboardInterrupt:
+            event=self.handle_ctrl_c()
+
+        result=self.mode.process_keyevent(event.keyinfo)
+        self._update_line()
+        return result
+
+    def readline_setup(self, prompt=''):
+        BaseReadline.readline_setup(self, prompt)
+        self._print_prompt()
+        self._update_line()
+
+    def readline(self, prompt=''):
+        self.readline_setup(prompt)
+        self.ctrl_c_timeout=time.time()
+        self._readline_from_keyboard()
+        self.console.write('\r\n')
+        log('returning(%s)' % self.get_line_buffer())
+        return self.get_line_buffer() + '\n'
+
+    def handle_ctrl_c(self):
+        from pyreadline.keysyms.common import KeyPress
+        from pyreadline.console.event import Event
+        log_sock("KBDIRQ")
+        event=Event(0,0)
+        event.char="c"
+        event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
+        if self.allow_ctrl_c:
+            now=time.time()
+            if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
+                log_sock("Raise KeyboardInterrupt")
+                raise KeyboardInterrupt
+            else:
+                self.ctrl_c_timeout=now
+        else:
+            raise KeyboardInterrupt
+        return event
+
+
+
+
+
+
+
 
 # create a Readline object to contain the state
 rl = Readline()
-
 
 def GetOutputFile():
     '''Return the console object used by readline so that it can be used for printing in color.'''

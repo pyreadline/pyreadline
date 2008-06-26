@@ -78,6 +78,8 @@ class BaseMode(object):
     _print_prompt=property(_g("_print_prompt"))
     _update_line=property(_g("_update_line"))
     console=property(_g("console"))
+    prompt_begin_pos=property(_g("prompt_begin_pos"))
+    prompt_end_pos=property(_g("prompt_end_pos"))
 
 #used in completer _completions
 #    completer_delims=property(*_gs("completer_delims"))
@@ -90,62 +92,10 @@ class BaseMode(object):
 
 #not used in basemode or emacs
 
-    def readline_event_available(self):
-        return self.console.peek() or (len(self.paste_line_buffer)>0)
-        
-    def _readline_from_keyboard(self):
-        while 1:
-            if self._readline_from_keyboard_poll():
-                break
-
-    def _readline_from_keyboard_poll(self):
-        if len(self.paste_line_buffer)>0:
-            #paste first line in multiline paste buffer
-            self.l_buffer=lineobj.ReadLineTextBuffer(self.paste_line_buffer[0])
-            self._update_line()
-            self.paste_line_buffer=self.paste_line_buffer[1:]
-            return True
-
-        c=self.console
-        def nop(e):
-            pass
-        try:
-            event = c.getkeypress()
-        except KeyboardInterrupt:
-            event=self.handle_ctrl_c()
-
-        result=self.process_keyevent(event.keyinfo)
-        self._update_line()
-        return result
-
-    def readline(self, prompt=''):
-        self.readline_setup(prompt)
-        self._readline_from_keyboard()
-        self.console.write('\r\n')
-        log('returning(%s)' % self.l_buffer.get_line_text())
-        return self.l_buffer.get_line_text() + '\n'
-
-    def handle_ctrl_c(self):
-        from pyreadline.keysyms.common import KeyPress
-        from pyreadline.console.event import Event
-        log_sock("KBDIRQ")
-        event=Event(0,0)
-        event.char="c"
-        event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
-        if self.allow_ctrl_c:
-            now=time.time()
-            if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
-                log_sock("Raise KeyboardInterrupt")
-                raise KeyboardInterrupt
-            else:
-                self.ctrl_c_timeout=now
-        else:
-            raise KeyboardInterrupt
-        return event
-
+    def process_keyevent(self, keyinfo):
+        raise NotImplementedError
 
     def readline_setup(self, prompt=''):
-        self.ctrl_c_timeout=time.time()
         self.l_buffer.selection_mark=-1
         if self.first_prompt:
             self.first_prompt = False
@@ -159,7 +109,7 @@ class BaseMode(object):
         c = self.console
         self.l_buffer.reset_line()
         self.prompt = prompt
-        self._print_prompt()
+#        self._print_prompt()
 
         if self.pre_input_hook:
             try:
@@ -168,7 +118,6 @@ class BaseMode(object):
                 print 'pre_input_hook failed'
                 traceback.print_exc()
                 self.pre_input_hook = None
-        self._update_line()
 
 
 ####################################
@@ -176,8 +125,8 @@ class BaseMode(object):
 
 
     def add_history(self, text):
-        self._history.add_history(text)
-
+        self._history.add_history(lineobj.ReadLineTextBuffer(text))
+            
 
     #Create key bindings:
     def rl_settings_to_string(self):

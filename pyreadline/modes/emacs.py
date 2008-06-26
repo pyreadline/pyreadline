@@ -79,7 +79,6 @@ class EmacsMode(basemode.BaseMode):
 
         self.previous_func = dispatch_func
         if r:
-            self._update_line()
             self.add_history(self.l_buffer.copy())
             return True
         return False
@@ -123,8 +122,8 @@ class EmacsMode(basemode.BaseMode):
             self._update_prompt_pos(scroll)
             self._clear_after()
 
-            event = c.getkeypress()
-            if event.keyinfo.keyname == 'backspace':
+            event = c.getkeypress().keyinfo
+            if event.keyname == 'backspace':
                 query = query[:-1]
                 if len(query) > 0:
                     #self._history.history_cursor = hc_start  #forces search to restart when search empty
@@ -136,11 +135,11 @@ class EmacsMode(basemode.BaseMode):
                 #self._history.history_cursor = hc_start
                 query += event.char
                 line=searchfun(query)
-            elif event.keyinfo == init_event.keyinfo:
+            elif event== init_event:
                 self._history.history_cursor += direction
                 line=searchfun(query)                
             else:
-                if event.keyinfo.keyname != 'return':
+                if event.keyname != 'return':
                     self._bell()
                 break
 
