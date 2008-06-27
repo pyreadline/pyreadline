@@ -117,6 +117,8 @@ def make_KeyPress(char,state,keycode):
     shift = (state & 0x10) != 0
     if control and char !="\x00":
        char = chr(VkKeyScan(ord(char)) & 0xff)
+    elif control and meta and char !="\x00":
+       char = chr(VkKeyScan(ord(char)) & 0xff)
     elif control:
         char=chr(keycode)
     try:

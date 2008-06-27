@@ -490,7 +490,6 @@ class Readline(BaseReadline):
             event = c.getkeypress()
         except KeyboardInterrupt:
             event=self.handle_ctrl_c()
-
         result=self.mode.process_keyevent(event.keyinfo)
         self._update_line()
         return result
@@ -525,10 +524,6 @@ class Readline(BaseReadline):
         else:
             raise KeyboardInterrupt
         return event
-
-
-
-
 
 
 
