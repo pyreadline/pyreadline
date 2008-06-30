@@ -51,6 +51,9 @@ class BaseMode(object):
 
         self.paste_line_buffer=[]
 
+        self._sub_modes=[]
+
+
     def __repr__(self):
         return "<BaseMode>"
 

@@ -25,16 +25,137 @@ def format(keyinfo):
     return "(%s,%s,%s,%s,%x)"%k
 in_ironpython="IronPython" in sys.version
 
+class IncrementalSearchPromptMode(object):
+    def __init__(self, rlobj):
+        pass
+        
+    def _process_incremental_search_keyevent(self, keyinfo):
+        keytuple=keyinfo.tuple()
+        log_sock("%s %s"%(keyinfo,keytuple))
+        if keyinfo.keyname == 'backspace':
+            self.subsearch_query = self.subsearch_query[:-1]
+            if len(self.subsearch_query) > 0:
+                self.line=self.subsearch_fun(self.subsearch_query)                
+            else:
+                self._bell()
+                self.line=""   #empty query means no search result
+        elif keyinfo.keyname in ['return', 'escape']:
+            self._bell()
+            self.prompt=self.subsearch_oldprompt
+            self.process_keyevent_queue=self.process_keyevent_queue[:-1]
+            self._history.history_cursor=len(self._history.history)
+            if keyinfo.keyname == 'escape':
+                self.l_buffer.set_line(self.subsearch_old_line)
+            return False
+        elif keyinfo.keyname:
+            pass
+        elif keytuple==self.subsearch_init_event:
+            self._history.history_cursor += self.subsearch_direction
+            self.line=self.subsearch_fun(self.subsearch_query)                
+        elif keyinfo.control==False and keyinfo.meta==False :
+            self.subsearch_query += keyinfo.char
+            self.line=self.subsearch_fun(self.subsearch_query)
+        else:
+            pass
+        self.prompt=self.subsearch_prompt%self.subsearch_query
+        self.l_buffer.set_line(self.line)
 
-class EmacsMode(basemode.BaseMode):
+    def _init_incremental_search(self, searchfun, direction, init_event):
+        """Initialize search prompt
+        """
+        self.subsearch_init_event=init_event.tuple()
+        self.subsearch_direction=direction
+        self.subsearch_query = ''
+        self.subsearch_fun = searchfun
+        self.subsearch_old_line = self.l_buffer.get_line_text()
+        
+        self.process_keyevent_queue.append(self._process_incremental_search_keyevent)
+        
+        self.subsearch_oldprompt=self.prompt
+        
+        if (self.previous_func != self.history_search_forward and
+                self.previous_func != self.history_search_backward):
+            self.subsearch_query = ''.join(self.l_buffer[0:Point].get_line_text())
+
+        
+        if self.subsearch_direction < 0:
+            self.subsearch_prompt = "reverse-i-search`%s': "
+        else:
+            self.subsearch_prompt = "forward-i-search`%s': "
+        self.prompt=self.subsearch_prompt%""
+        if self.subsearch_query:
+            self.line=self._process_search_keyevent(init_event)
+        else:
+            self.line=""
+
+class SearchPromptMode(object):
+    def __init__(self, rlobj):
+        pass
+
+    def _process_non_incremental_search_keyevent(self, keyinfo):
+        keytuple=keyinfo.tuple()
+        log_sock("%s %s"%(keyinfo,keytuple))
+
+        if keyinfo.keyname == 'backspace':
+            self.non_inc_query = self.non_inc_query[:-1]
+        elif keyinfo.keyname in ['return', 'escape']:
+            if self.non_inc_query:
+                if self.non_inc_direction==-1:
+                    res=self._history.reverse_search_history(self.non_inc_query)
+                else:
+                    res=self._history.forward_search_history(self.non_inc_query)
+
+            self._bell()
+            self.prompt=self.non_inc_oldprompt
+            self.process_keyevent_queue=self.process_keyevent_queue[:-1]
+            self._history.history_cursor=len(self._history.history)
+            if keyinfo.keyname == 'escape':
+                self.l_buffer=self.non_inc_oldline
+            else:
+                self.l_buffer.set_line(res)
+            return False
+        elif keyinfo.keyname:
+            pass
+        elif keyinfo.control==False and keyinfo.meta==False :
+            self.non_inc_query += keyinfo.char
+        else:
+            pass
+        self.prompt=self.non_inc_oldprompt+":"+self.non_inc_query
+
+    def _init_non_i_search(self, direction):
+        self.non_inc_direction = direction
+        self.non_inc_query = ""
+        self.non_inc_oldprompt=self.prompt
+        self.non_inc_oldline=self.l_buffer.copy()
+        self.l_buffer.reset_line()
+        self.prompt=self.non_inc_oldprompt+":"
+        self.process_keyevent_queue.append(self._process_non_incremental_search_keyevent)
+                
+    def non_incremental_reverse_search_history(self, e): # (M-p)
+        '''Search backward starting at the current line and moving up
+        through the history as necessary using a non-incremental search for
+        a string supplied by the user.'''
+        return self._init_non_i_search(-1)
+
+    def non_incremental_forward_search_history(self, e): # (M-n)
+        '''Search forward starting at the current line and moving down
+        through the the history as necessary using a non-incremental search
+        for a string supplied by the user.'''
+        return self._init_non_i_search(1)
+
+class EmacsMode(IncrementalSearchPromptMode, SearchPromptMode, basemode.BaseMode):
     mode="emacs"
-    def __init__(self,rlobj):
-        super(EmacsMode,self).__init__(rlobj)
+    def __init__(self, rlobj):
+        basemode.BaseMode.__init__(self, rlobj)
+        IncrementalSearchPromptMode.__init__(self, rlobj)
+        SearchPromptMode.__init__(self, rlobj)
         self._keylog=(lambda x,y: None)
         self.previous_func=None
         self.prompt=">>>"
         self._insert_verbatim=False
         self.next_meta = False # True to force meta on next character
+
+        self.process_keyevent_queue=[self._process_keyevent]
 
     def __repr__(self):
         return "<EmacsMode>"
@@ -44,6 +165,13 @@ class EmacsMode(basemode.BaseMode):
         self._keylog=logfun
 
     def process_keyevent(self, keyinfo):
+        r=self.process_keyevent_queue[-1](keyinfo)
+        if r:
+            self.add_history(self.l_buffer.copy())
+            return True
+        return False
+
+    def _process_keyevent(self, keyinfo):
         """return True when line is final
         """
         #Process exit keys. Only exit on empty line
@@ -71,6 +199,7 @@ class EmacsMode(basemode.BaseMode):
 
         log("readline from keyboard:%s,%s"%(keytuple, dispatch_func))
         log_sock((u"%s|%s"%(ensure_unicode(format(keytuple)),dispatch_func.__name__)),"bound_function")
+
         r = None
         if dispatch_func:
             r = dispatch_func(keyinfo)
@@ -78,10 +207,8 @@ class EmacsMode(basemode.BaseMode):
             self.l_buffer.push_undo()
 
         self.previous_func = dispatch_func
-        if r:
-            self.add_history(self.l_buffer.copy())
-            return True
-        return False
+        return r
+
 
 #########  History commands
     def previous_history(self, e): # (C-p)
@@ -102,77 +229,16 @@ class EmacsMode(basemode.BaseMode):
         being entered.'''
         self._history.end_of_history(self.l_buffer)
 
-    def _i_search(self, searchfun, direction, init_event):
-        c = self.console
-        line = self.l_buffer.get_line_text()
-        query = ''
-        if (self.previous_func != self.history_search_forward and
-                self.previous_func != self.history_search_backward):
-            self.query = ''.join(self.l_buffer[0:Point].get_line_text())
-        hc_start = self._history.history_cursor #+ direction
-        while 1:
-            x, y = self.prompt_end_pos
-            c.pos(0, y)
-            if direction < 0:
-                prompt = 'reverse-i-search'
-            else:
-                prompt = 'forward-i-search'
-
-            scroll = c.write_scrolling("%s`%s': %s" % (prompt, query, line))
-            self._update_prompt_pos(scroll)
-            self._clear_after()
-
-            event = c.getkeypress().keyinfo
-            if event.keyname == 'backspace':
-                query = query[:-1]
-                if len(query) > 0:
-                    #self._history.history_cursor = hc_start  #forces search to restart when search empty
-                    line=searchfun(query)                
-                else:
-                    self._bell()
-                    line=""   #empty query means no search result
-            elif event.char in string.letters + string.digits + string.punctuation + ' ':
-                #self._history.history_cursor = hc_start
-                query += event.char
-                line=searchfun(query)
-            elif event== init_event:
-                self._history.history_cursor += direction
-                line=searchfun(query)                
-            else:
-                if event.keyname != 'return':
-                    self._bell()
-                break
-
-        px, py = self.prompt_begin_pos
-        c.pos(0, py)
-        self.l_buffer.set_line(line)
-        self._print_prompt()
-        self._history.history_cursor=len(self._history.history)
 
     def reverse_search_history(self, e): # (C-r)
         '''Search backward starting at the current line and moving up
         through the history as necessary. This is an incremental search.'''
-        self._i_search(self._history.reverse_search_history, -1, e)
+        self._init_incremental_search(self._history.reverse_search_history, -1, e)
 
     def forward_search_history(self, e): # (C-s)
         '''Search forward starting at the current line and moving down
         through the the history as necessary. This is an incremental search.'''
-        self._i_search(self._history.forward_search_history, 1, e)
-
-
-    def non_incremental_reverse_search_history(self, e): # (M-p)
-        '''Search backward starting at the current line and moving up
-        through the history as necessary using a non-incremental search for
-        a string supplied by the user.'''
-        q=self._history.non_incremental_reverse_search_history(self.l_buffer)
-        self.l_buffer=q
-
-    def non_incremental_forward_search_history(self, e): # (M-n)
-        '''Search forward starting at the current line and moving down
-        through the the history as necessary using a non-incremental search
-        for a string supplied by the user.'''
-        q=self._history.non_incremental_reverse_search_history(self.l_buffer)
-        self.l_buffer=q
+        self._init_incremental_search(self._history.forward_search_history, 1, e)
 
     def history_search_forward(self, e): # ()
         '''Search forward through the history for the string of characters

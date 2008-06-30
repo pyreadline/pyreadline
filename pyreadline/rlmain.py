@@ -422,7 +422,9 @@ class Readline(BaseReadline):
         c=self.console
         l_buffer=self.mode.l_buffer
         c.cursor(0)         #Hide cursor avoiding flicking
-        c.pos(*self.prompt_end_pos)
+        #c.pos(*self.prompt_end_pos)
+        c.pos(*self.prompt_begin_pos)
+        self._print_prompt()
         ltext = l_buffer.quoted_text()
         if l_buffer.enable_selection and l_buffer.selection_mark>=0:
             start=len(l_buffer[:l_buffer.selection_mark].quoted_text())
