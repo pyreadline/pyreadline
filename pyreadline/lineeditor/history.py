@@ -143,50 +143,6 @@ class LineHistory(object):
             return res[0][1].get_line_text()
         return ""
 
-    def _non_i_search(self, direction, current):
-        c = pyreadline.rl.console
-        line = current.get_line_text()
-        query = ''
-        while 1:
-            c.pos(*pyreadline.rl.prompt_end_pos)
-            scroll = c.write_scrolling(":%s" % query)
-            pyreadline.rl._update_prompt_pos(scroll)
-            pyreadline.rl._clear_after()
-
-            event = c.getkeypress()
-            
-            if event.keyinfo.keyname == 'backspace':
-                if len(query) > 0:
-                    query = query[:-1]
-                else:
-                    break
-            elif event.char in string.letters + string.digits + string.punctuation + ' ':
-                query += event.char
-            elif event.keyinfo.keyname == 'return':
-                break
-            else:
-                pyreadline.rl._bell()
-        res=""
-        if query:
-            if direction==-1:
-                res=self.reverse_search_history(query)
-                
-            else:
-                res=self.forward_search_history(query)
-        return lineobj.ReadLineTextBuffer(res,point=0)
-        
-    def non_incremental_reverse_search_history(self,current): # (M-p)
-        '''Search backward starting at the current line and moving up
-        through the history as necessary using a non-incremental search for
-        a string supplied by the user.'''
-        return self._non_i_search(-1,current)
-
-    def non_incremental_forward_search_history(self,current): # (M-n)
-        '''Search forward starting at the current line and moving down
-        through the the history as necessary using a non-incremental search
-        for a string supplied by the user.'''
-        return self._non_i_search(1,current)
-
     def _search(self, direction, partial):
         try:
             if (self.lastcommand != self.history_search_forward and
