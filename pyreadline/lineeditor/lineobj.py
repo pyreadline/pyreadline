@@ -267,7 +267,8 @@ class TextLine(object):
     def end_of_line(self):
         self.point = len(self.line_buffer)
 
-    def _insert_text(self, text):
+    def _insert_text(self, text, argument=1):
+        text=text*argument
         if self.overwrite:
             for c in text:
                 #if self.point:
@@ -406,10 +407,10 @@ class ReadLineTextBuffer(TextLine):
         return 'ReadLineTextBuffer("%s",point=%s,mark=%s,selection_mark=%s)'%(self.line_buffer,self.point,self.mark,self.selection_mark)
 
 
-    def insert_text(self,char):
+    def insert_text(self, char, argument=1):
         self.delete_selection()
         self.selection_mark=-1
-        self._insert_text(char)
+        self._insert_text(char, argument)
     
     def to_clipboard(self):
         if self.enable_win32_clipboard:
