@@ -16,15 +16,27 @@ import pyreadline.logger as log
 log.sock_silent=False
 import Tkinter,sys
 
+translate={"plus":"+","minus":"-","asterisk":"*","slash":"/","exclam":"!","quotedbl":'"',
+           "parenleft":"(","parenright":")",}
+
 
 def KeyPress_from_event(event):
-    if len(event.keysym)>1:
-        keysym=event.keysym.lower()
-        char=event.char
-    else:
+    keysym=event.keysym.lower()
+    char=event.char
+    if keysym in translate:
+        keysym=translate[keysym]
+
+    shift=event.state&1!=0
+    control=event.state&4!=0
+    meta=event.state&(131072)!=0
+
+    if len(keysym)==1 and control and meta:
         keysym=""
-        char=event.keysym
-    return KeyPress(char, event.state&1!=0, event.state&4!=0, event.state&(131072)!=0, keysym)
+    elif len(keysym)==1:
+        char=keysym
+        keysym=""
+
+    return KeyPress(char, shift, control, meta, keysym)
 
 
 class App:
@@ -41,6 +53,7 @@ class App:
         self.text=Tkinter.Label(frame, textvariable=self.textvar,width=50,height=40,justify=Tkinter.LEFT,anchor=Tkinter.NW)
         self.text.pack(side=Tkinter.LEFT)
         master.bind("<Key>",self.handler)
+        self.locals={}
         
     def handler(self, event):
         keyevent=KeyPress_from_event(event)
@@ -50,7 +63,14 @@ class App:
             self.frame.quit()
             return
         if result:
-            self.lines.append(self.RL.get_line_buffer())
+            self.lines.append(self.prompt+" "+self.RL.get_line_buffer())
+            line=self.RL.get_line_buffer()
+            if line.strip():
+                try:
+                    result=eval(line, globals(), self.locals)
+                    self.lines.append(repr(result))
+                except:
+                    self.lines.append("ERROR")
             self.readline_setup(self.prompt)
         self._update_line()
         
