@@ -158,9 +158,9 @@ class ViMode(basemode.BaseMode):
         self.__vi_insert_mode = value
         if value:
             self.vi_save_line ()
-            self.console.cursor (size=25)
+            self.cursor_size=25
         else:
-            self.console.cursor (size=100)
+            self.cursor_size=100
 
     def vi_undo_restart (self):
         tpl_undo = (self.l_buffer.point, self.l_buffer.line_buffer[:], )

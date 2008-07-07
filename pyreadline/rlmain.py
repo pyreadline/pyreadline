@@ -468,7 +468,9 @@ class Readline(BaseReadline):
             c.clear_to_end_of_window()          #to System.Console's lack of FillFunction
         else:
             self._clear_after()
-        c.cursor(1)         #Show cursor
+        
+        #Show cursor, set size vi mode changes size in insert/overwrite mode
+        c.cursor(1, size=self.mode.cursor_size)  
         self._set_cursor()
 
 

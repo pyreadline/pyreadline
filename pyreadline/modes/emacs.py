@@ -88,10 +88,6 @@ class IncrementalSearchPromptMode(object):
         else:
             self.line=""
 
-
-
-
-
 class SearchPromptMode(object):
     def __init__(self, rlobj):
         pass
@@ -186,10 +182,6 @@ class DigitArgumentMode(object):
         log("<%s> %s"%(self.argument,type(self.argument)))
         self.prompt="(arg: %s) "%self.argument
         log("arg-init %s %s"%(self.argument,keyinfo.char))
-
-
-
-
 
 
 class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode, SearchPromptMode, basemode.BaseMode):

@@ -38,6 +38,7 @@ class BaseMode(object):
         self.startup_hook = None
         self.pre_input_hook = None
         self.first_prompt = True
+        self.cursor_size=25
         
         self.prompt = ">>>"
         
