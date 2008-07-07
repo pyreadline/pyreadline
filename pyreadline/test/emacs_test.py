@@ -15,7 +15,7 @@ from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
 
 from common import *
-from pyreadline.logger import log_sock
+from pyreadline.logger import log
 import pyreadline.logger as logger
 logger.sock_silent=True
 logger.show_event=["debug"]
@@ -60,7 +60,7 @@ class EmacsModeTest (EmacsMode):
             keyinfo, event = keytext_to_keyinfo_and_event (key)
             dispatch_func = self.key_dispatch.get(keyinfo.tuple(),self.self_insert)
             self.tested_commands[dispatch_func.__name__]=dispatch_func
-            log_sock("keydisp: %s %s"%( key,dispatch_func.__name__),"debug")
+            log("keydisp: %s %s"%( key,dispatch_func.__name__))
             dispatch_func (event)
             self.previous_func=dispatch_func
 
@@ -346,7 +346,7 @@ class TestsHistory (unittest.TestCase):
         import rlcompleter
         logger.sock_silent=False
 
-        log_sock("-"*50,"debug")
+        log("-"*50)
         r=EmacsModeTest()
         r.completer=rlcompleter.Completer().complete
         r._bind_key("tab",r.complete)

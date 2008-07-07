@@ -8,7 +8,7 @@
 #*****************************************************************************
 import os,re,math,glob,sys,time
 import pyreadline.logger as logger
-from   pyreadline.logger import log,log_sock
+from   pyreadline.logger import log
 from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
@@ -203,7 +203,7 @@ class BaseMode(object):
                     completions.append(r)
                 else:
                     break
-            log('text completions=%s' % completions)
+            log('text completions=<%s>' % completions)
         if not completions:
             # get the filename to complete
             while self.begidx > 0:
@@ -222,7 +222,7 @@ class BaseMode(object):
                     else:
                         mc.append(f)
                 completions = mc
-            log('fnames=%s' % completions)
+            log('fnames=<%s>' % completions)
         return completions
 
 
@@ -498,7 +498,7 @@ class BaseMode(object):
                     self.insert_text(t[0])
                     self.add_history(self.l_buffer.copy())
                     self.paste_line_buffer=t[1:]
-                    log("multi: %s"%self.paste_line_buffer)
+                    log("multi: >%s<"%self.paste_line_buffer)
                     return True
                 else:
                     return False

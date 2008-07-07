@@ -35,7 +35,7 @@ import os
 import System
 
 from event import Event
-from pyreadline.logger import log,log_sock
+from pyreadline.logger import log
 
 #print "Codepage",System.Console.InputEncoding.CodePage
 from pyreadline.keysyms import make_keysym, make_keyinfo,make_KeyPress,make_KeyPress_from_keydescr
@@ -85,15 +85,14 @@ class Console(object):
         self.saveattr = winattr[str(System.Console.ForegroundColor).lower()]
         self.savebg=System.Console.BackgroundColor
         log('initial attr=%s' % self.attr)
-        log_sock("%s"%self.saveattr)
 
     def _get(self):
         top=System.Console.WindowTop
-        log_sock("WindowTop:%s"%top,"console")
+        log("WindowTop:%s"%top)
         return top
     def _set(self,value):
         top=System.Console.WindowTop
-        log_sock("Set WindowTop:old:%s,new:%s"%(top,value),"console")
+        log("Set WindowTop:old:%s,new:%s"%(top,value))
     WindowTop=property(_get,_set)
     del _get,_set
 
@@ -148,7 +147,6 @@ class Console(object):
         # split the string into ordinary characters and funny characters
         chunks = self.motion_char_re.split(text)
         for chunk in chunks:
-            log('C:'+chunk)
             n = self.write_color(chunk, attr)
             if len(chunk) == 1: # the funny characters will be alone
                 if chunk[0] == '\n': # newline
@@ -311,7 +309,7 @@ class Console(object):
             elif e.Key == System.ConsoleKey.PageUp:#PageUp
                 self.scroll_window(-12)
             elif str(e.KeyChar)=="\000":#Drop deadkeys
-                log_sock("Deadkey: %s"%e)
+                log("Deadkey: %s"%e)
                 return event(self,e)
                 pass
             else:
@@ -364,7 +362,7 @@ class event(Event):
         self.char = str(input.KeyChar)
         self.keycode = input.Key
         self.state = input.Modifiers
-        log_sock("%s,%s,%s"%(input.Modifiers,input.Key,input.KeyChar),"console")
+        log("%s,%s,%s"%(input.Modifiers,input.Key,input.KeyChar))
         self.type="KeyRelease"
         self.keysym = make_keysym(self.keycode)
         self.keyinfo = make_KeyPress(self.char, self.state, self.keycode)

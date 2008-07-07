@@ -7,6 +7,7 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 import winconstants as c32
+from   pyreadline.logger import log
 from ctypes import windll
 import ctypes
 # table for translating virtual keys to X windows key symbols
@@ -111,21 +112,21 @@ def char_to_keyinfo(char, control=False, meta=False, shift=False):
     k.char=chr(vk & 0xff)
     return k
 
-def make_KeyPress(char,state,keycode):
+def make_KeyPress(char, state, keycode):
     control = (state & (4+8)) != 0
     meta = (state & (1+2)) != 0
     shift = (state & 0x10) != 0
-    if control and char !="\x00":
-       char = chr(VkKeyScan(ord(char)) & 0xff)
-    elif control and meta and char !="\x00":
-       char = chr(VkKeyScan(ord(char)) & 0xff)
-    elif control:
+    if control and not meta:#Matches ctrl- chords should pass keycode as char
         char=chr(keycode)
+    elif control and meta:  #Matches alt gr and should just pass on char
+        control=False
+        meta=False
     try:
         keyname=code2sym_map[keycode]
     except KeyError:
         keyname=""
-    return KeyPress(char,shift,control,meta,keyname)
+    out=KeyPress(char, shift, control, meta, keyname)
+    return out
 
 if __name__=="__main__":
     import startup

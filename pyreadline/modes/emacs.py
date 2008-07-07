@@ -8,7 +8,7 @@
 #*****************************************************************************
 import os,sys,time
 import pyreadline.logger as logger
-from   pyreadline.logger import log,log_sock
+from   pyreadline.logger import log
 from pyreadline.lineeditor.lineobj import Point
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
@@ -31,7 +31,7 @@ class IncrementalSearchPromptMode(object):
         
     def _process_incremental_search_keyevent(self, keyinfo):
         keytuple=keyinfo.tuple()
-        log_sock("%s %s"%(keyinfo,keytuple))
+        log("IncrementalSearchPromptMode %s %s"%(keyinfo,keytuple))
         if keyinfo.keyname == 'backspace':
             self.subsearch_query = self.subsearch_query[:-1]
             if len(self.subsearch_query) > 0:
@@ -98,7 +98,7 @@ class SearchPromptMode(object):
 
     def _process_non_incremental_search_keyevent(self, keyinfo):
         keytuple=keyinfo.tuple()
-        log_sock("%s %s"%(keyinfo,keytuple))
+        log("SearchPromptMode %s %s"%(keyinfo,keytuple))
 
         if keyinfo.keyname == 'backspace':
             self.non_inc_query = self.non_inc_query[:-1]
@@ -154,9 +154,9 @@ class DigitArgumentMode(object):
         pass
 
     def _process_digit_argument_keyevent(self, keyinfo):
-        log_sock("_process_digit_argument_keyevent %s"%keyinfo)
+        log("DigitArgumentMode.keyinfo %s"%keyinfo)
         keytuple=keyinfo.tuple()
-        log_sock("%s %s"%(keyinfo,keytuple))
+        log("DigitArgumentMode.keytuple %s %s"%(keyinfo,keytuple))
         if keyinfo.keyname in ['return']:
             self.prompt=self._digit_argument_oldprompt
             self.process_keyevent_queue=self.process_keyevent_queue[:-1]
@@ -164,7 +164,7 @@ class DigitArgumentMode(object):
         elif keyinfo.keyname:
             pass
         elif keyinfo.char in "0123456789" and keyinfo.control==False and keyinfo.meta==False :
-            log_sock("arg %s %s"%(self.argument,keyinfo.char))
+            log("arg %s %s"%(self.argument,keyinfo.char))
             self.argument=self.argument*10+int(keyinfo.char)
         else:
             self.prompt=self._digit_argument_oldprompt
@@ -183,9 +183,9 @@ class DigitArgumentMode(object):
             self.argument=-1
         elif keyinfo.char in "0123456789":
             self.argument=int(keyinfo.char)
-        log_sock("<%s> %s"%(self.argument,type(self.argument)))
+        log("<%s> %s"%(self.argument,type(self.argument)))
         self.prompt="(arg: %s) "%self.argument
-        log_sock("arg-init %s %s"%(self.argument,keyinfo.char))
+        log("arg-init %s %s"%(self.argument,keyinfo.char))
 
 
 
@@ -229,7 +229,7 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode, SearchPromptMode
         """return True when line is final
         """
         #Process exit keys. Only exit on empty line
-        log_sock("_process_keyevent %s"%keyinfo)
+        log("_process_keyevent <%s>"%keyinfo)
         def nop(e):
             pass
         if self.next_meta:
@@ -244,17 +244,16 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode, SearchPromptMode
             return False
         
         if keytuple in self.exit_dispatch:
-            log_sock("exit_dispatch:%s, %s"%(self.l_buffer, lineobj.EndOfLine(self.l_buffer)))
+            log("exit_dispatch:<%s, %s>"%(self.l_buffer, lineobj.EndOfLine(self.l_buffer)))
             if lineobj.EndOfLine(self.l_buffer) == 0:
                 raise EOFError
-        if keyinfo.keyname:
+        if keyinfo.keyname or keyinfo.control or keyinfo.meta:
             default=nop
         else:
             default=self.self_insert
         dispatch_func = self.key_dispatch.get(keytuple, default)
 
-        log("readline from keyboard:%s,%s"%(keytuple, dispatch_func))
-        log_sock((u"%s|%s"%(ensure_unicode(format(keytuple)),dispatch_func.__name__)),"bound_function")
+        log("readline from keyboard:<%s,%s>"%(keytuple, dispatch_func))
 
         r = None
         if dispatch_func:
