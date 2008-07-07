@@ -11,7 +11,7 @@ import pyreadline.lineeditor.history as history
 
 import pyreadline.logger
 pyreadline.logger.sock_silent=False
-from pyreadline.logger import log_sock
+from pyreadline.logger import log
 #----------------------------------------------------------------------
 
 

@@ -20,7 +20,7 @@ import exceptions
 class EscapeHistory(exceptions.Exception):
     pass
 
-from pyreadline.logger import log_sock
+from pyreadline.logger import log
 
 _ignore_leading_spaces=False
 
@@ -35,20 +35,20 @@ class LineHistory(object):
 
     def get_history_length(self):
         value=self._history_length
-        log_sock("get_history_length:%d"%value,"history")
+        log("get_history_length:%d"%value)
         return value
 
     def set_history_length(self,value):
-        log_sock("set_history_length: old:%d new:%d"%(self._history_length,value),"history")
+        log("set_history_length: old:%d new:%d"%(self._history_length,value))
         self._history_length=value
 
     def get_history_cursor(self):
         value=self._history_cursor
-        log_sock("get_history_cursor:%d"%value,"history")
+        log("get_history_cursor:%d"%value)
         return value
 
     def set_history_cursor(self,value):
-        log_sock("set_history_cursor: old:%d new:%d"%(self._history_cursor,value),"history")
+        log("set_history_cursor: old:%d new:%d"%(self._history_cursor,value))
         self._history_cursor=value
         
     history_length=property(get_history_length,set_history_length)

@@ -6,42 +6,59 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
-import socket
+import socket, logging, logging.handlers
 from pyreadline.unicode_helper import ensure_str
-_logfile=False
-
-def start_log(on,filename):
-    global _logfile
-    if on=="on":
-        _logfile=open(filename,"w")
-    else:
-        _logfile=False
-        
-def log(s):
-    if _logfile:
-        s = ensure_str(s)
-        print >>_logfile, s
-        _logfile.flush()
-
 
 host="localhost"
-port=8081
-logsocket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+port=logging.handlers.DEFAULT_TCP_LOGGING_PORT
 
-show_event=["keypress","bound_function","bind_key","console"]
-show_event=["bound_function"]
 
-sock_silent=True
+root_logger=logging.getLogger('')
+root_logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(message)s')
+file_handler=None
 
-def log_sock(s,event_type=None):
-    if sock_silent:
+class NULLHandler(logging.Handler):
+    def emit(self, s):
         pass
-    else:
-        if event_type is None:
-            logsocket.sendto(ensure_str(s),(host,port))
-        elif event_type in show_event:
-            logsocket.sendto(ensure_str(s),(host,port))
-        else:
-            pass
 
-    
+class SocketStream(object):
+    def __init__(self, host, port):
+        self.logsocket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+
+    def write(self, s):
+        self.logsocket.sendto(ensure_str(s),(host,port))
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+socket_handler = logging.StreamHandler(SocketStream(host, port))
+socket_handler.setFormatter(formatter)
+root_logger.addHandler(NULLHandler())
+
+
+def start_socket_log():
+    root_logger.addHandler(socket_handler)
+
+def stop_socket_log():
+    root_logger.removeHandler(socket_handler)
+
+def start_file_log(filename):
+    global file_handler
+    file_handler=logging.handlers.FileHandler(filename, "w")
+    root_logger.addHandler(file_handler)
+
+def stop_file_log():
+    global file_handler
+    if file_handler:
+        root_logger.removeHandler(file_handler)
+        file_handler.close()
+        file_handler=None
+
+def log(s):
+    s = ensure_str(s)
+    root_logger.debug(s)
+

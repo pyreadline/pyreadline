@@ -11,7 +11,7 @@ sys.path.append ('../..')
 from pyreadline.modes.vi import *
 from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
-from pyreadline.logger import log_sock
+from pyreadline.logger import log
 import pyreadline.logger as logger
 from common import *
 

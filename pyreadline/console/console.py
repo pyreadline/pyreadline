@@ -16,7 +16,7 @@ This was modeled after the C extension of the same name by Fredrik Lundh.
 import sys,os
 import traceback
 import re
-from pyreadline.logger import log,log_sock
+from pyreadline.logger import log
 from pyreadline.unicode_helper import ensure_unicode,ensure_str
 import pyreadline.unicode_helper as unicode_helper
 try:
@@ -28,6 +28,13 @@ except ImportError:
 # my code
 from pyreadline.keysyms import make_KeyPress
 from pyreadline.console.ansi import AnsiState,AnsiWriter
+
+
+def nolog(string):
+    pass
+    
+log=nolog
+
 
 # some constants we need
 STD_INPUT_HANDLE = -10
@@ -297,7 +304,6 @@ class Console(object):
         # split the string into ordinary characters and funny characters
         chunks = self.motion_char_re.split(text)
         for chunk in chunks:
-            log('C:'+chunk)
             n = self.write_color(chunk, attr)
             if len(chunk) == 1: # the funny characters will be alone
                 if chunk[0] == '\n': # newline
@@ -339,8 +345,8 @@ class Console(object):
         n,res= self.ansiwriter.write_color(text,attr)
         junk = c_int(0)
         for attr,chunk in res:
-            log(unicode(attr))
-            log(unicode(chunk))
+            log(u"console.attr:%s"%unicode(attr))
+            log(u"console.chunk:%s"%unicode(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)
             for short_chunk in split_block(chunk):
                 self.WriteConsoleW(self.hout, short_chunk, len(short_chunk), byref(junk), None)
@@ -480,7 +486,7 @@ class Console(object):
             status = self.ReadConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
             if status and count.value == 1:
                 e = event(self, Cevent)
-                log_sock(ensure_unicode(e.keyinfo),"keypress")
+                log(u"console.get %s"%ensure_unicode(e.keyinfo))
                 return e
 
     def getkeypress(self):
@@ -488,7 +494,7 @@ class Console(object):
         while 1:
             e = self.get()
             if e.type == 'KeyPress' and e.keycode not in key_modifiers:
-                log(e)
+                log("console.getleypress %s"%e)
                 if e.keyinfo.keyname == 'next':
                     self.scroll_window(12)
                 elif e.keyinfo.keyname == 'prior':

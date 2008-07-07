@@ -11,7 +11,7 @@ import sys,os,re,time
 from glob import glob
 
 import clipboard,logger,console
-from   logger import log,log_sock
+from   logger import log
 from error import ReadlineError,GetSetError
 from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
 
@@ -146,7 +146,7 @@ class BaseReadline(object):
         '''Load a readline history file. The default filename is ~/.history.'''
         if filename is None:
             filename=self.mode._history.history_filename
-        log_sock("read_history_file from %s"%filename)
+        log("read_history_file from %s"%filename)
         self.mode._history.read_history_file(filename)
 
     def write_history_file(self, filename=None): 
@@ -266,7 +266,6 @@ class BaseReadline(object):
         def setmode(name):
             self.mode=modes[name]
         def bind_key(key,name):
-            log("bind %s %s"%(key,name))
             if hasattr(modes[mode],name):
                 modes[mode]._bind_key(key,getattr(modes[mode],name))
             else:
@@ -286,31 +285,51 @@ class BaseReadline(object):
         def setkill_ring_to_clipboard(killring):
             import pyreadline.lineeditor.lineobj 
             pyreadline.lineeditor.lineobj.kill_ring_to_clipboard=killring
+
         def sethistoryfilename(filename):
             self.mode._history.history_filename=os.path.expanduser(filename)
+
         def setbellstyle(mode):
             self.bell_style=mode
+
         def sethistorylength(length):
             self.mode._history.history_length=int(length)
+
         def allow_ctrl_c(mode):
-            log_sock("allow_ctrl_c:%s:%s"%(self.allow_ctrl_c,mode))
+            log("allow_ctrl_c:%s:%s"%(self.allow_ctrl_c,mode))
             self.allow_ctrl_c=mode
+ 
         def setbellstyle(mode):
             self.bell_style=mode
+ 
         def show_all_if_ambiguous(mode):
             self.mode.show_all_if_ambiguous=mode
+        
         def ctrl_c_tap_time_interval(mode):
             self.ctrl_c_tap_time_interval=mode
+        
         def mark_directories(mode):
             self.mode.mark_directories=mode
+        
         def completer_delims(delims):
             self.mode.completer_delims=delims
+        
         def debug_output(on,filename="pyreadline_debug_log.txt"):  #Not implemented yet
             if on in ["on","on_nologfile"]:
                 self.debug=True
-            logger.start_log(on,filename)
-            logger.log("STARTING LOG")
-#            print release.branch
+
+            if on == "on":
+                logger.start_file_log(filename)
+                logger.start_socket_log()
+                logger.log("STARTING LOG")
+            elif on =="on_nologfile":
+                logger.start_socket_log()
+                logger.log("STARTING LOG")
+            else:
+                logger.log("STOPING LOG")
+                logger.stop_file_log()
+                logger.stop_socket_log()
+        
         def set_prompt_color(color):
             trtable={"black":0,"darkred":4,"darkgreen":2,"darkyellow":6,"darkblue":1,"darkmagenta":5,"darkcyan":3,"gray":7,
                      "red":4+8,"green":2+8,"yellow":6+8,"blue":1+8,"magenta":5+8,"cyan":3+8,"white":7+8}
@@ -512,14 +531,14 @@ class Readline(BaseReadline):
     def handle_ctrl_c(self):
         from pyreadline.keysyms.common import KeyPress
         from pyreadline.console.event import Event
-        log_sock("KBDIRQ")
+        log("KBDIRQ")
         event=Event(0,0)
         event.char="c"
         event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
         if self.allow_ctrl_c:
             now=time.time()
             if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
-                log_sock("Raise KeyboardInterrupt")
+                log("Raise KeyboardInterrupt")
                 raise KeyboardInterrupt
             else:
                 self.ctrl_c_timeout=now

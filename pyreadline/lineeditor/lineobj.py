@@ -9,7 +9,7 @@ import re,operator,sys
 
 import wordmatcher
 import pyreadline.clipboard as clipboard
-from pyreadline.logger import  log,log_sock
+from pyreadline.logger import  log
 from pyreadline.unicode_helper import ensure_unicode
 
 kill_ring_to_clipboard=False #set to true to copy every addition to kill ring to clipboard

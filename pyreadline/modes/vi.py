@@ -9,7 +9,7 @@
 #*****************************************************************************
 import os
 import pyreadline.logger as logger
-from   pyreadline.logger import log,log_sock
+from   pyreadline.logger import log
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import basemode
