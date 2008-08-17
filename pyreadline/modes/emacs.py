@@ -283,7 +283,11 @@ class EmacsMode(basemode.BaseMode):
 
     def tab_insert(self, e): # (M-TAB)
         '''Insert a tab character. '''
-        ws = ' ' * (self.tabstop - (self.line_cursor%self.tabstop))
+        # vds: >>
+        line_cursor = len(self.l_buffer)
+        ws = ' ' * (self.tabstop - (line_cursor%self.tabstop))
+        #ws = ' ' * (self.tabstop - (self.line_cursor%self.tabstop))
+        # vds: <<
         self.insert_text(ws)
 
     def transpose_chars(self, e): # (C-t)
