@@ -1,3 +1,7 @@
+2008-08-25 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
+	* Merging tab insert patch from Vivian De Smedt. Removed comments
+	  with vds initials.
+
 2008-02-21 Jörgen Stenarson  <jorgen.stenarson -at- bostream.nu>
 	* unicodehelper functions now defaults to ascii if supplied pyreadline_encoding is 
 	  not a valid encoding. This is a brute force solution to ticket #228 it fixes 

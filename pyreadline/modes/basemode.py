@@ -25,6 +25,7 @@ class BaseMode(object):
         self.key_dispatch = {}
         self.argument=1
         self.prevargument=None
+        self.tabstop = 4
         
     def __repr__(self):
         return "<BaseMode>"
