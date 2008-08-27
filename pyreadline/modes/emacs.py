@@ -347,7 +347,8 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode, SearchPromptMode
 
     def tab_insert(self, e): # (M-TAB)
         '''Insert a tab character. '''
-        ws = ' ' * (self.tabstop - (self.l_buffer.point%self.tabstop))
+        cursor = min(self.l_buffer.point, len(self.l_buffer.line_buffer))
+        ws = ' ' * (self.tabstop - (cursor % self.tabstop))
         self.insert_text(ws)
         self.finalize()
 

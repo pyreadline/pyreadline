@@ -272,7 +272,8 @@ class NotEmacsMode(basemode.BaseMode):
 
     def tab_insert(self, e): # (M-TAB)
         '''Insert a tab character. '''
-        ws = ' ' * (self.tabstop - (self.line_cursor%self.tabstop))
+        cursor = min(self.l_buffer.point, len(self.l_buffer.line_buffer))
+        ws = ' ' * (self.tabstop - (cursor % self.tabstop))
         self.insert_text(ws)
 
     def self_insert(self, e): # (a, b, A, 1, !, ...)
