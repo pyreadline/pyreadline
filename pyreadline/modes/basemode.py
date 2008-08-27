@@ -113,10 +113,8 @@ class BaseMode(object):
                     print 'startup hook failed'
                     traceback.print_exc()
 
-        c = self.console
         self.l_buffer.reset_line()
         self.prompt = prompt
-#        self._print_prompt()
 
         if self.pre_input_hook:
             try:

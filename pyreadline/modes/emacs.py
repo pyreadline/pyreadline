@@ -202,7 +202,7 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode, SearchPromptMode
     def __repr__(self):
         return "<EmacsMode>"
 
-    def add_key_logger(self,logfun):
+    def add_key_logger(self, logfun):
         """logfun should be function that takes disp_fun and line_buffer object """
         self._keylog=logfun
 
