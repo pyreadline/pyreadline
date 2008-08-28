@@ -1,35 +1,22 @@
-pyreadline
+Pyreadline
 ==========
 
-a python implementation of GNU readline
+A python implementation of GNU readline
 ---------------------------------------
 
+Pyreadline is a package inspired by GNU readline which aims to improve the 
+command line editing experience. In most UNIX based pythons GNU readline is 
+available and used by python but on windows this is not the case. A readline
+like python library can also be useful when implementing commandline like 
+interfaces in GUIs. The use of pyreadline for anything but the windows 
+console is still under development.
 
 
-Overview
-========
-
-The pyreadline package is a python implementation of GNU readline. At the moment it is only available for the windows platform. The package is based on the readline package by Gary Bishop. The goal is to provide the functionality of the readline package. New features:
-
-    * International characters
-
-    * Cut and paste from clipboard
-
-    paste
-      Will paste first line from clipboard (multiple lines doesn't paste well).
-    
-    ipython_paste
-      Smart paste paths, smart paste tab delimited data as list or array.
-
-    multiline_paste
-    	Will assume text on clipobard is python code, removes all empty lines. 
-
-    * Bell is disabled by default
-
-dependencies
+Dependencies
 ------------
 
     * ctypes
+
 
 Conflicts
 ---------
