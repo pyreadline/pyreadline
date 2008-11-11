@@ -8,8 +8,8 @@
 import re,operator,string,sys,os
 
 from pyreadline.unicode_helper import ensure_unicode,ensure_str
-if "pyreadline" in sys.modules:
-    pyreadline= sys.modules["pyreadline"]
+if u"pyreadline" in sys.modules:
+    pyreadline= sys.modules[u"pyreadline"]
 else:
     import pyreadline
 
@@ -29,60 +29,60 @@ class LineHistory(object):
         self.history=[]
         self._history_length=100
         self._history_cursor=0
-        self.history_filename=os.path.expanduser('~/.history')
+        self.history_filename=os.path.expanduser('~/.history') #Cannot expand unicode strings correctly on python2.4
         self.lastcommand=None
-        self.query=""
+        self.query=u""
 
     def get_history_length(self):
         value=self._history_length
-        log("get_history_length:%d"%value)
+        log(u"get_history_length:%d"%value)
         return value
 
     def set_history_length(self,value):
-        log("set_history_length: old:%d new:%d"%(self._history_length,value))
+        log(u"set_history_length: old:%d new:%d"%(self._history_length,value))
         self._history_length=value
 
     def get_history_cursor(self):
         value=self._history_cursor
-        log("get_history_cursor:%d"%value)
+        log(u"get_history_cursor:%d"%value)
         return value
 
     def set_history_cursor(self,value):
-        log("set_history_cursor: old:%d new:%d"%(self._history_cursor,value))
+        log(u"set_history_cursor: old:%d new:%d"%(self._history_cursor,value))
         self._history_cursor=value
         
     history_length=property(get_history_length,set_history_length)
     history_cursor=property(get_history_cursor,set_history_cursor)
 
     def clear_history(self):
-        '''Clear readline history.'''
+        u'''Clear readline history.'''
         self.history[:] = []
         self.history_cursor = 0
 
     def read_history_file(self, filename=None): 
-        '''Load a readline history file.'''
+        u'''Load a readline history file.'''
         if filename is None:
             filename=self.history_filename
         try:
-            for line in open(filename, 'r'):
+            for line in open(filename, u'r'):
                 self.add_history(lineobj.ReadLineTextBuffer(ensure_unicode(line.rstrip())))
         except IOError:
             self.history = []
             self.history_cursor = 0
 
     def write_history_file(self, filename=None): 
-        '''Save a readline history file.'''
+        u'''Save a readline history file.'''
         if filename is None:
             filename=self.history_filename
-        fp = open(filename, 'wb')
+        fp = open(filename, u'wb')
         for line in self.history[-self.history_length:]:
             fp.write(ensure_str(line.get_line_text()))
-            fp.write('\n')
+            fp.write(u'\n')
         fp.close()
 
 
     def add_history(self, line):
-        '''Append a line to the history buffer, as if it was the last line typed.'''
+        u'''Append a line to the history buffer, as if it was the last line typed.'''
         if not line.get_line_text():
             pass
         elif len(self.history) > 0 and self.history[-1].get_line_text() == line.get_line_text():
@@ -92,7 +92,7 @@ class LineHistory(object):
         self.history_cursor = len(self.history)
 
     def previous_history(self,current): # (C-p)
-        '''Move back through the history list, fetching the previous command. '''
+        u'''Move back through the history list, fetching the previous command. '''
         if self.history_cursor==len(self.history):
             self.history.append(current.copy()) #do not use add_history since we do not want to increment cursor
             
@@ -102,19 +102,19 @@ class LineHistory(object):
             current.point=lineobj.EndOfLine
 
     def next_history(self,current): # (C-n)
-        '''Move forward through the history list, fetching the next command. '''
+        u'''Move forward through the history list, fetching the next command. '''
         if self.history_cursor < len(self.history)-1:
             self.history_cursor += 1
             current.set_line(self.history[self.history_cursor].get_line_text())
 
     def beginning_of_history(self): # (M-<)
-        '''Move to the first line in the history.'''
+        u'''Move to the first line in the history.'''
         self.history_cursor = 0
         if len(self.history) > 0:
             self.l_buffer = self.history[0]
 
     def end_of_history(self,current): # (M->)
-        '''Move to the end of the input history, i.e., the line currently
+        u'''Move to the end of the input history, i.e., the line currently
         being entered.'''
         self.history_cursor=len(self.history)
         current.set_line(self.history[-1].get_line_text())
@@ -129,7 +129,7 @@ class LineHistory(object):
         if res:
             self.history_cursor-=res[0][0]
             return res[0][1].get_line_text()
-        return ""
+        return u""
         
     def forward_search_history(self,searchfor,startpos=None):
         if startpos is None:
@@ -141,13 +141,13 @@ class LineHistory(object):
         if res:
             self.history_cursor+=res[0][0]
             return res[0][1].get_line_text()
-        return ""
+        return u""
 
     def _search(self, direction, partial):
         try:
             if (self.lastcommand != self.history_search_forward and
                     self.lastcommand != self.history_search_backward):
-                self.query = ''.join(partial[0:partial.point].get_line_text())
+                self.query = u''.join(partial[0:partial.point].get_line_text())
             hcstart=max(self.history_cursor,0) 
             hc = self.history_cursor + direction
             while (direction < 0 and hc >= 0) or (direction > 0 and hc < len(self.history)):
@@ -166,7 +166,7 @@ class LineHistory(object):
                     pass 
                 elif hc>=len(self.history) and not self.query:
                     self.history_cursor=len(self.history)
-                    return lineobj.ReadLineTextBuffer("",point=0)
+                    return lineobj.ReadLineTextBuffer(u"",point=0)
                 elif self.history[max(min(hcstart,len(self.history)-1),0)].get_line_text().startswith(self.query) and self.query:
                     return lineobj.ReadLineTextBuffer(self.history[max(min(hcstart,len(self.history)-1),0)],point=partial.point)
                 else:                
@@ -176,26 +176,26 @@ class LineHistory(object):
             raise
 
     def history_search_forward(self,partial): # ()
-        '''Search forward through the history for the string of characters
+        u'''Search forward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
         q= self._search(1,partial)
         return q
 
     def history_search_backward(self,partial): # ()
-        '''Search backward through the history for the string of characters
+        u'''Search backward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
         
         q= self._search(-1,partial)
         return q
 
-if __name__=="__main__":
+if __name__==u"__main__":
     q=LineHistory()
     RL=lineobj.ReadLineTextBuffer
-    q.add_history(RL("aaaa"))
-    q.add_history(RL("aaba"))
-    q.add_history(RL("aaca"))
-    q.add_history(RL("akca"))
-    q.add_history(RL("bbb"))
-    q.add_history(RL("ako"))
+    q.add_history(RL(u"aaaa"))
+    q.add_history(RL(u"aaba"))
+    q.add_history(RL(u"aaca"))
+    q.add_history(RL(u"akca"))
+    q.add_history(RL(u"bbb"))
+    q.add_history(RL(u"ako"))

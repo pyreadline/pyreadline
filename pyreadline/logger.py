@@ -9,11 +9,11 @@
 import socket, logging, logging.handlers
 from pyreadline.unicode_helper import ensure_str
 
-host="localhost"
+host=u"localhost"
 port=logging.handlers.DEFAULT_TCP_LOGGING_PORT
 
 
-root_logger=logging.getLogger('')
+root_logger=logging.getLogger(u'')
 root_logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(message)s')
 file_handler=None

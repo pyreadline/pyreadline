@@ -27,7 +27,7 @@ def quote_char(c):
 
 class LinePositioner(object):
     def __call__(self,line):
-        NotImplementedError("Base class !!!")
+        NotImplementedError(u"Base class !!!")
 
 class NextChar(LinePositioner):
     def __call__(self,line):
@@ -69,7 +69,7 @@ class WordStart(LinePositioner):
             else:
                 return line.point
         else:   
-            raise NotAWordError("Point is not in a word")
+            raise NotAWordError(u"Point is not in a word")
 WordStart=WordStart()
 
 class WordEnd(LinePositioner):
@@ -80,7 +80,7 @@ class WordEnd(LinePositioner):
             else:
                 return line.point
         else:   
-            raise NotAWordError("Point is not in a word")
+            raise NotAWordError(u"Point is not in a word")
 WordEnd=WordEnd()
 
 class PrevWordEnd(LinePositioner):
@@ -91,10 +91,10 @@ PrevWordEnd=PrevWordEnd()
 class PrevSpace(LinePositioner):
     def __call__(self,line):
         point=line.point
-        if line[point-1:point].get_line_text()==" ":
-            while point>0 and line[point-1:point].get_line_text()==" ":
+        if line[point-1:point].get_line_text()==u" ":
+            while point>0 and line[point-1:point].get_line_text()==u" ":
                 point-=1
-        while point>0 and line[point-1:point].get_line_text()!=" ":
+        while point>0 and line[point-1:point].get_line_text()!=u" ":
             point-=1
         return point
 PrevSpace=PrevSpace()
@@ -127,7 +127,7 @@ all_positioners.sort()
 
 class LineSlice(object):
     def __call__(self,line):
-        NotImplementedError("Base class !!!")
+        NotImplementedError(u"Base class !!!")
 
 
 class CurrentWord(LineSlice):
@@ -221,7 +221,7 @@ class TextLine(object):
             pass
         
     def __repr__(self):
-        return 'TextLine("%s",point=%s,mark=%s)'%(self.line_buffer,self.point,self.mark)
+        return u'TextLine("%s",point=%s,mark=%s)'%(self.line_buffer,self.point,self.mark)
 
     def copy(self):
         return self.__class__(self)
@@ -241,7 +241,7 @@ class TextLine(object):
     def visible_line_width(self,position=Point):
         """Return the visible width of the text in line buffer up to position."""
         extra_char_width = len([ None for c in self[:position].line_buffer if 0x2013 <= ord(c) <= 0xFFFD])
-        return len(self[:position].quoted_text())+self[:position].line_buffer.count("\t")*7 + extra_char_width
+        return len(self[:position].quoted_text())+self[:position].line_buffer.count(u"\t")*7 + extra_char_width
 
     def quoted_text(self):
         quoted = [ quote_char(c) for c in self.line_buffer ]
@@ -305,7 +305,7 @@ class TextLine(object):
         elif isinstance(key,LinePositioner):
             return self.line_buffer[key(self)]
         elif isinstance(key,tuple):
-            raise IndexError("Cannot use step in line buffer indexing") #Multiple slice not allowed
+            raise IndexError(u"Cannot use step in line buffer indexing") #Multiple slice not allowed
         else:
             # return TextLine(self.line_buffer[key])
             return self.line_buffer[key]
@@ -385,10 +385,10 @@ class TextLine(object):
         return txt in self.get_line_text()
 
 
-lines=[TextLine("abc"),
-       TextLine("abc def"),
-       TextLine("abc def  ghi"),
-       TextLine("  abc  def  "),
+lines=[TextLine(u"abc"),
+       TextLine(u"abc def"),
+       TextLine(u"abc def  ghi"),
+       TextLine(u"  abc  def  "),
       ]
 l=lines[2]
 l.point=5
@@ -404,7 +404,7 @@ class ReadLineTextBuffer(TextLine):
         self.kill_ring=[]
 
     def __repr__(self):
-        return 'ReadLineTextBuffer("%s",point=%s,mark=%s,selection_mark=%s)'%(self.line_buffer,self.point,self.mark,self.selection_mark)
+        return u'ReadLineTextBuffer("%s",point=%s,mark=%s,selection_mark=%s)'%(self.line_buffer,self.point,self.mark,self.selection_mark)
 
 
     def insert_text(self, char, argument=1):
@@ -714,7 +714,7 @@ class ReadLineTextBuffer(TextLine):
 
 
     def copy_region_to_clipboard(self): # ()
-        '''Copy the text in the region to the windows clipboard.'''
+        u'''Copy the text in the region to the windows clipboard.'''
         if self.enable_win32_clipboard:
                 mark=min(self.mark,len(self.line_buffer))
                 cursor=min(self.point,len(self.line_buffer))
@@ -722,11 +722,11 @@ class ReadLineTextBuffer(TextLine):
                         return
                 begin=min(cursor,mark)
                 end=max(cursor,mark)
-                toclipboard="".join(self.line_buffer[begin:end])
+                toclipboard=u"".join(self.line_buffer[begin:end])
                 clipboard.SetClipboardText(toclipboard)
 
     def copy_selection_to_clipboard(self): # ()
-        '''Copy the text in the region to the windows clipboard.'''
+        u'''Copy the text in the region to the windows clipboard.'''
         if self.enable_win32_clipboard and self.enable_selection and self.selection_mark>=0:
                 selection_mark=min(self.selection_mark,len(self.line_buffer))
                 cursor=min(self.point,len(self.line_buffer))
@@ -734,7 +734,7 @@ class ReadLineTextBuffer(TextLine):
                         return
                 begin=min(cursor,selection_mark)
                 end=max(cursor,selection_mark)
-                toclipboard="".join(self.line_buffer[begin:end])
+                toclipboard=u"".join(self.line_buffer[begin:end])
                 clipboard.SetClipboardText(toclipboard)
 
 
@@ -757,46 +757,45 @@ class ReadLineTextBuffer(TextLine):
 
 
 ##################################################################
-q=ReadLineTextBuffer("asff asFArw  ewrWErhg",point=8)
-q=TextLine("asff asFArw  ewrWErhg",point=8)
+q=ReadLineTextBuffer(u"asff asFArw  ewrWErhg",point=8)
+q=TextLine(u"asff asFArw  ewrWErhg",point=8)
 
-def show_pos(buff,pos,chr="."):
+def show_pos(buff,pos,chr=u"."):
     l=len(buff.line_buffer)
     def choice(bool):
         if bool:
             return chr
         else:
-            return " "
-    return "".join([choice(pos==idx) for idx in range(l+1)])
+            return u" "
+    return u"".join([choice(pos==idx) for idx in range(l+1)])
 
 
 def test_positioner(buff,points,positioner):
-    print (" %s "%positioner.__class__.__name__).center(40,"-")
+    print (u" %s "%positioner.__class__.__name__).center(40,u"-")
     buffstr=buff.line_buffer
     
-    print '"%s"'%(buffstr)
+    print u'"%s"'%(buffstr)
     for point in points:
         b=TextLine(buff,point=point)
-        out=[" "]*(len(buffstr)+1)
+        out=[u" "]*(len(buffstr)+1)
         pos=positioner(b)
         if pos==point:
-            out[pos]="&"
+            out[pos]=u"&"
         else:
-            out[point]="."
-            out[pos]="^"
-        print '"%s"'%("".join(out))
+            out[point]=u"."
+            out[pos]=u"^"
+        print u'"%s"'%(u"".join(out))
     
 if __name__=="__main__":
-    import startup
 
-    print '%-15s "%s"'%("Position",q.get_line_text())
-    print '%-15s "%s"'%("Point",show_pos(q,q.point))
+    print u'%-15s "%s"'%(u"Position",q.get_line_text())
+    print u'%-15s "%s"'%(u"Point",show_pos(q,q.point))
 
 
     for name,positioner in all_positioners:
         pos=positioner(q)
         []
-        print '%-15s "%s"'%(name,show_pos(q,pos,"^"))
+        print u'%-15s "%s"'%(name,show_pos(q,pos,u"^"))
 
-    l=ReadLineTextBuffer("kjjk asads   asad")
+    l=ReadLineTextBuffer(u"kjjk asads   asad")
     l.point=EndOfLine

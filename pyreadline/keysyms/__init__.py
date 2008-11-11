@@ -1,7 +1,7 @@
 import sys
 
 success=False
-in_ironpython="IronPython" in sys.version
+in_ironpython=u"IronPython" in sys.version
 
 if in_ironpython:
     try:
@@ -17,4 +17,4 @@ else:
         pass
     
 if not success:
-    raise ImportError("Could not import keysym for local pythonversion",x)
+    raise ImportError(u"Could not import keysym for local pythonversion",x)

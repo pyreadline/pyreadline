@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-'''Cursor control and color for the .NET console.
+u'''Cursor control and color for the .NET console.
 '''
 
 #
@@ -42,40 +42,40 @@ from pyreadline.keysyms import make_keysym, make_keyinfo,make_KeyPress,make_KeyP
 from pyreadline.console.ansi import AnsiState
 color=System.ConsoleColor
 
-ansicolor={"0;30": color.Black,
-           "0;31": color.DarkRed,
-           "0;32": color.DarkGreen,
-           "0;33": color.DarkYellow,
-           "0;34": color.DarkBlue,
-           "0;35": color.DarkMagenta,
-           "0;36": color.DarkCyan,
-           "0;37": color.DarkGray,
-           "1;30": color.Gray,
-           "1;31": color.Red,
-           "1;32": color.Green,
-           "1;33": color.Yellow,
-           "1;34": color.Blue,
-           "1;35": color.Magenta,
-           "1;36": color.Cyan,
-           "1;37": color.White
+ansicolor={u"0;30": color.Black,
+           u"0;31": color.DarkRed,
+           u"0;32": color.DarkGreen,
+           u"0;33": color.DarkYellow,
+           u"0;34": color.DarkBlue,
+           u"0;35": color.DarkMagenta,
+           u"0;36": color.DarkCyan,
+           u"0;37": color.DarkGray,
+           u"1;30": color.Gray,
+           u"1;31": color.Red,
+           u"1;32": color.Green,
+           u"1;33": color.Yellow,
+           u"1;34": color.Blue,
+           u"1;35": color.Magenta,
+           u"1;36": color.Cyan,
+           u"1;37": color.White
           }
 
-winattr={"black":0,"darkgray":0+8,
-         "darkred":4,"red":4+8,
-         "darkgreen":2,"green":2+8,
-         "darkyellow":6,"yellow":6+8,
-         "darkblue":1,"blue":1+8,
-         "darkmagenta":5, "magenta":5+8,
-         "darkcyan":3,"cyan":3+8,
-         "gray":7,"white":7+8}
+winattr={u"black":0,u"darkgray":0+8,
+         u"darkred":4,u"red":4+8,
+         u"darkgreen":2,u"green":2+8,
+         u"darkyellow":6,u"yellow":6+8,
+         u"darkblue":1,u"blue":1+8,
+         u"darkmagenta":5, u"magenta":5+8,
+         u"darkcyan":3,u"cyan":3+8,
+         u"gray":7,u"white":7+8}
 
 class Console(object):
-    '''Console driver for Windows.
+    u'''Console driver for Windows.
 
     '''
 
     def __init__(self, newbuffer=0):
-        '''Initialize the Console object.
+        u'''Initialize the Console object.
 
         newbuffer=1 will allocate a new buffer so the old content will be restored
         on exit.
@@ -84,25 +84,25 @@ class Console(object):
         self.attr = System.Console.ForegroundColor
         self.saveattr = winattr[str(System.Console.ForegroundColor).lower()]
         self.savebg=System.Console.BackgroundColor
-        log('initial attr=%s' % self.attr)
+        log(u'initial attr=%s' % self.attr)
 
     def _get(self):
         top=System.Console.WindowTop
-        log("WindowTop:%s"%top)
+        log(u"WindowTop:%s"%top)
         return top
     def _set(self,value):
         top=System.Console.WindowTop
-        log("Set WindowTop:old:%s,new:%s"%(top,value))
+        log(u"Set WindowTop:old:%s,new:%s"%(top,value))
     WindowTop=property(_get,_set)
     del _get,_set
 
     def __del__(self):
-        '''Cleanup the console when finished.'''
+        u'''Cleanup the console when finished.'''
         # I don't think this ever gets called
         pass
 
     def pos(self, x=None, y=None):
-        '''Move or query the window cursor.'''
+        u'''Move or query the window cursor.'''
         if x is not None:
             System.Console.CursorLeft=x
         else:
@@ -114,20 +114,20 @@ class Console(object):
         return x,y
 
     def home(self):
-        '''Move to home.'''
+        u'''Move to home.'''
         self.pos(0,0)
 
 # Map ANSI color escape sequences into Windows Console Attributes
 
-    terminal_escape = re.compile('(\001?\033\\[[0-9;]*m\002?)')
-    escape_parts = re.compile('\001?\033\\[([0-9;]*)m\002?')
+    terminal_escape = re.compile(u'(\001?\033\\[[0-9;]*m\002?)')
+    escape_parts = re.compile(u'\001?\033\\[([0-9;]*)m\002?')
 
     # This pattern should match all characters that change the cursor position differently
     # than a normal character.
-    motion_char_re = re.compile('([\n\r\t\010\007])')
+    motion_char_re = re.compile(u'([\n\r\t\010\007])')
 
     def write_scrolling(self, text, attr=None):
-        '''write text at current cursor position while watching for scrolling.
+        u'''write text at current cursor position while watching for scrolling.
 
         If the window scrolls because you are at the bottom of the screen
         buffer, all positions that you are storing will be shifted by the
@@ -149,19 +149,19 @@ class Console(object):
         for chunk in chunks:
             n = self.write_color(chunk, attr)
             if len(chunk) == 1: # the funny characters will be alone
-                if chunk[0] == '\n': # newline
+                if chunk[0] == u'\n': # newline
                     x = 0
                     y += 1
-                elif chunk[0] == '\r': # carriage return
+                elif chunk[0] == u'\r': # carriage return
                     x = 0
-                elif chunk[0] == '\t': # tab
+                elif chunk[0] == u'\t': # tab
                     x = 8*(int(x/8)+1)
                     if x > w: # newline
                         x -= w
                         y += 1
-                elif chunk[0] == '\007': # bell
+                elif chunk[0] == u'\007': # bell
                     pass
-                elif chunk[0] == '\010':
+                elif chunk[0] == u'\010':
                     x -= 1
                     if x < 0:
                         y -= 1 # backed up 1 line
@@ -193,9 +193,9 @@ class Console(object):
 
         return the number of characters written.
         '''
-        log('write_color("%s", %s)' % (text, attr))
+        log(u'write_color("%s", %s)' % (text, attr))
         chunks = self.terminal_escape.split(text)
-        log('chunks=%s' % repr(chunks))
+        log(u'chunks=%s' % repr(chunks))
         bg=self.savebg
         n = 0 # count the characters we actually write, omitting the escapes
         if attr is None:#use attribute from initial console
@@ -219,8 +219,8 @@ class Console(object):
         return n
 
     def write_plain(self, text, attr=None):
-        '''write text at current cursor position.'''
-        log('write("%s", %s)' %(text,attr))
+        u'''write text at current cursor position.'''
+        log(u'write("%s", %s)' %(text,attr))
         if attr is None:
             attr = self.attr
         n = c_int(0)
@@ -228,7 +228,7 @@ class Console(object):
         self.WriteConsoleA(self.hout, text, len(text), byref(n), None)
         return len(text)
         
-    if os.environ.has_key("EMACS"):
+    if os.environ.has_key(u"EMACS"):
         def write_color(self, text, attr=None):
             junk = c_int(0)
             self.WriteFile(self.hout, text, len(text), byref(junk), None)
@@ -237,7 +237,7 @@ class Console(object):
 
     # make this class look like a file object
     def write(self, text):
-        log('write("%s")' % text)
+        log(u'write("%s")' % text)
         return self.write_color(text)
 
     #write = write_scrolling
@@ -248,12 +248,12 @@ class Console(object):
     def flush(self):
         pass
 
-    def page(self, attr=None, fill=' '):
-        '''Fill the entire screen.'''
+    def page(self, attr=None, fill=u' '):
+        u'''Fill the entire screen.'''
         System.Console.Clear()
 
     def text(self, x, y, text, attr=None):
-        '''Write text at the given position.'''
+        u'''Write text at the given position.'''
         self.pos(x,y)
         self.write_color(text,attr)
 
@@ -263,12 +263,12 @@ class Console(object):
         pos=self.pos()
         w,h=self.size()
         length=w-pos[0]+min((lastline-pos[1]-1),5)*w-1
-        self.write_color(length*" ")
+        self.write_color(length*u" ")
         self.pos(*pos)
         self.WindowTop=oldtop
         
-    def rectangle(self, rect, attr=None, fill=' '):
-        '''Fill Rectangle.'''
+    def rectangle(self, rect, attr=None, fill=u' '):
+        u'''Fill Rectangle.'''
         pass
         oldtop=self.WindowTop
         oldpos=self.pos()
@@ -279,19 +279,19 @@ class Console(object):
         if fill:
             rowfill=fill[:1]*abs(x1-x0)
         else:
-            rowfill=' '*abs(x1-x0)
+            rowfill=u' '*abs(x1-x0)
         for y in range(y0, y1):
                 System.Console.SetCursorPosition(x0,y)
                 self.write_color(rowfill,attr)
         self.pos(*oldpos)
 
     def scroll(self, rect, dx, dy, attr=None, fill=' '):
-        '''Scroll a rectangle.'''
+        u'''Scroll a rectangle.'''
         pass
         raise NotImplementedError
 
     def scroll_window(self, lines):
-        '''Scroll the window by the indicated number of lines.'''
+        u'''Scroll the window by the indicated number of lines.'''
         top=self.WindowTop+lines
         if top<0:
             top=0
@@ -300,7 +300,7 @@ class Console(object):
         self.WindowTop=top
 
     def getkeypress(self):
-        '''Return next key press event from the queue, ignoring others.'''
+        u'''Return next key press event from the queue, ignoring others.'''
         ck=System.ConsoleKey
         while 1:
             e = System.Console.ReadKey(True)
@@ -308,22 +308,22 @@ class Console(object):
                 self.scroll_window(12)
             elif e.Key == System.ConsoleKey.PageUp:#PageUp
                 self.scroll_window(-12)
-            elif str(e.KeyChar)=="\000":#Drop deadkeys
-                log("Deadkey: %s"%e)
+            elif str(e.KeyChar)==u"\000":#Drop deadkeys
+                log(u"Deadkey: %s"%e)
                 return event(self,e)
                 pass
             else:
                 return event(self,e)
 
     def title(self, txt=None):
-        '''Set/get title.'''
+        u'''Set/get title.'''
         if txt:
             System.Console.Title=txt
         else:
             return System.Console.Title
 
     def size(self, width=None, height=None):
-        '''Set/get window size.'''
+        u'''Set/get window size.'''
         sc=System.Console
         
     
@@ -338,22 +338,22 @@ class Console(object):
             return sc.WindowWidth-1,sc.WindowHeight-1
     
     def cursor(self, visible=True, size=None):
-        '''Set cursor on or off.'''
+        u'''Set cursor on or off.'''
         System.Console.CursorVisible=visible
 
     def bell(self):
         System.Console.Beep()
 
     def next_serial(self):
-        '''Get next event serial number.'''
+        u'''Get next event serial number.'''
         self.serial += 1
         return self.serial
 
 class event(Event):
-    '''Represent events from the console.'''
+    u'''Represent events from the console.'''
     def __init__(self, console, input):
-        '''Initialize an event from the Windows input structure.'''
-        self.type = '??'
+        u'''Initialize an event from the Windows input structure.'''
+        self.type = u'??'
         self.serial = console.next_serial()
         self.width = 0
         self.height = 0
@@ -362,7 +362,7 @@ class event(Event):
         self.char = str(input.KeyChar)
         self.keycode = input.Key
         self.state = input.Modifiers
-        log("%s,%s,%s"%(input.Modifiers,input.Key,input.KeyChar))
+        log(u"%s,%s,%s"%(input.Modifiers,input.Key,input.KeyChar))
         self.type="KeyRelease"
         self.keysym = make_keysym(self.keycode)
         self.keyinfo = make_KeyPress(self.char, self.state, self.keycode)
@@ -370,7 +370,7 @@ class event(Event):
 def make_event_from_keydescr(keydescr):
     def input():
         return 1
-    input.KeyChar="a"
+    input.KeyChar=u"a"
     input.Key=System.ConsoleKey.A
     input.Modifiers=System.ConsoleModifiers.Shift
     input.next_serial=input
@@ -380,17 +380,17 @@ def make_event_from_keydescr(keydescr):
     e.keyinfo=keyinfo
     return e
 
-CTRL_C_EVENT=make_event_from_keydescr("Control-c")
+CTRL_C_EVENT=make_event_from_keydescr(u"Control-c")
 
 def install_readline(hook):
     def hook_wrap():
         try:
             res=hook()
         except KeyboardInterrupt,x:   #this exception does not seem to be caught
-            res=""
+            res=u""
         except EOFError:
             return None
-        if res[-1:]=="\n":
+        if res[-1:]==u"\n":
             return res[:-1]
         else:
             return res
@@ -405,19 +405,19 @@ def install_readline(hook):
 
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
     import time, sys
     c = Console(0)
     sys.stdout = c
     sys.stderr = c
     c.page()
     c.pos(5, 10)
-    c.write('hi there')
-    c.title("Testing console")
+    c.write(u'hi there')
+    c.title(u"Testing console")
 #    c.bell()
     print
-    print "size",c.size()
-    print '  some printed output'
+    print u"size",c.size()
+    print u'  some printed output'
     for i in range(10):
         e=c.getkeypress()
         print e.Key,chr(e.KeyChar),ord(e.KeyChar),e.Modifiers
