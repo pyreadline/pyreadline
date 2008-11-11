@@ -14,19 +14,19 @@ import struct,socket
 try:
     import msvcrt
 except ImportError:
-    msvcrt=None
+    msvcrt = None
     print u"problem"
 
 
-port=logging.handlers.DEFAULT_TCP_LOGGING_PORT
-host=u'localhost'
+port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
+host = u'localhost'
 
 def check_key():
     if msvcrt is None:
         return False
     else:
-        if msvcrt.kbhit()!=0:
-            q=msvcrt.getch()
+        if msvcrt.kbhit() != 0:
+            q = msvcrt.getch()
             return q
     return u""
 
@@ -34,24 +34,24 @@ def check_key():
 singleline=False
 
 def main():
-    print u"Starting TCP logserver on port:",port
+    print u"Starting TCP logserver on port:", port
     print u"Press q to quit logserver", port
     print u"Press c to clear screen", port
-    s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    s.bind((u"",port))
+    s.bind((u"", port))
     s.settimeout(1)
     while 1:
         try:
-            data, addr=s.recvfrom(100000)
+            data, addr = s.recvfrom(100000)
             print data,
         except socket.timeout:
-            key=check_key().lower()
-            if u"q"==key:
+            key = check_key().lower()
+            if u"q" == key:
                 print u"Quitting logserver"
                 break
             elif u"c" == key:
-                print u"\n"*100            
+                print u"\n" * 100            
 
 if __name__ == u"__main__":
     main()
