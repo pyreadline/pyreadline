@@ -7,61 +7,63 @@ escape_parts = re.compile(u'\001?\033\\[([0-9;]*)m\002?')
 
 class AnsiState(object):
     def __init__(self,bold=False,inverse=False,color=u"white",background=u"black",backgroundbold=False):
-        self.bold=bold
-        self.inverse=inverse
-        self.color=color
-        self.background=background
-        self.backgroundbold=backgroundbold
+        self.bold = bold
+        self.inverse = inverse
+        self.color = color
+        self.background = background
+        self.backgroundbold = backgroundbold
 
-    trtable={u"black":0,u"red":4,u"green":2,u"yellow":6,u"blue":1,u"magenta":5,u"cyan":3,u"white":7}
-    revtable=dict(zip(trtable.values(),trtable.keys()))
+    trtable = {u"black":0, u"red":4,      u"green":2,  u"yellow":6,
+               u"blue":1,  u"magenta":5,  u"cyan":3,  u"white":7}
+    revtable = dict(zip(trtable.values(),trtable.keys()))
     def get_winattr(self):
-        attr=0
+        attr = 0
         if self.bold:
-            attr|=0x0008
+            attr |= 0x0008
         if self.backgroundbold:
-            attr|=0x0080
+            attr |= 0x0080
         if self.inverse:
-            attr|=0x4000
-        attr|=self.trtable[self.color]
-        attr|=(self.trtable[self.background]<<4)
+            attr |= 0x4000
+        attr |= self.trtable[self.color]
+        attr |= (self.trtable[self.background] << 4)
         return attr
 
-    def set_winattr(self,attr):
-        self.bold=bool(attr&0x0008)
-        self.backgroundbold=bool(attr&0x0080)
-        self.inverse=bool(attr&0x4000)
-        self.color=self.revtable[attr&0x0007]
-        self.background=self.revtable[(attr&0x0070)>>4]
+    def set_winattr(self, attr):
+        self.bold = bool(attr & 0x0008)
+        self.backgroundbold = bool(attr & 0x0080)
+        self.inverse = bool(attr & 0x4000)
+        self.color = self.revtable[attr & 0x0007]
+        self.background = self.revtable[(attr & 0x0070) >> 4]
         
     winattr=property(get_winattr,set_winattr)
     def __repr__(self):
-        return u'AnsiState(bold=%s,inverse=%s,color=%9s,background=%9s,backgroundbold=%s)# 0x%x'%(self.bold,
-                                                                                                 self.inverse,
-                                                                                                 '"%s"'%self.color,
-                                                                                                 '"%s"'%self.background,
-                                                                                                 self.backgroundbold,
-                                                                                                 self.winattr)
+        return u'AnsiState(bold=%s,inverse=%s,color=%9s,'    \
+               u'background=%9s,backgroundbold=%s)# 0x%x'%   \
+                (self.bold, self.inverse, '"%s"'%self.color,  
+                 '"%s"'%self.background, self.backgroundbold,
+                 self.winattr)
 
     def copy(self):
-        x=AnsiState()
-        x.bold=self.bold
-        x.inverse=self.inverse
-        x.color=self.color
-        x.background=self.background
-        x.backgroundbold=self.backgroundbold
+        x = AnsiState()
+        x.bold = self.bold
+        x.inverse = self.inverse
+        x.color = self.color
+        x.background = self.background
+        x.backgroundbold = self.backgroundbold
         return x
-defaultstate=AnsiState(False,False,u"white")
 
-trtable={0:u"black",1:u"red",2:u"green",3:u"yellow",4:u"blue",5:u"magenta",6:u"cyan",7:u"white"}
+defaultstate = AnsiState(False,False,u"white")
+
+trtable = {0:u"black",  1:u"red",       2:u"green", 3:u"yellow",
+           4:u"blue",   5:u"magenta",   6:u"cyan",  7:u"white"}
 
 class AnsiWriter(object):
-    def __init__(self,default=defaultstate):
-        if isinstance(defaultstate,AnsiState):
-            self.defaultstate=default
+    def __init__(self, default=defaultstate):
+        if isinstance(defaultstate, AnsiState):
+            self.defaultstate = default
         else:
             self.defaultstate=AnsiState()
-            self.defaultstate.winattr=defaultstate
+            self.defaultstate.winattr = defaultstate
             
             
     def write_color(self,text, attr=None):
@@ -70,21 +72,21 @@ class AnsiWriter(object):
         return the number of characters written.
         '''
         if isinstance(attr,AnsiState):
-            defaultstate=attr
+            defaultstate = attr
         elif attr is None:  #use attribute form initial console
             attr = self.defaultstate.copy()
         else:
-            defaultstate=AnsiState()
-            defaultstate.winattr=attr
-            attr=defaultstate
+            defaultstate = AnsiState()
+            defaultstate.winattr = attr
+            attr = defaultstate
         chunks = terminal_escape.split(text)
         n = 0 # count the characters we actually write, omitting the escapes
         res=[]
         for chunk in chunks:
             m = escape_parts.match(chunk)
             if m:
-                parts=m.group(1).split(u";")
-                if len(parts)==1 and parts[0]==u"0":
+                parts = m.group(1).split(u";")
+                if len(parts) == 1 and parts[0] == u"0":
                     attr = self.defaultstate.copy()
                     continue
                 for part in parts:
@@ -96,29 +98,29 @@ class AnsiWriter(object):
                     elif part == u"1": # switch on bold (i.e. intensify foreground color)
                         attr.bold=True 
                     elif len(part) == 2 and u"30" <= part <= u"37": # set foreground color
-                        attr.color = trtable[int(part)-30]
+                        attr.color = trtable[int(part) - 30]
                     elif len(part) == 2 and u"40" <= part <= u"47": # set background color
-                        attr.color = trtable[int(part)-40]
+                        attr.color = trtable[int(part) - 40]
                 continue
             n += len(chunk)
             if True:
-                res.append((attr.copy(),chunk))
+                res.append((attr.copy(), chunk))
         return n,res
 
     def parse_color(self,text, attr=None):
-        n,res=self.write_color(text,attr)
-        return n,[attr.winattr for attr,text in res]
+        n,res=self.write_color(text, attr)
+        return n, [attr.winattr for attr, text in res]
 
-def write_color(text,attr=None):
-    a=AnsiWriter(defaultstate)
-    return a.write_color(text,attr)
+def write_color(text, attr=None):
+    a = AnsiWriter(defaultstate)
+    return a.write_color(text, attr)
 
 def write_color_old( text, attr=None):
     u'''write text at current cursor position and interpret color escapes.
 
     return the number of characters written.
     '''
-    res=[]
+    res = []
     chunks = terminal_escape.split(text)
     n = 0 # count the characters we actually write, omitting the escapes
     if attr is None:#use attribute from initial console
@@ -138,14 +140,14 @@ def write_color_old( text, attr=None):
                     # we have to mirror bits
                     attr = (attr & ~0x07) | ((part & 0x1) << 2) | (part & 0x2) | ((part & 0x4) >> 2)
                 elif len(part) == 2 and u"40" <= part <= u"47": # set background color
-                    part = int(part)-40
+                    part = int(part) - 40
                     # we have to mirror bits
                     attr = (attr & ~0x70) | ((part & 0x1) << 6) | ((part & 0x2) << 4) | ((part & 0x4) << 2)
                 # ignore blink, underline and anything we don't understand
             continue
         n += len(chunk)
         if chunk:
-            res.append((u"0x%x"%attr,chunk))
+            res.append((u"0x%x"%attr, chunk))
     return res
 
 

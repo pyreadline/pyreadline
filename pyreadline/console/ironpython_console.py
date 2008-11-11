@@ -37,10 +37,10 @@ import System
 from event import Event
 from pyreadline.logger import log
 
-#print "Codepage",System.Console.InputEncoding.CodePage
-from pyreadline.keysyms import make_keysym, make_keyinfo,make_KeyPress,make_KeyPress_from_keydescr
+from pyreadline.keysyms import \
+    make_keysym, make_keyinfo, make_KeyPress, make_KeyPress_from_keydescr
 from pyreadline.console.ansi import AnsiState
-color=System.ConsoleColor
+color = System.ConsoleColor
 
 ansicolor={u"0;30": color.Black,
            u"0;31": color.DarkRed,
@@ -60,14 +60,14 @@ ansicolor={u"0;30": color.Black,
            u"1;37": color.White
           }
 
-winattr={u"black":0,u"darkgray":0+8,
-         u"darkred":4,u"red":4+8,
-         u"darkgreen":2,u"green":2+8,
-         u"darkyellow":6,u"yellow":6+8,
-         u"darkblue":1,u"blue":1+8,
-         u"darkmagenta":5, u"magenta":5+8,
-         u"darkcyan":3,u"cyan":3+8,
-         u"gray":7,u"white":7+8}
+winattr = {u"black" : 0,        u"darkgray" : 0+8,
+           u"darkred" : 4,      u"red" : 4+8,
+           u"darkgreen" : 2,    u"green" : 2+8,
+           u"darkyellow" : 6,   u"yellow" : 6+8,
+           u"darkblue" : 1,     u"blue" : 1+8,
+           u"darkmagenta" : 5,  u"magenta" : 5+8,
+           u"darkcyan" : 3,     u"cyan" : 3+8,
+           u"gray" : 7,         u"white" : 7+8}
 
 class Console(object):
     u'''Console driver for Windows.
@@ -80,21 +80,23 @@ class Console(object):
         newbuffer=1 will allocate a new buffer so the old content will be restored
         on exit.
         '''
-        self.serial=0
+        self.serial = 0
         self.attr = System.Console.ForegroundColor
         self.saveattr = winattr[str(System.Console.ForegroundColor).lower()]
-        self.savebg=System.Console.BackgroundColor
+        self.savebg = System.Console.BackgroundColor
         log(u'initial attr=%s' % self.attr)
 
     def _get(self):
-        top=System.Console.WindowTop
+        top = System.Console.WindowTop
         log(u"WindowTop:%s"%top)
         return top
-    def _set(self,value):
-        top=System.Console.WindowTop
-        log(u"Set WindowTop:old:%s,new:%s"%(top,value))
-    WindowTop=property(_get,_set)
-    del _get,_set
+
+    def _set(self, value):
+        top = System.Console.WindowTop
+        log(u"Set WindowTop:old:%s,new:%s"%(top, value))
+
+    WindowTop = property(_get, _set)
+    del _get, _set
 
     def __del__(self):
         u'''Cleanup the console when finished.'''
@@ -106,16 +108,16 @@ class Console(object):
         if x is not None:
             System.Console.CursorLeft=x
         else:
-            x=System.Console.CursorLeft
+            x = System.Console.CursorLeft
         if y is not None:
             System.Console.CursorTop=y
         else:
-            y=System.Console.CursorTop
-        return x,y
+            y = System.Console.CursorTop
+        return x, y
 
     def home(self):
         u'''Move to home.'''
-        self.pos(0,0)
+        self.pos(0, 0)
 
 # Map ANSI color escape sequences into Windows Console Attributes
 
@@ -155,7 +157,7 @@ class Console(object):
                 elif chunk[0] == u'\r': # carriage return
                     x = 0
                 elif chunk[0] == u'\t': # tab
-                    x = 8*(int(x/8)+1)
+                    x = 8 * (int(x / 8) + 1)
                     if x > w: # newline
                         x -= w
                         y += 1
@@ -183,10 +185,12 @@ class Console(object):
                     y = h - 1
         return scroll
 
-    trtable={0:color.Black,4:color.DarkRed,2:color.DarkGreen,6:color.DarkYellow,
-             1:color.DarkBlue,5:color.DarkMagenta,3:color.DarkCyan,7:color.Gray,
-             8:color.DarkGray,4+8:color.Red,2+8:color.Green,6+8:color.Yellow,
-             1+8:color.Blue,5+8:color.Magenta,3+8:color.Cyan,7+8:color.White}
+    trtable = {0 : color.Black,      4 : color.DarkRed,  2 : color.DarkGreen,
+               6 : color.DarkYellow, 1 : color.DarkBlue, 5 : color.DarkMagenta,  
+               3 : color.DarkCyan,   7 : color.Gray,     8 : color.DarkGray,   
+               4+8 : color.Red,      2+8 : color.Green,  6+8 : color.Yellow,
+               1+8 : color.Blue,     5+8 : color.Magenta,3+8 : color.Cyan,
+               7+8 : color.White}
 
     def write_color(self, text, attr=None):
         '''write text at current cursor position and interpret color escapes.
@@ -196,31 +200,30 @@ class Console(object):
         log(u'write_color("%s", %s)' % (text, attr))
         chunks = self.terminal_escape.split(text)
         log(u'chunks=%s' % repr(chunks))
-        bg=self.savebg
+        bg = self.savebg
         n = 0 # count the characters we actually write, omitting the escapes
         if attr is None:#use attribute from initial console
             attr = self.attr
         try:
-            fg=self.trtable[(0x000f&attr)]
-            bg=self.trtable[(0x00f0&attr)>>4]
+            fg = self.trtable[(0x000f&attr)]
+            bg = self.trtable[(0x00f0&attr)>>4]
         except TypeError:
-            fg=attr
+            fg = attr
             
         for chunk in chunks:
             m = self.escape_parts.match(chunk)
             if m:
                 log(m.group(1))
-                attr=ansicolor.get(m.group(1),self.attr)
+                attr = ansicolor.get(m.group(1), self.attr)
             n += len(chunk)
-            System.Console.ForegroundColor=fg
-            System.Console.BackgroundColor=bg
-            #self.WriteConsoleA(self.hout, chunk, len(chunk), byref(junk), None)
+            System.Console.ForegroundColor = fg
+            System.Console.BackgroundColor = bg
             System.Console.Write(chunk)
         return n
 
     def write_plain(self, text, attr=None):
         u'''write text at current cursor position.'''
-        log(u'write("%s", %s)' %(text,attr))
+        log(u'write("%s", %s)' %(text, attr))
         if attr is None:
             attr = self.attr
         n = c_int(0)
@@ -254,92 +257,87 @@ class Console(object):
 
     def text(self, x, y, text, attr=None):
         u'''Write text at the given position.'''
-        self.pos(x,y)
-        self.write_color(text,attr)
+        self.pos(x, y)
+        self.write_color(text, attr)
 
     def clear_to_end_of_window(self):
-        oldtop=self.WindowTop
-        lastline=self.WindowTop+System.Console.WindowHeight
-        pos=self.pos()
-        w,h=self.size()
-        length=w-pos[0]+min((lastline-pos[1]-1),5)*w-1
-        self.write_color(length*u" ")
+        oldtop = self.WindowTop
+        lastline = self.WindowTop+System.Console.WindowHeight
+        pos = self.pos()
+        w, h = self.size()
+        length = w - pos[0] + min((lastline - pos[1] - 1), 5) * w - 1
+        self.write_color(length * u" ")
         self.pos(*pos)
-        self.WindowTop=oldtop
+        self.WindowTop = oldtop
         
     def rectangle(self, rect, attr=None, fill=u' '):
         u'''Fill Rectangle.'''
-        pass
-        oldtop=self.WindowTop
-        oldpos=self.pos()
+        oldtop = self.WindowTop
+        oldpos = self.pos()
         #raise NotImplementedError
         x0, y0, x1, y1 = rect
         if attr is None:
             attr = self.attr
         if fill:
-            rowfill=fill[:1]*abs(x1-x0)
+            rowfill = fill[:1] * abs(x1 - x0)
         else:
-            rowfill=u' '*abs(x1-x0)
+            rowfill = u' ' * abs(x1 - x0)
         for y in range(y0, y1):
-                System.Console.SetCursorPosition(x0,y)
-                self.write_color(rowfill,attr)
+                System.Console.SetCursorPosition(x0, y)
+                self.write_color(rowfill, attr)
         self.pos(*oldpos)
 
     def scroll(self, rect, dx, dy, attr=None, fill=' '):
         u'''Scroll a rectangle.'''
-        pass
         raise NotImplementedError
 
     def scroll_window(self, lines):
         u'''Scroll the window by the indicated number of lines.'''
-        top=self.WindowTop+lines
-        if top<0:
-            top=0
-        if top+System.Console.WindowHeight>System.Console.BufferHeight:
-            top=System.Console.BufferHeight
-        self.WindowTop=top
+        top = self.WindowTop + lines
+        if top < 0:
+            top = 0
+        if top + System.Console.WindowHeight > System.Console.BufferHeight:
+            top = System.Console.BufferHeight
+        self.WindowTop = top
 
     def getkeypress(self):
         u'''Return next key press event from the queue, ignoring others.'''
-        ck=System.ConsoleKey
+        ck = System.ConsoleKey
         while 1:
             e = System.Console.ReadKey(True)
             if e.Key == System.ConsoleKey.PageDown: #PageDown
                 self.scroll_window(12)
             elif e.Key == System.ConsoleKey.PageUp:#PageUp
                 self.scroll_window(-12)
-            elif str(e.KeyChar)==u"\000":#Drop deadkeys
+            elif str(e.KeyChar) == u"\000":#Drop deadkeys
                 log(u"Deadkey: %s"%e)
-                return event(self,e)
-                pass
+                return event(self, e)
             else:
-                return event(self,e)
+                return event(self, e)
 
     def title(self, txt=None):
         u'''Set/get title.'''
         if txt:
-            System.Console.Title=txt
+            System.Console.Title = txt
         else:
             return System.Console.Title
 
     def size(self, width=None, height=None):
         u'''Set/get window size.'''
-        sc=System.Console
-        
-    
+        sc = System.Console
         if width is not None and height is not None:
-            sc.BufferWidth,sc.BufferHeight=width,height
+            sc.BufferWidth, sc.BufferHeight = width,height
         else:
-            return sc.BufferWidth,sc.BufferHeight
+            return sc.BufferWidth, sc.BufferHeight
 
         if width is not None and height is not None:
-            sc.WindowWidth,sc.WindowHeight=width,height
+            sc.WindowWidth, sc.WindowHeight = width,height
         else:
-            return sc.WindowWidth-1,sc.WindowHeight-1
+            return sc.WindowWidth - 1, sc.WindowHeight - 1
     
     def cursor(self, visible=True, size=None):
         u'''Set cursor on or off.'''
-        System.Console.CursorVisible=visible
+        System.Console.CursorVisible = visible
 
     def bell(self):
         System.Console.Beep()
@@ -362,22 +360,22 @@ class event(Event):
         self.char = str(input.KeyChar)
         self.keycode = input.Key
         self.state = input.Modifiers
-        log(u"%s,%s,%s"%(input.Modifiers,input.Key,input.KeyChar))
-        self.type="KeyRelease"
+        log(u"%s,%s,%s"%(input.Modifiers, input.Key, input.KeyChar))
+        self.type = "KeyRelease"
         self.keysym = make_keysym(self.keycode)
         self.keyinfo = make_KeyPress(self.char, self.state, self.keycode)
 
 def make_event_from_keydescr(keydescr):
     def input():
         return 1
-    input.KeyChar=u"a"
-    input.Key=System.ConsoleKey.A
-    input.Modifiers=System.ConsoleModifiers.Shift
-    input.next_serial=input
-    e=event(input,input)
+    input.KeyChar = u"a"
+    input.Key = System.ConsoleKey.A
+    input.Modifiers = System.ConsoleModifiers.Shift
+    input.next_serial = input
+    e = event(input,input)
     del input.next_serial
-    keyinfo=make_KeyPress_from_keydescr(keydescr)
-    e.keyinfo=keyinfo
+    keyinfo = make_KeyPress_from_keydescr(keydescr)
+    e.keyinfo = keyinfo
     return e
 
 CTRL_C_EVENT=make_event_from_keydescr(u"Control-c")
@@ -385,21 +383,21 @@ CTRL_C_EVENT=make_event_from_keydescr(u"Control-c")
 def install_readline(hook):
     def hook_wrap():
         try:
-            res=hook()
+            res = hook()
         except KeyboardInterrupt,x:   #this exception does not seem to be caught
-            res=u""
+            res = u""
         except EOFError:
             return None
-        if res[-1:]==u"\n":
+        if res[-1:] == u"\n":
             return res[:-1]
         else:
             return res
     class IronPythonWrapper(IronPythonConsole.IConsole):
-        def ReadLine(self,autoIndentSize): 
+        def ReadLine(self, autoIndentSize): 
             return hook_wrap()
-        def Write(self,text, style):
+        def Write(self, text, style):
             System.Console.Write(text)
-        def WriteLine(self,text, style): 
+        def WriteLine(self, text, style): 
             System.Console.WriteLine(text)
     IronPythonConsole.PythonCommandLine.MyConsole = IronPythonWrapper()
 
@@ -416,11 +414,11 @@ if __name__ == u'__main__':
     c.title(u"Testing console")
 #    c.bell()
     print
-    print u"size",c.size()
+    print u"size", c.size()
     print u'  some printed output'
     for i in range(10):
-        e=c.getkeypress()
-        print e.Key,chr(e.KeyChar),ord(e.KeyChar),e.Modifiers
+        e = c.getkeypress()
+        print e.Key, chr(e.KeyChar), ord(e.KeyChar), e.Modifiers
     del c
 
     System.Console.Clear()

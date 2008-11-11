@@ -156,14 +156,14 @@ funcs = [
     ]
 
 # I don't want events for these keys, they are just a bother for my application
-key_modifiers = { VK_SHIFT:1,
-                  VK_CONTROL:1,
-                  VK_MENU:1, # alt key
-                  0x5b:1, # windows key
+key_modifiers = { VK_SHIFT : 1,
+                  VK_CONTROL : 1,
+                  VK_MENU : 1, # alt key
+                  0x5b : 1, # windows key
                  }
 
-def split_block(text,size=1000):
-    return [text[start:start+size] for start in range(0, len(text), size)]
+def split_block(text, size=1000):
+    return [text[start:start + size] for start in range(0, len(text), size)]
 
 
 
@@ -184,8 +184,9 @@ class Console(object):
         #self.AllocConsole()
 
         if newbuffer:
-            self.hout = self.CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
-                                                                                                 0, None, 1, None)
+            self.hout = self.CreateConsoleScreenBuffer(
+                             GENERIC_READ | GENERIC_WRITE,
+                             0, None, 1, None)
             self.SetConsoleActiveScreenBuffer(self.hout)
         else:
             self.hout = self.GetStdHandle(STD_OUTPUT_HANDLE)
@@ -199,10 +200,9 @@ class Console(object):
         self.attr = info.wAttributes
         self.saveattr = info.wAttributes # remember the initial colors
 
-        self.defaultstate=AnsiState()
-        self.defaultstate.winattr=info.wAttributes
-        self.ansiwriter=AnsiWriter(self.defaultstate)
-#        self.ansiwriter.defaultstate.bold=False
+        self.defaultstate = AnsiState()
+        self.defaultstate.winattr = info.wAttributes
+        self.ansiwriter = AnsiWriter(self.defaultstate)
         
         background = self.attr & 0xf0
         for escape in self.escape_to_color:
@@ -212,8 +212,10 @@ class Console(object):
         self.softspace = 0 # this is for using it as a file-like object
         self.serial = 0
 
-        self.pythondll = CDLL(u'python%s%s' % (sys.version[0], sys.version[2]))
-        self.inputHookPtr = c_int.from_address(addressof(self.pythondll.PyOS_InputHook)).value
+        self.pythondll = \
+            CDLL(u'python%s%s' % (sys.version[0], sys.version[2]))
+        self.inputHookPtr = \
+            c_int.from_address(addressof(self.pythondll.PyOS_InputHook)).value
         setattr(Console, u'PyMem_Malloc', self.pythondll.PyMem_Malloc)
 
     def __del__(self):
@@ -232,7 +234,8 @@ class Console(object):
         return top,bot
 
     def fixcoord(self, x, y):
-        u'''Return a long with x and y packed inside, also handle negative x and y.'''
+        u'''Return a long with x and y packed inside, 
+        also handle negative x and y.'''
         if x < 0 or y < 0:
             info = CONSOLE_SCREEN_BUFFER_INFO()
             self.GetConsoleScreenBufferInfo(self.hout, byref(info))
@@ -240,8 +243,8 @@ class Console(object):
                 x = info.srWindow.Right - x
                 y = info.srWindow.Bottom + y
 
-        # this is a hack! ctypes won't pass structures but COORD is just like a
-        # long, so this works.
+        # this is a hack! ctypes won't pass structures but COORD is 
+        # just like a long, so this works.
         return c_int(y << 16 | x)
 
     def pos(self, x=None, y=None):
@@ -251,11 +254,12 @@ class Console(object):
             self.GetConsoleScreenBufferInfo(self.hout, byref(info))
             return (info.dwCursorPosition.X, info.dwCursorPosition.Y)
         else:
-            return self.SetConsoleCursorPosition(self.hout, self.fixcoord(x, y))
+            return self.SetConsoleCursorPosition(self.hout, 
+                                                 self.fixcoord(x, y))
 
     def home(self):
         u'''Move to home.'''
-        self.pos(0,0)
+        self.pos(0, 0)
 
 # Map ANSI color escape sequences into Windows Console Attributes
 
@@ -312,7 +316,7 @@ class Console(object):
                 elif chunk[0] == u'\r': # carriage return
                     x = 0
                 elif chunk[0] == u'\t': # tab
-                    x = 8*(int(x/8)+1)
+                    x = 8 * (int(x / 8) + 1)
                     if x > w: # newline
                         x -= w
                         y += 1
@@ -342,25 +346,27 @@ class Console(object):
 
     def write_color(self, text, attr=None):
         text = ensure_unicode(text)
-        n,res= self.ansiwriter.write_color(text,attr)
+        n, res= self.ansiwriter.write_color(text, attr)
         junk = c_int(0)
         for attr,chunk in res:
             log(u"console.attr:%s"%unicode(attr))
             log(u"console.chunk:%s"%unicode(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)
             for short_chunk in split_block(chunk):
-                self.WriteConsoleW(self.hout, short_chunk, len(short_chunk), byref(junk), None)
+                self.WriteConsoleW(self.hout, short_chunk, 
+                                   len(short_chunk), byref(junk), None)
         return n
 
     def write_plain(self, text, attr=None):
         u'''write text at current cursor position.'''
-        log(u'write("%s", %s)' %(text,attr))
+        log(u'write("%s", %s)' %(text, attr))
         if attr is None:
             attr = self.attr
         n = c_int(0)
         self.SetConsoleTextAttribute(self.hout, attr)
         for short_chunk in split_block(chunk):
-            self.WriteConsoleW(self.hout, ensure_unicode(short_chunk), len(short_chunk), byref(junk), None)
+            self.WriteConsoleW(self.hout, ensure_unicode(short_chunk), 
+                               len(short_chunk), byref(junk), None)
         return len(text)
 
     #This function must be used to ensure functioning with EMACS
@@ -368,7 +374,7 @@ class Console(object):
     if os.environ.has_key(u"EMACS"):
         def write_color(self, text, attr=None):
             junk = c_int(0)
-            self.WriteFile(self.hout, text, len(text), byref(junk),None)
+            self.WriteFile(self.hout, text, len(text), byref(junk), None)
             return len(text)
         write_plain = write_color
 
@@ -399,8 +405,10 @@ class Console(object):
         w = info.dwSize.X
         n = c_int(0)
         for y in range(info.dwSize.Y):
-            self.FillConsoleOutputAttribute(self.hout, attr, w, self.fixcoord(0, y), byref(n))
-            self.FillConsoleOutputCharacterW(self.hout, ord(fill[0]), w, self.fixcoord(0, y), byref(n))
+            self.FillConsoleOutputAttribute(self.hout, attr, 
+                                            w, self.fixcoord(0, y), byref(n))
+            self.FillConsoleOutputCharacterW(self.hout, ord(fill[0]), 
+                                             w, self.fixcoord(0, y), byref(n))
 
         self.attr = attr
 
@@ -411,16 +419,17 @@ class Console(object):
 
         pos = self.fixcoord(x, y)
         n = c_int(0)
-        self.WriteConsoleOutputCharacterW(self.hout, text, len(text), pos, byref(n))
+        self.WriteConsoleOutputCharacterW(self.hout, text, 
+                                          len(text), pos, byref(n))
         self.FillConsoleOutputAttribute(self.hout, attr, n, pos, byref(n))
 
     def clear_to_end_of_window(self):
-        top,bot=self._get_top_bot()
-        pos=self.pos()
-        w,h=self.size()
-        self.rectangle( (pos[0],pos[1],w,pos[1]+1))
-        if pos[1]<bot:
-            self.rectangle((0,pos[1]+1,w,bot+1))
+        top, bot = self._get_top_bot()
+        pos = self.pos()
+        w, h = self.size()
+        self.rectangle( (pos[0], pos[1], w, pos[1] + 1))
+        if pos[1] < bot:
+            self.rectangle((0, pos[1] + 1, w, bot + 1))
 
     def rectangle(self, rect, attr=None, fill=u' '):
         u'''Fill Rectangle.'''
@@ -430,23 +439,24 @@ class Console(object):
             attr = self.attr
         for y in range(y0, y1):
             pos = self.fixcoord(x0, y)
-            self.FillConsoleOutputAttribute(self.hout, attr, x1-x0, pos, byref(n))
-            self.FillConsoleOutputCharacterW(self.hout, ord(fill[0]), x1-x0, pos, byref(n))
+            self.FillConsoleOutputAttribute(self.hout, attr, x1 - x0, 
+                                            pos, byref(n))
+            self.FillConsoleOutputCharacterW(self.hout, ord(fill[0]), x1 - x0,
+                                             pos, byref(n))
 
     def scroll(self, rect, dx, dy, attr=None, fill=' '):
         u'''Scroll a rectangle.'''
         if attr is None:
             attr = self.attr
-
         x0, y0, x1, y1 = rect
-        source = SMALL_RECT(x0, y0, x1-1, y1-1)
-        dest = self.fixcoord(x0+dx, y0+dy)
+        source = SMALL_RECT(x0, y0, x1 - 1, y1 - 1)
+        dest = self.fixcoord(x0 + dx, y0 + dy)
         style = CHAR_INFO()
         style.Char.AsciiChar = ensure_str(fill[0])
         style.Attributes = attr
 
-        return self.ScrollConsoleScreenBufferW(self.hout, byref(source), byref(source),
-                                                                                     dest, byref(style))
+        return self.ScrollConsoleScreenBufferW(self.hout, byref(source), 
+                                          byref(source), dest, byref(style))
 
     def scroll_window(self, lines):
         u'''Scroll the window by the indicated number of lines.'''
@@ -470,7 +480,7 @@ class Console(object):
         nrect.Bottom = bot
         nrect.Left = rect.Left
         nrect.Right = rect.Right
-        log(u'sn: top=%d bot=%d' % (top,bot))
+        log(u'sn: top=%d bot=%d' % (top, bot))
         r=self.SetConsoleWindowInfo(self.hout, True, byref(nrect))
         log(u'r=%d' % r)
 
@@ -483,7 +493,8 @@ class Console(object):
         while 1:
             if inputHookFunc:
                 call_function(inputHookFunc, ())
-            status = self.ReadConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
+            status = self.ReadConsoleInputW(self.hin, 
+                                        byref(Cevent), 1, byref(count))
             if status and count.value == 1:
                 e = event(self, Cevent)
                 log(u"console.get %s"%ensure_unicode(e.keyinfo))
@@ -501,8 +512,9 @@ class Console(object):
                     self.scroll_window(-12)
                 else:
                     return e
-            elif e.type == u'KeyRelease' and e.keyinfo==(True, False, False, 83):
-                log(u"getKeypress:%s,%s,%s"%(e.keyinfo,e.keycode,e.type))
+            elif ((e.type == u'KeyRelease') and 
+                  (e.keyinfo == (True, False, False, 83))):
+                log(u"getKeypress:%s,%s,%s"%(e.keyinfo, e.keycode, e.type))
                 return e
                 
     def getchar(self):
@@ -511,9 +523,12 @@ class Console(object):
         Cevent = INPUT_RECORD()
         count = c_int(0)
         while 1:
-            status = self.ReadConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
-            if (status and count.value==1 and Cevent.EventType == 1 and
-                    Cevent.Event.KeyEvent.bKeyDown):
+            status = self.ReadConsoleInputW(self.hin, 
+                                            byref(Cevent), 1, byref(count))
+            if (status and 
+                (count.value == 1) and 
+                (Cevent.EventType == 1) and
+                Cevent.Event.KeyEvent.bKeyDown):
                 sym = keysym(Cevent.Event.KeyEvent.wVirtualKeyCode)
                 if len(sym) == 0:
                     sym = Cevent.Event.KeyEvent.uChar.AsciiChar
@@ -523,7 +538,8 @@ class Console(object):
         u'''Check event queue.'''
         Cevent = INPUT_RECORD()
         count = c_int(0)
-        status = self.PeekConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
+        status = self.PeekConsoleInputW(self.hin, 
+                                byref(Cevent), 1, byref(count))
         if status and count == 1:
             return event(self, Cevent)
 
@@ -550,7 +566,8 @@ class Console(object):
             width = max(width, wmin)
             height = max(height, hmin)
             #print width, height
-            self.SetConsoleScreenBufferSize(self.hout, self.fixcoord(width, height))
+            self.SetConsoleScreenBufferSize(self.hout, 
+                                            self.fixcoord(width, height))
         else:
             return (info.dwSize.X, info.dwSize.Y)
 
@@ -575,8 +592,8 @@ class Console(object):
 # add the functions from the dll to the class
 for func in funcs:
     setattr(Console, func, getattr(windll.kernel32, func))
-windll.kernel32.SetConsoleTitleW.argtypes=[c_wchar_p]
-windll.kernel32.GetConsoleTitleW.argtypes=[c_wchar_p,c_short]
+windll.kernel32.SetConsoleTitleW.argtypes = [c_wchar_p]
+windll.kernel32.GetConsoleTitleW.argtypes = [c_wchar_p,c_short]
 
 from event import Event
 
@@ -607,7 +624,7 @@ class event(Event):
             self.char = input.Event.KeyEvent.uChar.UnicodeChar
             self.keycode = input.Event.KeyEvent.wVirtualKeyCode
             self.state = input.Event.KeyEvent.dwControlKeyState
-            self.keyinfo=make_KeyPress(self.char,self.state,self.keycode)
+            self.keyinfo = make_KeyPress(self.char,self.state,self.keycode)
 
         elif input.EventType == MOUSE_EVENT:
             if input.Event.MouseEvent.dwEventFlags & MOUSE_MOVED:
@@ -661,7 +678,7 @@ HOOKFUNC22 = CFUNCTYPE(c_char_p, c_char_p)
 HOOKFUNC23 = CFUNCTYPE(c_char_p, c_void_p, c_void_p, c_char_p)
 
 readline_hook = None # the python hook goes here
-readline_ref = None  # this holds a reference to the c-callable to keep it alive
+readline_ref = None  # reference to the c-callable to keep it alive
 
 def hook_wrapper_23(stdin, stdout, prompt):
     u'''Wrap a Python readline so it behaves like GNU readline.'''
@@ -683,8 +700,8 @@ def hook_wrapper_23(stdin, stdout, prompt):
         res = u'\n'
     # we have to make a copy because the caller expects to free the result
     n = len(res)
-    p = Console.PyMem_Malloc(n+1)
-    cdll.msvcrt.strncpy(p, res, n+1)
+    p = Console.PyMem_Malloc(n + 1)
+    cdll.msvcrt.strncpy(p, res, n + 1)
     return p
 
 def hook_wrapper(prompt):
@@ -710,13 +727,14 @@ def hook_wrapper(prompt):
     return p
 
 def install_readline(hook):
-    '''Set up things for the interpreter to call our function like GNU readline.'''
+    '''Set up things for the interpreter to call 
+    our function like GNU readline.'''
     global readline_hook, readline_ref
     # save the hook so the wrapper can call it
     readline_hook = hook
     # get the address of PyOS_ReadlineFunctionPointer so we can update it
     PyOS_RFP = c_int.from_address(Console.GetProcAddress(sys.dllhandle,
-                                                 "PyOS_ReadlineFunctionPointer"))
+                                            "PyOS_ReadlineFunctionPointer"))
     # save a reference to the generated C-callable so it doesn't go away
     if sys.version < '2.3':
         readline_ref = HOOKFUNC22(hook_wrapper)
@@ -738,11 +756,11 @@ if __name__ == '__main__':
     sys.stdout = c
     sys.stderr = c
     c.page()
-    print p("d"),p("D")
+    print p("d"), p("D")
     c.pos(5, 10)
     c.write('hi there')
     print 'some printed output'
     for i in range(10):
-        q=c.getkeypress()
+        q = c.getkeypress()
         print q
     del c

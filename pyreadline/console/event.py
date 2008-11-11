@@ -2,12 +2,13 @@ class Event(object):
     u'''Represent events from the console.'''
     def __init__(self, console, input):
         pass
+
     def __repr__(self):
         u'''Display an event for debugging.'''
         if self.type in [u'KeyPress', u'KeyRelease']:
-            chr=self.char
+            chr = self.char
             if ord(chr)<ord(u"A"):
-                chr=u"?"
+                chr = u"?"
             s = u"%s char='%s'%d keysym='%s' keycode=%d:%x state=%x keyinfo=%s" % \
                    (self.type, chr, ord(self.char), self.keysym, self.keycode, self.keycode,
                      self.state, self.keyinfo)
