@@ -7,12 +7,12 @@
 #*****************************************************************************
 
 
-mybuffer=u""
+mybuffer = u""
 
 def GetClipboardText():
     return mybuffer
 
 def SetClipboardText(text):
     global mybuffer
-    mybuffer=text
+    mybuffer = text
     

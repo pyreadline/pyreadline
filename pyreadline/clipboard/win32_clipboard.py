@@ -37,38 +37,45 @@ from pyreadline.keysyms.winconstants import CF_TEXT, GHND
 from pyreadline.unicode_helper import ensure_unicode,ensure_str
 
 OpenClipboard = windll.user32.OpenClipboard
-EmptyClipboard = windll.user32.EmptyClipboard
-GetClipboardData = windll.user32.GetClipboardData
-GetClipboardFormatName = windll.user32.GetClipboardFormatNameA
-SetClipboardData = windll.user32.SetClipboardData
-EnumClipboardFormats = windll.user32.EnumClipboardFormats
-CloseClipboard = windll.user32.CloseClipboard
-OpenClipboard.argtypes=[c_int]
-EnumClipboardFormats.argtypes=[c_int]
-CloseClipboard.argtypes=[]
-GetClipboardFormatName.argtypes=[c_uint,c_char_p,c_int]
-GetClipboardData.argtypes=[c_int]
-SetClipboardData.argtypes=[c_int,c_int]
+OpenClipboard.argtypes = [c_int]
 
-GlobalLock = windll.kernel32.GlobalLock
+EmptyClipboard = windll.user32.EmptyClipboard
+
+GetClipboardData = windll.user32.GetClipboardData
+GetClipboardData.argtypes = [c_int]
+
+GetClipboardFormatName = windll.user32.GetClipboardFormatNameA
+GetClipboardFormatName.argtypes = [c_uint,c_char_p,c_int]
+
+SetClipboardData = windll.user32.SetClipboardData
+SetClipboardData.argtypes = [c_int,c_int]
+
+EnumClipboardFormats = windll.user32.EnumClipboardFormats
+EnumClipboardFormats.argtypes = [c_int]
+
+CloseClipboard = windll.user32.CloseClipboard
+CloseClipboard.argtypes = []
+
+
 GlobalAlloc = windll.kernel32.GlobalAlloc
+GlobalLock = windll.kernel32.GlobalLock
+GlobalLock.argtypes = [c_int]
 GlobalUnlock = windll.kernel32.GlobalUnlock
-GlobalLock.argtypes=[c_int]
-GlobalUnlock.argtypes=[c_int]
+GlobalUnlock.argtypes = [c_int]
 memcpy = cdll.msvcrt.memcpy
 
 def enum():
     OpenClipboard(0)
-    q=EnumClipboardFormats(0)
+    q = EnumClipboardFormats(0)
     while q:
-        q=EnumClipboardFormats(q)
+        q = EnumClipboardFormats(q)
     CloseClipboard()
 
 def getformatname(format):
     buffer = c_buffer(" "*100)
     bufferSize = sizeof(buffer)
     OpenClipboard(0)
-    GetClipboardFormatName(format,buffer,bufferSize)
+    GetClipboardFormatName(format, buffer, bufferSize)
     CloseClipboard()
     return buffer.value
 
@@ -97,5 +104,5 @@ def SetClipboardText(text):
         CloseClipboard()
 
 if __name__ == u'__main__':
-    txt=GetClipboardText()                            # display last text clipped
+    txt = GetClipboardText()                            # display last text clipped
     print txt
