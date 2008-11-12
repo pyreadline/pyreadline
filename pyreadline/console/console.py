@@ -16,19 +16,19 @@ This was modeled after the C extension of the same name by Fredrik Lundh.
 import sys,os
 import traceback
 import re
-from pyreadline.logger import log
-from pyreadline.unicode_helper import ensure_unicode,ensure_str
+
 import pyreadline.unicode_helper as unicode_helper
+
+from pyreadline.logger import log
+from pyreadline.unicode_helper import ensure_unicode, ensure_str
+from pyreadline.keysyms import make_KeyPress
+from pyreadline.console.ansi import AnsiState,AnsiWriter
+
 try:
     from ctypes import *
     from _ctypes import call_function
 except ImportError:
     raise ImportError(u"You need ctypes to run this code")
-
-# my code
-from pyreadline.keysyms import make_KeyPress
-from pyreadline.console.ansi import AnsiState,AnsiWriter
-
 
 def nolog(string):
     pass

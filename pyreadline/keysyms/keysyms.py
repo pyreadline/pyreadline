@@ -12,7 +12,7 @@ from ctypes import windll
 import ctypes
 # table for translating virtual keys to X windows key symbols
 
-from common import validkey,KeyPress,make_KeyPress_from_keydescr
+from common import validkey, KeyPress, make_KeyPress_from_keydescr
 
 code2sym_map = {c32.VK_CANCEL:     u'cancel',
                 c32.VK_BACK:       u'backspace',
@@ -117,15 +117,15 @@ def make_KeyPress(char, state, keycode):
     meta = (state & (1+2)) != 0
     shift = (state & 0x10) != 0
     if control and not meta:#Matches ctrl- chords should pass keycode as char
-        char=chr(keycode)
+        char = chr(keycode)
     elif control and meta:  #Matches alt gr and should just pass on char
-        control=False
-        meta=False
+        control = False
+        meta = False
     try:
         keyname=code2sym_map[keycode]
     except KeyError:
-        keyname=u""
-    out=KeyPress(char, shift, control, meta, keyname)
+        keyname = u""
+    out = KeyPress(char, shift, control, meta, keyname)
     return out
 
 if __name__==u"__main__":

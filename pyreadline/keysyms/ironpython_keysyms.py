@@ -7,12 +7,12 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 import System
-from common import validkey,KeyPress,make_KeyPress_from_keydescr
+from common import validkey, KeyPress, make_KeyPress_from_keydescr
 
-c32=System.ConsoleKey
-Shift=System.ConsoleModifiers.Shift
-Control=System.ConsoleModifiers.Control
-Alt=System.ConsoleModifiers.Alt
+c32 = System.ConsoleKey
+Shift = System.ConsoleModifiers.Shift
+Control = System.ConsoleModifiers.Control
+Alt = System.ConsoleModifiers.Alt
 # table for translating virtual keys to X windows key symbols
 code2sym_map = {#c32.CANCEL:    u'Cancel',
                 c32.Backspace:  u'BackSpace',
@@ -181,25 +181,22 @@ def keyseq_to_keyinfo(keyseq):
             return res[0]
 
 def make_keyinfo(keycode, state):
-#    control = (state & (4+8)) != 0
-#    meta = (state & (1+2)) != 0
-#    shift = (state & 0x10) != 0
-    control=False
-    meta=False
-    shift=False
+    control = False
+    meta  =False
+    shift = False
     return (control, meta, shift, keycode)
 
 
-def make_KeyPress(char,state,keycode):
+def make_KeyPress(char, state, keycode):
 
-    shift=bool(int(state)&int(Shift))
-    control=bool(int(state)&int(Control))
-    meta=bool(int(state)&int(Alt))
-    keyname=code2sym_map.get(keycode,u"").lower()
+    shift = bool(int(state) & int(Shift))
+    control = bool(int(state) & int(Control))
+    meta = bool(int(state) & int(Alt))
+    keyname = code2sym_map.get(keycode, u"").lower()
     if control and meta: #equivalent to altgr so clear flags
-        control=False
-        meta=False    
+        control = False
+        meta = False    
     elif control:
-        char=str(keycode)
-    return KeyPress(char,shift,control,meta,keyname)
+        char = str(keycode)
+    return KeyPress(char, shift, control, meta, keyname)
 
