@@ -190,7 +190,7 @@ class BaseMode(object):
                     self.begidx += 1
                     break
             text = ensure_str(u''.join(buf[self.begidx:self.endidx]))
-            log(u'complete text="%s"' % text)
+            log(u'complete text="%s"' % ensure_unicode(text))
             i = 0
             while 1:
                 try:
@@ -202,7 +202,7 @@ class BaseMode(object):
                     completions.append(r)
                 else:
                     break
-            log(u'text completions=<%s>' % completions)
+            log(u'text completions=<%s>' % map(ensure_unicode, completions))
         if not completions:
             # get the filename to complete
             while self.begidx > 0:
@@ -211,7 +211,7 @@ class BaseMode(object):
                     self.begidx += 1
                     break
             text = ensure_str(u''.join(buf[self.begidx:self.endidx]))
-            log(u'file complete text="%s"' % text)
+            log(u'file complete text="%s"' % ensure_unicode(text))
             completions = map(ensure_unicode, glob.glob(os.path.expanduser(text) + '*'))
             if self.mark_directories == u'on':
                 mc = []
@@ -221,7 +221,7 @@ class BaseMode(object):
                     else:
                         mc.append(f)
                 completions = mc
-            log(u'fnames=<%s>' % completions)
+            log(u'fnames=<%s>' % map(ensure_unicode, completions))
         return completions
 
 
