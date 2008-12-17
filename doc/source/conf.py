@@ -11,7 +11,7 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
-import sys, os
+import sys, os, pyreadline.release
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -42,9 +42,9 @@ copyright = '2008, J. Stenarson'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '1.6'
+version = pyreadline.release.version.rsplit(".",1)[0]
 # The full version, including alpha/beta/rc tags.
-release = '1.6'
+release = pyreadline.release.version
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

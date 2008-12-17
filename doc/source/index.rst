@@ -10,8 +10,12 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   manual_base
-
+   introduction
+   installation
+   usage
+   known_issues
+   bindable_commands
+   
 Indices and tables
 ==================
 
