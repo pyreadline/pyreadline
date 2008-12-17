@@ -98,7 +98,7 @@ class AnsiWriter(object):
                     elif len(part) == 2 and "30" <= part <= "37": # set foreground color
                         attr.color = trtable[int(part)-30]
                     elif len(part) == 2 and "40" <= part <= "47": # set background color
-                        attr.color = trtable[int(part)-40]
+                        attr.backgroundcolor = trtable[int(part)-40]
                 continue
             n += len(chunk)
             if True:
