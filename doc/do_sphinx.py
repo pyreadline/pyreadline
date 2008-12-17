@@ -2,10 +2,16 @@
 """Script to build documentation using Sphinx.
 """
 
-import fileinput,os,sys
+import fileinput, os, sys
 
 def oscmd(c):
     os.system(c)
+
+if os.path.isdir("build"):
+    os.removedirs("build")
+
+os.makedirs("build/html")
+os.makedirs("build/latex")
 
 # html manual.
 oscmd('sphinx-build -d build/doctrees source build/html')
