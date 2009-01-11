@@ -359,6 +359,7 @@ class Console(object):
 
     def write_plain(self, text, attr=None):
         u'''write text at current cursor position.'''
+        text = ensure_unicode(text)
         log(u'write("%s", %s)' %(text, attr))
         if attr is None:
             attr = self.attr
@@ -373,6 +374,7 @@ class Console(object):
     #Emacs sets the EMACS environment variable
     if os.environ.has_key(u"EMACS"):
         def write_color(self, text, attr=None):
+            text = ensure_str(text)
             junk = c_int(0)
             self.WriteFile(self.hout, text, len(text), byref(junk), None)
             return len(text)
@@ -380,6 +382,7 @@ class Console(object):
 
     # make this class look like a file object
     def write(self, text):
+        text = ensure_unicode(text)
         log(u'write("%s")' % text)
         return self.write_color(text)
 
