@@ -174,10 +174,9 @@ class BaseReadline(object):
 
     def get_completer(self): 
         u'''Get the completer function. 
-        ''' 
-
-        log(u'get_completer') 
-        return self.mode.completer 
+        '''
+        log(u'get_completer')
+        return self.mode.completer
 
     def get_begidx(self):
         u'''Get the beginning index of the readline tab-completion scope.'''
@@ -193,7 +192,7 @@ class BaseReadline(object):
 
     def get_completer_delims(self):
         u'''Get the readline word delimiters for tab-completion.'''
-        return self.mode.completer_delims
+        return self.mode.completer_delims.encode("ascii") 
 
     def set_startup_hook(self, function=None): 
         u'''Set or remove the startup_hook function.

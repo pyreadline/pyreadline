@@ -30,51 +30,51 @@ class IncrementalSearchPromptMode(object):
         pass
         
     def _process_incremental_search_keyevent(self, keyinfo):
-        keytuple=keyinfo.tuple()
-        log(u"IncrementalSearchPromptMode %s %s"%(keyinfo,keytuple))
+        keytuple = keyinfo.tuple()
+        log(u"IncrementalSearchPromptMode %s %s"%(keyinfo, keytuple))
         if keyinfo.keyname == u'backspace':
             self.subsearch_query = self.subsearch_query[:-1]
             if len(self.subsearch_query) > 0:
                 self.line=self.subsearch_fun(self.subsearch_query)                
             else:
                 self._bell()
-                self.line=""   #empty query means no search result
+                self.line = ""   #empty query means no search result
         elif keyinfo.keyname in [u'return', u'escape']:
             self._bell()
-            self.prompt=self.subsearch_oldprompt
-            self.process_keyevent_queue=self.process_keyevent_queue[:-1]
-            self._history.history_cursor=len(self._history.history)
+            self.prompt = self.subsearch_oldprompt
+            self.process_keyevent_queue = self.process_keyevent_queue[:-1]
+            self._history.history_cursor = len(self._history.history)
             if keyinfo.keyname == u'escape':
                 self.l_buffer.set_line(self.subsearch_old_line)
             return False
         elif keyinfo.keyname:
             pass
-        elif keytuple==self.subsearch_init_event:
+        elif keytuple == self.subsearch_init_event:
             self._history.history_cursor += self.subsearch_direction
-            self.line=self.subsearch_fun(self.subsearch_query)                
-        elif keyinfo.control==False and keyinfo.meta==False :
+            self.line = self.subsearch_fun(self.subsearch_query)                
+        elif keyinfo.control == False and keyinfo.meta == False :
             self.subsearch_query += keyinfo.char
             self.line=self.subsearch_fun(self.subsearch_query)
         else:
             pass
-        self.prompt=self.subsearch_prompt%self.subsearch_query
+        self.prompt = self.subsearch_prompt%self.subsearch_query
         self.l_buffer.set_line(self.line)
 
     def _init_incremental_search(self, searchfun, direction, init_event):
         u"""Initialize search prompt
         """
-        self.subsearch_init_event=init_event.tuple()
-        self.subsearch_direction=direction
+        self.subsearch_init_event = init_event.tuple()
+        self.subsearch_direction = direction
         self.subsearch_query = u''
         self.subsearch_fun = searchfun
         self.subsearch_old_line = self.l_buffer.get_line_text()
         
         self.process_keyevent_queue.append(self._process_incremental_search_keyevent)
         
-        self.subsearch_oldprompt=self.prompt
+        self.subsearch_oldprompt = self.prompt
         
         if (self.previous_func != self.history_search_forward and
-                self.previous_func != self.history_search_backward):
+            self.previous_func != self.history_search_backward):
             self.subsearch_query = u''.join(self.l_buffer[0:Point].get_line_text())
 
         
@@ -82,11 +82,13 @@ class IncrementalSearchPromptMode(object):
             self.subsearch_prompt = u"reverse-i-search`%s': "
         else:
             self.subsearch_prompt = u"forward-i-search`%s': "
-        self.prompt=self.subsearch_prompt%""
+
+        self.prompt = self.subsearch_prompt%""
+
         if self.subsearch_query:
-            self.line=self._process_search_keyevent(init_event)
+            self.line = self._process_incremental_search_keyevent(init_event)
         else:
-            self.line=u""
+            self.line = u""
 
 class SearchPromptMode(object):
     def __init__(self, rlobj):
@@ -125,10 +127,10 @@ class SearchPromptMode(object):
     def _init_non_i_search(self, direction):
         self.non_inc_direction = direction
         self.non_inc_query = u""
-        self.non_inc_oldprompt=self.prompt
-        self.non_inc_oldline=self.l_buffer.copy()
+        self.non_inc_oldprompt = self.prompt
+        self.non_inc_oldline = self.l_buffer.copy()
         self.l_buffer.reset_line()
-        self.prompt=self.non_inc_oldprompt+u":"
+        self.prompt = self.non_inc_oldprompt + u":"
         self.process_keyevent_queue.append(self._process_non_incremental_search_keyevent)
                 
     def non_incremental_reverse_search_history(self, e): # (M-p)

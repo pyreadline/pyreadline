@@ -21,7 +21,7 @@ import pyreadline.unicode_helper as unicode_helper
 
 from pyreadline.logger import log
 from pyreadline.unicode_helper import ensure_unicode, ensure_str
-from pyreadline.keysyms import make_KeyPress
+from pyreadline.keysyms import make_KeyPress, KeyPress
 from pyreadline.console.ansi import AnsiState,AnsiWriter
 
 try:
@@ -33,7 +33,7 @@ except ImportError:
 def nolog(string):
     pass
     
-log=nolog
+log = nolog
 
 
 # some constants we need
@@ -500,7 +500,6 @@ class Console(object):
                                         byref(Cevent), 1, byref(count))
             if status and count.value == 1:
                 e = event(self, Cevent)
-                log(u"console.get %s"%ensure_unicode(e.keyinfo))
                 return e
 
     def getkeypress(self):
@@ -508,17 +507,18 @@ class Console(object):
         while 1:
             e = self.get()
             if e.type == u'KeyPress' and e.keycode not in key_modifiers:
-                log(u"console.getleypress %s"%e)
-                if e.keyinfo.keyname == 'next':
+                log(u"console.getkeypress %s"%e)
+                if e.keyinfo.keyname == u'next':
                     self.scroll_window(12)
-                elif e.keyinfo.keyname == 'prior':
+                elif e.keyinfo.keyname == u'prior':
                     self.scroll_window(-12)
                 else:
                     return e
             elif ((e.type == u'KeyRelease') and 
-                  (e.keyinfo == (True, False, False, 83))):
+                  (e.keyinfo == KeyPress('S', False, True, False, 'S'))):
                 log(u"getKeypress:%s,%s,%s"%(e.keyinfo, e.keycode, e.type))
                 return e
+            
                 
     def getchar(self):
         u'''Get next character from queue.'''
@@ -649,6 +649,7 @@ class event(Event):
         elif input.EventType == MENU_EVENT:
             self.type = u"Menu"
             self.state = input.Event.MenuEvent.dwCommandId
+
 
 def getconsole(buffer=1):
         """Get a console handle.

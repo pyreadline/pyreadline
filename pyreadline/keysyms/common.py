@@ -39,7 +39,7 @@ validkey =set([u'cancel',      u'backspace',    u'tab',          u'clear',
 escape_sequence_to_special_key = {u"\\e[a" : u"up", u"\\e[b" : u"down", u"del" : u"delete"}
 
 class KeyPress(object):
-    def __init__(self, char="", shift=False, control=False, meta=False,keyname=u""):
+    def __init__(self, char=u"", shift=False, control=False, meta=False, keyname=u""):
         if control or meta or shift:
             char = char.upper()
         self.info = dict(char=char,
@@ -72,6 +72,14 @@ class KeyPress(object):
                 return (self.control, self.meta, self.shift, self.char.upper())
             else:
                 return (self.control, self.meta, self.shift, self.char)
+
+    def __eq__(self, other):
+        if isinstance(other, KeyPress):
+            s = self.tuple()
+            o = other.tuple()
+            return s == o
+        else:
+            return False
 
 def make_KeyPress_from_keydescr(keydescr):
     keyinfo = KeyPress()
