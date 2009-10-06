@@ -6,7 +6,7 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-import unicode_helper,logger,clipboard,lineeditor,modes
+import unicode_helper, logger, clipboard, lineeditor, modes
 from rlmain import *
 import rlmain
 __all__ = [ 'parse_and_bind',
@@ -27,6 +27,9 @@ __all__ = [ 'parse_and_bind',
             'set_completer_delims',
             'get_completer_delims',
             'add_history',
+            'callback_handler_install',
+            'callback_handler_remove',
+            'callback_read_char',
             'GetOutputFile',
             'rl',
             'rlmain']

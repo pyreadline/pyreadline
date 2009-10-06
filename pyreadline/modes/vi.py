@@ -9,7 +9,7 @@
 #*****************************************************************************
 import os
 import pyreadline.logger as logger
-from   pyreadline.logger import log,log_sock
+from   pyreadline.logger import log
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import basemode
@@ -23,73 +23,29 @@ class ViMode(basemode.BaseMode):
     def __repr__(self):
         return "<ViMode>"
 
-    def _readline_from_keyboard(self):
-        c=self.console
-        while 1:
+    def process_keyevent(self, keyinfo):
+        def nop(e):
+            pass
+        keytuple=keyinfo.tuple()
+
+        #Process exit keys. Only exit on empty line
+        if keytuple in self.exit_dispatch:
+            if lineobj.EndOfLine(self.l_buffer) == 0:
+                raise EOFError
+
+        dispatch_func = self.key_dispatch.get(keytuple,self.vi_key)
+        log("readline from keyboard:%s->%s"%(keytuple,dispatch_func))
+        r = None
+        if dispatch_func:
+            r = dispatch_func(keyinfo)
+            self.l_buffer.push_undo()
+
+        self.previous_func = dispatch_func
+        if r:
             self._update_line()
-            event = c.getkeypress()
-            if self.next_meta:
-                self.next_meta = False
-                control, meta, shift, code = event.keyinfo
-                event.keyinfo = (control, True, shift, code)
-
-            #Process exit keys. Only exit on empty line
-            if event.keyinfo in self.exit_dispatch:
-                if lineobj.EndOfLine(self.l_buffer) == 0:
-                    raise EOFError
-
-            dispatch_func = self.key_dispatch.get(event.keyinfo.tuple(),self.vi_key)
-            log("readline from keyboard:%s->%s"%(event.keyinfo.tuple(),dispatch_func))
-            r = None
-            if dispatch_func:
-                r = dispatch_func(event)
-                self.l_buffer.push_undo()
-
-            self.previous_func = dispatch_func
-            if r:
-                self._update_line()
-                break
-
-    def readline(self, prompt=''):
-        '''Try to act like GNU readline.'''
-        # handle startup_hook
-        if self.first_prompt:
-            self.first_prompt = False
-            if self.startup_hook:
-                try:
-                    self.startup_hook()
-                except:
-                    print 'startup hook failed'
-                    traceback.print_exc()
-
-        c = self.console
-        self.l_buffer.reset_line()
-        self.prompt = prompt
-        self._print_prompt()
-
-        if self.pre_input_hook:
-            try:
-                self.pre_input_hook()
-            except:
-                print 'pre_input_hook failed'
-                traceback.print_exc()
-                self.pre_input_hook = None
-
-        log("in readline: %s"%self.paste_line_buffer)
-        if len(self.paste_line_buffer)>0:
-            self.l_buffer=lineobj.ReadlineTextBuffer(self.paste_line_buffer[0])
-            self._update_line()
-            self.paste_line_buffer=self.paste_line_buffer[1:]
-            c.write('\r\n')
-        else:
-            self._readline_from_keyboard()
-            c.write('\r\n')
-
-        self.add_history(self.l_buffer.copy())
-
-        log('returning(%s)' % self.l_buffer.get_line_text())
-        return self.l_buffer.get_line_text() + '\n'
-
+            return True
+        return False
+        
     ### Methods below here are bindable emacs functions
 
     def init_editing_mode(self, e): # (M-C-j)
@@ -156,8 +112,6 @@ class ViMode(basemode.BaseMode):
             else:
                 self._vi_command = ViCommand (self)
             self.vi_set_insert_mode (False)
-#            if self.line_cursor > 0:
-#                self.line_cursor -= 1
             self.l_buffer.point=lineobj.PrevChar
         elif self._vi_command and self._vi_command.is_replace_one:
             self._vi_command.add_char (e.char)
@@ -204,9 +158,9 @@ class ViMode(basemode.BaseMode):
         self.__vi_insert_mode = value
         if value:
             self.vi_save_line ()
-            self.console.cursor (size=25)
+            self.cursor_size=25
         else:
-            self.console.cursor (size=100)
+            self.cursor_size=100
 
     def vi_undo_restart (self):
         tpl_undo = (self.l_buffer.point, self.l_buffer.line_buffer[:], )
@@ -402,7 +356,7 @@ class ViCommand:
             if char == '\x1b':  # escape
                 self.escape (char)
             elif char == '\x09':  # tab
-                ts = self.readline.tabstop
+                ts = self.tabstop
                 ws = ' ' * (ts - (self.readline.l_buffer.point%ts))
                 self.set_text (ws)
             elif char == '\x08':  # backspace

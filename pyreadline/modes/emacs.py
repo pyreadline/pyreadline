@@ -8,7 +8,7 @@
 #*****************************************************************************
 import os,sys,time
 import pyreadline.logger as logger
-from   pyreadline.logger import log,log_sock
+from   pyreadline.logger import log
 from pyreadline.lineeditor.lineobj import Point
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
@@ -22,215 +22,279 @@ def format(keyinfo):
     else:
         k=keyinfo+(ord(keyinfo[-1]),)
     
-    return "(%s,%s,%s,%s,%x)"%k
-in_ironpython="IronPython" in sys.version
+    return u"(%s,%s,%s,%s,%x)"%k
+in_ironpython=u"IronPython" in sys.version
+
+class IncrementalSearchPromptMode(object):
+    def __init__(self, rlobj):
+        pass
+        
+    def _process_incremental_search_keyevent(self, keyinfo):
+        keytuple = keyinfo.tuple()
+        log(u"IncrementalSearchPromptMode %s %s"%(keyinfo, keytuple))
+        if keyinfo.keyname == u'backspace':
+            self.subsearch_query = self.subsearch_query[:-1]
+            if len(self.subsearch_query) > 0:
+                self.line=self.subsearch_fun(self.subsearch_query)                
+            else:
+                self._bell()
+                self.line = ""   #empty query means no search result
+        elif keyinfo.keyname in [u'return', u'escape']:
+            self._bell()
+            self.prompt = self.subsearch_oldprompt
+            self.process_keyevent_queue = self.process_keyevent_queue[:-1]
+            self._history.history_cursor = len(self._history.history)
+            if keyinfo.keyname == u'escape':
+                self.l_buffer.set_line(self.subsearch_old_line)
+            return False
+        elif keyinfo.keyname:
+            pass
+        elif keytuple == self.subsearch_init_event:
+            self._history.history_cursor += self.subsearch_direction
+            self.line = self.subsearch_fun(self.subsearch_query)                
+        elif keyinfo.control == False and keyinfo.meta == False :
+            self.subsearch_query += keyinfo.char
+            self.line=self.subsearch_fun(self.subsearch_query)
+        else:
+            pass
+        self.prompt = self.subsearch_prompt%self.subsearch_query
+        self.l_buffer.set_line(self.line)
+
+    def _init_incremental_search(self, searchfun, direction, init_event):
+        u"""Initialize search prompt
+        """
+        self.subsearch_init_event = init_event.tuple()
+        self.subsearch_direction = direction
+        self.subsearch_query = u''
+        self.subsearch_fun = searchfun
+        self.subsearch_old_line = self.l_buffer.get_line_text()
+        
+        self.process_keyevent_queue.append(self._process_incremental_search_keyevent)
+        
+        self.subsearch_oldprompt = self.prompt
+        
+        if (self.previous_func != self.history_search_forward and
+            self.previous_func != self.history_search_backward):
+            self.subsearch_query = u''.join(self.l_buffer[0:Point].get_line_text())
+
+        
+        if self.subsearch_direction < 0:
+            self.subsearch_prompt = u"reverse-i-search`%s': "
+        else:
+            self.subsearch_prompt = u"forward-i-search`%s': "
+
+        self.prompt = self.subsearch_prompt%""
+
+        if self.subsearch_query:
+            self.line = self._process_incremental_search_keyevent(init_event)
+        else:
+            self.line = u""
+
+class SearchPromptMode(object):
+    def __init__(self, rlobj):
+        pass
+
+    def _process_non_incremental_search_keyevent(self, keyinfo):
+        keytuple=keyinfo.tuple()
+        log(u"SearchPromptMode %s %s"%(keyinfo,keytuple))
+
+        if keyinfo.keyname == u'backspace':
+            self.non_inc_query = self.non_inc_query[:-1]
+        elif keyinfo.keyname in [u'return', u'escape']:
+            if self.non_inc_query:
+                if self.non_inc_direction==-1:
+                    res=self._history.reverse_search_history(self.non_inc_query)
+                else:
+                    res=self._history.forward_search_history(self.non_inc_query)
+
+            self._bell()
+            self.prompt=self.non_inc_oldprompt
+            self.process_keyevent_queue=self.process_keyevent_queue[:-1]
+            self._history.history_cursor=len(self._history.history)
+            if keyinfo.keyname == u'escape':
+                self.l_buffer=self.non_inc_oldline
+            else:
+                self.l_buffer.set_line(res)
+            return False
+        elif keyinfo.keyname:
+            pass
+        elif keyinfo.control==False and keyinfo.meta==False :
+            self.non_inc_query += keyinfo.char
+        else:
+            pass
+        self.prompt=self.non_inc_oldprompt+u":"+self.non_inc_query
+
+    def _init_non_i_search(self, direction):
+        self.non_inc_direction = direction
+        self.non_inc_query = u""
+        self.non_inc_oldprompt = self.prompt
+        self.non_inc_oldline = self.l_buffer.copy()
+        self.l_buffer.reset_line()
+        self.prompt = self.non_inc_oldprompt + u":"
+        self.process_keyevent_queue.append(self._process_non_incremental_search_keyevent)
+                
+    def non_incremental_reverse_search_history(self, e): # (M-p)
+        u'''Search backward starting at the current line and moving up
+        through the history as necessary using a non-incremental search for
+        a string supplied by the user.'''
+        return self._init_non_i_search(-1)
+
+    def non_incremental_forward_search_history(self, e): # (M-n)
+        u'''Search forward starting at the current line and moving down
+        through the the history as necessary using a non-incremental search
+        for a string supplied by the user.'''
+        return self._init_non_i_search(1)
+
+class LeaveModeTryNext(Exception): pass
+
+class DigitArgumentMode(object):
+    def __init__(self, rlobj):
+        pass
+
+    def _process_digit_argument_keyevent(self, keyinfo):
+        log(u"DigitArgumentMode.keyinfo %s"%keyinfo)
+        keytuple=keyinfo.tuple()
+        log(u"DigitArgumentMode.keytuple %s %s"%(keyinfo,keytuple))
+        if keyinfo.keyname in ['return']:
+            self.prompt=self._digit_argument_oldprompt
+            self.process_keyevent_queue=self.process_keyevent_queue[:-1]
+            return True
+        elif keyinfo.keyname:
+            pass
+        elif keyinfo.char in u"0123456789" and keyinfo.control==False and keyinfo.meta==False :
+            log(u"arg %s %s"%(self.argument,keyinfo.char))
+            self.argument=self.argument*10+int(keyinfo.char)
+        else:
+            self.prompt=self._digit_argument_oldprompt
+            raise LeaveModeTryNext
+        self.prompt=u"(arg: %s) "%self.argument
+
+    def _init_digit_argument(self, keyinfo):
+        """Initialize search prompt
+        """
+        c = self.console
+        line = self.l_buffer.get_line_text()
+        self._digit_argument_oldprompt = self.prompt
+        self.process_keyevent_queue.append(self._process_digit_argument_keyevent)
+
+        if keyinfo.char=="-":
+            self.argument=-1
+        elif keyinfo.char in u"0123456789":
+            self.argument=int(keyinfo.char)
+        log(u"<%s> %s"%(self.argument,type(self.argument)))
+        self.prompt=u"(arg: %s) "%self.argument
+        log(u"arg-init %s %s"%(self.argument,keyinfo.char))
 
 
-class EmacsMode(basemode.BaseMode):
+class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode, SearchPromptMode, basemode.BaseMode):
     mode="emacs"
-    def __init__(self,rlobj):
-        super(EmacsMode,self).__init__(rlobj)
+    def __init__(self, rlobj):
+        basemode.BaseMode.__init__(self, rlobj)
+        IncrementalSearchPromptMode.__init__(self, rlobj)
+        SearchPromptMode.__init__(self, rlobj)
+        DigitArgumentMode.__init__(self, rlobj)
         self._keylog=(lambda x,y: None)
         self.previous_func=None
-        self.prompt=">>>"
-    def __repr__(self):
-        return "<EmacsMode>"
+        self.prompt=u">>> "
+        self._insert_verbatim=False
+        self.next_meta = False # True to force meta on next character
 
-    def add_key_logger(self,logfun):
-        """logfun should be function that takes disp_fun and line_buffer object """
+        self.process_keyevent_queue=[self._process_keyevent]
+
+    def __repr__(self):
+        return u"<EmacsMode>"
+
+    def add_key_logger(self, logfun):
+        u"""logfun should be function that takes disp_fun and line_buffer object """
         self._keylog=logfun
-        
-    def _readline_from_keyboard(self):
-        c=self.console
+
+    def process_keyevent(self, keyinfo):
+        try:
+            r=self.process_keyevent_queue[-1](keyinfo)
+        except LeaveModeTryNext:
+            self.process_keyevent_queue=self.process_keyevent_queue[:-1]
+            r=self.process_keyevent(keyinfo)
+        if r:
+            self.add_history(self.l_buffer.copy())
+            return True
+        return False
+
+    def _process_keyevent(self, keyinfo):
+        u"""return True when line is final
+        """
+        #Process exit keys. Only exit on empty line
+        log(u"_process_keyevent <%s>"%keyinfo)
         def nop(e):
             pass
-        while 1:
-            self._update_line()
-            lbuf=self.l_buffer
-            log_sock("point:%d mark:%d selection_mark:%d"%(lbuf.point,lbuf.mark,lbuf.selection_mark))
-            try:
-                event = c.getkeypress()
-                log_sock(u">>%s"%event)
-            except KeyboardInterrupt:
-                from pyreadline.keysyms.common import KeyPress
-                from pyreadline.console.event import Event
-                event=Event(0,0)
-                event.char="c"
-                event.keyinfo=KeyPress("c",shift=False,control=True,meta=False,keyname=None)
-                log_sock("KBDIRQ")
-                if self.allow_ctrl_c:
-                    now=time.time()
-                    if (now-self.ctrl_c_timeout)<self.ctrl_c_tap_time_interval:
-                        raise
-                    else:
-                        self.ctrl_c_timeout=now
-                    pass
-                else:
-                    raise
-            if self.next_meta:
-                self.next_meta = False
-                control, meta, shift, code = event.keyinfo
-                event.keyinfo = (control, True, shift, code)
-
-            #Process exit keys. Only exit on empty line
-            keyinfo=event.keyinfo.tuple()
-            if keyinfo in self.exit_dispatch:
-                if lineobj.EndOfLine(self.l_buffer) == 0:
-                    raise EOFError
-            if len(keyinfo[-1])>1:
-                default=nop
-            else:
-                default=self.self_insert
-            dispatch_func = self.key_dispatch.get(keyinfo,default)
-            
-            log("readline from keyboard:%s,%s"%(keyinfo,dispatch_func))
-            log_sock((u"%s|%s"%(ensure_unicode(format(keyinfo)),dispatch_func.__name__)),"bound_function")
-            r = None
-            if dispatch_func:
-                r = dispatch_func(event)
-                self._keylog(dispatch_func,self.l_buffer)
-                self.l_buffer.push_undo()
-
-            self.previous_func = dispatch_func
-            if r:
-                self._update_line()
-                break
-
-    def readline(self, prompt=''):
-        '''Try to act like GNU readline.'''
-        # handle startup_hook
-        self.ctrl_c_timeout=time.time()
-        self.l_buffer.selection_mark=-1
-        if self.first_prompt:
-            self.first_prompt = False
-            if self.startup_hook:
-                try:
-                    self.startup_hook()
-                except:
-                    print 'startup hook failed'
-                    traceback.print_exc()
-
-        c = self.console
-        self.l_buffer.reset_line()
-        self.prompt = prompt
-        self._print_prompt()
-
-        if self.pre_input_hook:
-            try:
-                self.pre_input_hook()
-            except:
-                print 'pre_input_hook failed'
-                traceback.print_exc()
-                self.pre_input_hook = None
-
-        log("in readline: %s"%self.paste_line_buffer)
-        if len(self.paste_line_buffer)>0:
-            self.l_buffer=lineobj.ReadLineTextBuffer(self.paste_line_buffer[0])
-            self._update_line()
-            self.paste_line_buffer=self.paste_line_buffer[1:]
-            c.write('\r\n')
+        if self.next_meta:
+            self.next_meta = False
+            keyinfo.meta=True
+        keytuple=keyinfo.tuple()
+        
+        if self._insert_verbatim:
+            self.insert_text(keyinfo)
+            self._insert_verbatim=False
+            self.argument=0
+            return False
+        
+        if keytuple in self.exit_dispatch:
+            log(u"exit_dispatch:<%s, %s>"%(self.l_buffer, lineobj.EndOfLine(self.l_buffer)))
+            if lineobj.EndOfLine(self.l_buffer) == 0:
+                raise EOFError
+        if keyinfo.keyname or keyinfo.control or keyinfo.meta:
+            default=nop
         else:
-            self._readline_from_keyboard()
-            c.write('\r\n')
+            default=self.self_insert
+        dispatch_func = self.key_dispatch.get(keytuple, default)
 
-        self.add_history(self.l_buffer.copy())
+        log(u"readline from keyboard:<%s,%s>"%(keytuple, dispatch_func))
 
-        log('returning(%s)' % self.l_buffer.get_line_text())
-        return self.l_buffer.get_line_text() + '\n'
+        r = None
+        if dispatch_func:
+            r = dispatch_func(keyinfo)
+            self._keylog(dispatch_func,self.l_buffer)
+            self.l_buffer.push_undo()
+
+        self.previous_func = dispatch_func
+        return r
 
 #########  History commands
     def previous_history(self, e): # (C-p)
-        '''Move back through the history list, fetching the previous command. '''
+        u'''Move back through the history list, fetching the previous command. '''
         self._history.previous_history(self.l_buffer)
         self.l_buffer.point=lineobj.EndOfLine
+        self.finalize()
         
     def next_history(self, e): # (C-n)
         '''Move forward through the history list, fetching the next command. '''
         self._history.next_history(self.l_buffer)
+        self.finalize()
 
     def beginning_of_history(self, e): # (M-<)
-        '''Move to the first line in the history.'''
+        u'''Move to the first line in the history.'''
         self._history.beginning_of_history()
+        self.finalize()
 
     def end_of_history(self, e): # (M->)
-        '''Move to the end of the input history, i.e., the line currently
+        u'''Move to the end of the input history, i.e., the line currently
         being entered.'''
         self._history.end_of_history(self.l_buffer)
-
-    def _i_search(self, searchfun, direction, init_event):
-        c = self.console
-        line = self.l_buffer.get_line_text()
-        query = ''
-        if (self.previous_func != self.history_search_forward and
-                self.previous_func != self.history_search_backward):
-            self.query = ''.join(self.l_buffer[0:Point].get_line_text())
-        hc_start = self._history.history_cursor #+ direction
-        while 1:
-            x, y = self.prompt_end_pos
-            c.pos(0, y)
-            if direction < 0:
-                prompt = 'reverse-i-search'
-            else:
-                prompt = 'forward-i-search'
-
-            scroll = c.write_scrolling("%s`%s': %s" % (prompt, query, line))
-            self._update_prompt_pos(scroll)
-            self._clear_after()
-
-            event = c.getkeypress()
-            if event.keyinfo.keyname == 'backspace':
-                query = query[:-1]
-                if len(query) > 0:
-                    #self._history.history_cursor = hc_start  #forces search to restart when search empty
-                    line=searchfun(query)                
-                else:
-                    self._bell()
-                    line=""   #empty query means no search result
-            elif event.char in string.letters + string.digits + string.punctuation + ' ':
-                #self._history.history_cursor = hc_start
-                query += event.char
-                line=searchfun(query)
-            elif event.keyinfo == init_event.keyinfo:
-                self._history.history_cursor += direction
-                line=searchfun(query)                
-            else:
-                if event.keyinfo.keyname != 'return':
-                    self._bell()
-                break
-
-        px, py = self.prompt_begin_pos
-        c.pos(0, py)
-        self.l_buffer.set_line(line)
-        self._print_prompt()
-        self._history.history_cursor=len(self._history.history)
+        self.finalize()
 
     def reverse_search_history(self, e): # (C-r)
-        '''Search backward starting at the current line and moving up
+        u'''Search backward starting at the current line and moving up
         through the history as necessary. This is an incremental search.'''
-        self._i_search(self._history.reverse_search_history, -1, e)
+        self._init_incremental_search(self._history.reverse_search_history, -1, e)
+        self.finalize()
 
     def forward_search_history(self, e): # (C-s)
-        '''Search forward starting at the current line and moving down
+        u'''Search forward starting at the current line and moving down
         through the the history as necessary. This is an incremental search.'''
-        self._i_search(self._history.forward_search_history, 1, e)
-
-
-    def non_incremental_reverse_search_history(self, e): # (M-p)
-        '''Search backward starting at the current line and moving up
-        through the history as necessary using a non-incremental search for
-        a string supplied by the user.'''
-        q=self._history.non_incremental_reverse_search_history(self.l_buffer)
-        self.l_buffer=q
-
-    def non_incremental_forward_search_history(self, e): # (M-n)
-        '''Search forward starting at the current line and moving down
-        through the the history as necessary using a non-incremental search
-        for a string supplied by the user.'''
-        q=self._history.non_incremental_reverse_search_history(self.l_buffer)
-        self.l_buffer=q
+        self._init_incremental_search(self._history.forward_search_history, 1, e)
+        self.finalize()
 
     def history_search_forward(self, e): # ()
-        '''Search forward through the history for the string of characters
+        u'''Search forward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
         if self.previous_func and hasattr(self._history,self.previous_func.__name__):
@@ -240,9 +304,10 @@ class EmacsMode(basemode.BaseMode):
         q=self._history.history_search_forward(self.l_buffer)
         self.l_buffer=q
         self.l_buffer.point=q.point
+        self.finalize()
 
     def history_search_backward(self, e): # ()
-        '''Search backward through the history for the string of characters
+        u'''Search backward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
         if self.previous_func and hasattr(self._history,self.previous_func.__name__):
@@ -252,56 +317,60 @@ class EmacsMode(basemode.BaseMode):
         q=self._history.history_search_backward(self.l_buffer)
         self.l_buffer=q
         self.l_buffer.point=q.point
+        self.finalize()
 
 
     def yank_nth_arg(self, e): # (M-C-y)
-        '''Insert the first argument to the previous command (usually the
+        u'''Insert the first argument to the previous command (usually the
         second word on the previous line) at point. With an argument n,
         insert the nth word from the previous command (the words in the
         previous command begin with word 0). A negative argument inserts the
         nth word from the end of the previous command.'''
-        pass
+        self.finalize()
 
     def yank_last_arg(self, e): # (M-. or M-_)
-        '''Insert last argument to the previous command (the last word of
+        u'''Insert last argument to the previous command (the last word of
         the previous history entry). With an argument, behave exactly like
         yank-nth-arg. Successive calls to yank-last-arg move back through
         the history list, inserting the last argument of each line in turn.'''
-        pass
+        self.finalize()
 
     def forward_backward_delete_char(self, e): # ()
-        '''Delete the character under the cursor, unless the cursor is at
+        u'''Delete the character under the cursor, unless the cursor is at
         the end of the line, in which case the character behind the cursor
         is deleted. By default, this is not bound to a key.'''
-        pass
+        self.finalize()
 
     def quoted_insert(self, e): # (C-q or C-v)
-        '''Add the next character typed to the line verbatim. This is how to
+        u'''Add the next character typed to the line verbatim. This is how to
         insert key sequences like C-q, for example.'''
-        e = self.console.getkeypress()
-        self.insert_text(e.char)
+        self._insert_verbatim=True
+        self.finalize()
 
     def tab_insert(self, e): # (M-TAB)
-        '''Insert a tab character. '''
+        u'''Insert a tab character. '''
         cursor = min(self.l_buffer.point, len(self.l_buffer.line_buffer))
         ws = ' ' * (self.tabstop - (cursor % self.tabstop))
         self.insert_text(ws)
+        self.finalize()
 
     def transpose_chars(self, e): # (C-t)
-        '''Drag the character before the cursor forward over the character
+        u'''Drag the character before the cursor forward over the character
         at the cursor, moving the cursor forward as well. If the insertion
         point is at the end of the line, then this transposes the last two
         characters of the line. Negative arguments have no effect.'''
         self.l_buffer.transpose_chars()
+        self.finalize()
 
     def transpose_words(self, e): # (M-t)
-        '''Drag the word before point past the word after point, moving
+        u'''Drag the word before point past the word after point, moving
         point past that word as well. If the insertion point is at the end
         of the line, this transposes the last two words on the line.'''
         self.l_buffer.transpose_words()
+        self.finalize()
 
     def overwrite_mode(self, e): # ()
-        '''Toggle overwrite mode. With an explicit positive numeric
+        u'''Toggle overwrite mode. With an explicit positive numeric
         argument, switches to overwrite mode. With an explicit non-positive
         numeric argument, switches to insert mode. This command affects only
         emacs mode; vi mode does overwrite differently. Each call to
@@ -309,118 +378,198 @@ class EmacsMode(basemode.BaseMode):
         bound to self-insert replace the text at point rather than pushing
         the text to the right. Characters bound to backward-delete-char
         replace the character before point with a space.'''
-        pass
+        self.finalize()
         
     def kill_line(self, e): # (C-k)
-        '''Kill the text from point to the end of the line. '''
+        u'''Kill the text from point to the end of the line. '''
         self.l_buffer.kill_line()
+        self.finalize()
         
     def backward_kill_line(self, e): # (C-x Rubout)
-        '''Kill backward to the beginning of the line. '''
+        u'''Kill backward to the beginning of the line. '''
         self.l_buffer.backward_kill_line()
+        self.finalize()
 
     def unix_line_discard(self, e): # (C-u)
-        '''Kill backward from the cursor to the beginning of the current line. '''
+        u'''Kill backward from the cursor to the beginning of the current line. '''
         # how is this different from backward_kill_line?
         self.l_buffer.unix_line_discard()
+        self.finalize()
 
     def kill_whole_line(self, e): # ()
-        '''Kill all characters on the current line, no matter where point
+        u'''Kill all characters on the current line, no matter where point
         is. By default, this is unbound.'''
         self.l_buffer.kill_whole_line()
+        self.finalize()
 
     def kill_word(self, e): # (M-d)
-        '''Kill from point to the end of the current word, or if between
+        u'''Kill from point to the end of the current word, or if between
         words, to the end of the next word. Word boundaries are the same as
         forward-word.'''
         self.l_buffer.kill_word()
+        self.finalize()
+
     forward_kill_word=kill_word
-    
+
     def backward_kill_word(self, e): # (M-DEL)
-        '''Kill the word behind point. Word boundaries are the same as
+        u'''Kill the word behind point. Word boundaries are the same as
         backward-word. '''
         self.l_buffer.backward_kill_word()
-
+        self.finalize()
+    
     def unix_word_rubout(self, e): # (C-w)
-        '''Kill the word behind point, using white space as a word
+        u'''Kill the word behind point, using white space as a word
         boundary. The killed text is saved on the kill-ring.'''
         self.l_buffer.unix_word_rubout()
-
+        self.finalize()
+    
     def kill_region(self, e): # ()
-        '''Kill the text in the current region. By default, this command is unbound. '''
-        pass
-
+        u'''Kill the text in the current region. By default, this command is unbound. '''
+        self.finalize()
+    
     def copy_region_as_kill(self, e): # ()
-        '''Copy the text in the region to the kill buffer, so it can be
+        u'''Copy the text in the region to the kill buffer, so it can be
         yanked right away. By default, this command is unbound.'''
-        pass
-
+        self.finalize()
+    
     def copy_backward_word(self, e): # ()
-        '''Copy the word before point to the kill buffer. The word
+        u'''Copy the word before point to the kill buffer. The word
         boundaries are the same as backward-word. By default, this command
         is unbound.'''
-        pass
-
+        self.finalize()
+    
     def copy_forward_word(self, e): # ()
-        '''Copy the word following point to the kill buffer. The word
+        u'''Copy the word following point to the kill buffer. The word
         boundaries are the same as forward-word. By default, this command is
         unbound.'''
-        pass
-
+        self.finalize()
+    
 
     def yank(self, e): # (C-y)
-        '''Yank the top of the kill ring into the buffer at point. '''
+        u'''Yank the top of the kill ring into the buffer at point. '''
         self.l_buffer.yank()
-
+        self.finalize()
+    
     def yank_pop(self, e): # (M-y)
-        '''Rotate the kill-ring, and yank the new top. You can only do this
+        u'''Rotate the kill-ring, and yank the new top. You can only do this
         if the prior command is yank or yank-pop.'''
         self.l_buffer.yank_pop()
+        self.finalize()
+    
+    def delete_char_or_list(self, e): # ()
+        u'''Deletes the character under the cursor if not at the beginning or
+        end of the line (like delete-char). If at the end of the line,
+        behaves identically to possible-completions. This command is unbound
+        by default.'''
+        self.finalize()
+    
+    def start_kbd_macro(self, e): # (C-x ()
+        u'''Begin saving the characters typed into the current keyboard macro. '''
+        self.finalize()
+    
+    def end_kbd_macro(self, e): # (C-x ))
+        u'''Stop saving the characters typed into the current keyboard macro
+        and save the definition.'''
+        self.finalize()
+    
+    def call_last_kbd_macro(self, e): # (C-x e)
+        u'''Re-execute the last keyboard macro defined, by making the
+        characters in the macro appear as if typed at the keyboard.'''
+        self.finalize()
+    
+    def re_read_init_file(self, e): # (C-x C-r)
+        u'''Read in the contents of the inputrc file, and incorporate any
+        bindings or variable assignments found there.'''
+        self.finalize()
+    
+    def abort(self, e): # (C-g)
+        u'''Abort the current editing command and ring the terminals bell
+             (subject to the setting of bell-style).'''
+        self._bell()
+        self.finalize()
+    
+    def do_uppercase_version(self, e): # (M-a, M-b, M-x, ...)
+        u'''If the metafied character x is lowercase, run the command that is
+        bound to the corresponding uppercase character.'''
+        self.finalize()
+    
+    def prefix_meta(self, e): # (ESC)
+        u'''Metafy the next character typed. This is for keyboards without a
+        meta key. Typing ESC f is equivalent to typing M-f. '''
+        self.next_meta = True
+        self.finalize()
+    
+    def undo(self, e): # (C-_ or C-x C-u)
+        u'''Incremental undo, separately remembered for each line.'''
+        self.l_buffer.pop_undo()
+        self.finalize()
+    
+    def revert_line(self, e): # (M-r)
+        u'''Undo all changes made to this line. This is like executing the
+        undo command enough times to get back to the beginning.'''
+        self.finalize()
+    
+    def tilde_expand(self, e): # (M-~)
+        u'''Perform tilde expansion on the current word.'''
+        self.finalize()
+    
+    def set_mark(self, e): # (C-@)
+        u'''Set the mark to the point. If a numeric argument is supplied, the
+        mark is set to that position.'''
+        self.l_buffer.set_mark()
+        self.finalize()
+    
+    def exchange_point_and_mark(self, e): # (C-x C-x)
+        u'''Swap the point with the mark. The current cursor position is set
+        to the saved position, and the old cursor position is saved as the
+        mark.'''
+        self.finalize()
+    
+    def character_search(self, e): # (C-])
+        u'''A character is read and point is moved to the next occurrence of
+        that character. A negative count searches for previous occurrences.'''
+        self.finalize()
+    
+    def character_search_backward(self, e): # (M-C-])
+        u'''A character is read and point is moved to the previous occurrence
+        of that character. A negative count searches for subsequent
+        occurrences.'''
+        self.finalize()
+    
+    def insert_comment(self, e): # (M-#)
+        u'''Without a numeric argument, the value of the comment-begin
+        variable is inserted at the beginning of the current line. If a
+        numeric argument is supplied, this command acts as a toggle: if the
+        characters at the beginning of the line do not match the value of
+        comment-begin, the value is inserted, otherwise the characters in
+        comment-begin are deleted from the beginning of the line. In either
+        case, the line is accepted as if a newline had been typed.'''
+        self.finalize()
+    
+    def dump_variables(self, e): # ()
+        u'''Print all of the settable variables and their values to the
+        Readline output stream. If a numeric argument is supplied, the
+        output is formatted in such a way that it can be made part of an
+        inputrc file. This command is unbound by default.'''
+        self.finalize()
+    
+    def dump_macros(self, e): # ()
+        u'''Print all of the Readline key sequences bound to macros and the
+        strings they output. If a numeric argument is supplied, the output
+        is formatted in such a way that it can be made part of an inputrc
+        file. This command is unbound by default.'''
+        self.finalize()
+    
 
 
     def digit_argument(self, e): # (M-0, M-1, ... M--)
-        '''Add this digit to the argument already accumulating, or start a
+        u'''Add this digit to the argument already accumulating, or start a
         new argument. M-- starts a negative argument.'''
-        args=e.char
-
-        c = self.console
-        line = self.l_buffer.get_line_text()
-        oldprompt=self.prompt
-        def nop(e):
-            pass
-        while 1:
-            x, y = self.prompt_end_pos
-            c.pos(0, y)
-            self.prompt="(arg: %s) "%args
-            self._print_prompt()
-            self._update_line()
-
-            event = c.getkeypress()
-            if event.keyinfo.keyname == 'enter':
-                break
-            elif event.char in "0123456789":
-                args+=event.char
-            else:
-                self.argument=int(args)
-                keyinfo=event.keyinfo.tuple()
-                if len(keyinfo[-1])>1:
-                    default=nop
-                else:
-                    default=self.self_insert
-                dispatch_func = self.key_dispatch.get(keyinfo,default)
-                dispatch_func(event)
-                break
-        self.prompt=oldprompt
-        x, y = self.prompt_end_pos
-        c.pos(0, y)
-        self._print_prompt()
-        self._update_line()
-
-            
-
+        self._init_digit_argument(e)
+        #Should not finalize
 
     def universal_argument(self, e): # ()
-        '''This is another way to specify an argument. If this command is
+        u'''This is another way to specify an argument. If this command is
         followed by one or more digits, optionally with a leading minus
         sign, those digits define the argument. If the command is followed
         by digits, executing universal-argument again ends the numeric
@@ -431,199 +580,105 @@ class EmacsMode(basemode.BaseMode):
         executing this function the first time makes the argument count
         four, a second time makes the argument count sixteen, and so on. By
         default, this is not bound to a key.'''
-        pass
-
-    def delete_char_or_list(self, e): # ()
-        '''Deletes the character under the cursor if not at the beginning or
-        end of the line (like delete-char). If at the end of the line,
-        behaves identically to possible-completions. This command is unbound
-        by default.'''
-        pass
-
-    def start_kbd_macro(self, e): # (C-x ()
-        '''Begin saving the characters typed into the current keyboard macro. '''
-        pass
-
-    def end_kbd_macro(self, e): # (C-x ))
-        '''Stop saving the characters typed into the current keyboard macro
-        and save the definition.'''
-        pass
-
-    def call_last_kbd_macro(self, e): # (C-x e)
-        '''Re-execute the last keyboard macro defined, by making the
-        characters in the macro appear as if typed at the keyboard.'''
-        pass
-
-    def re_read_init_file(self, e): # (C-x C-r)
-        '''Read in the contents of the inputrc file, and incorporate any
-        bindings or variable assignments found there.'''
-        pass
-
-    def abort(self, e): # (C-g)
-        '''Abort the current editing command and ring the terminals bell
-             (subject to the setting of bell-style).'''
-        self._bell()
-
-    def do_uppercase_version(self, e): # (M-a, M-b, M-x, ...)
-        '''If the metafied character x is lowercase, run the command that is
-        bound to the corresponding uppercase character.'''
-        pass
-
-    def prefix_meta(self, e): # (ESC)
-        '''Metafy the next character typed. This is for keyboards without a
-        meta key. Typing ESC f is equivalent to typing M-f. '''
-        self.next_meta = True
-
-    def undo(self, e): # (C-_ or C-x C-u)
-        '''Incremental undo, separately remembered for each line.'''
-        self.l_buffer.pop_undo()
-
-    def revert_line(self, e): # (M-r)
-        '''Undo all changes made to this line. This is like executing the
-        undo command enough times to get back to the beginning.'''
-        pass
-
-    def tilde_expand(self, e): # (M-~)
-        '''Perform tilde expansion on the current word.'''
-        pass
-
-    def set_mark(self, e): # (C-@)
-        '''Set the mark to the point. If a numeric argument is supplied, the
-        mark is set to that position.'''
-        self.l_buffer.set_mark()
-
-    def exchange_point_and_mark(self, e): # (C-x C-x)
-        '''Swap the point with the mark. The current cursor position is set
-        to the saved position, and the old cursor position is saved as the
-        mark.'''
-        pass
-
-    def character_search(self, e): # (C-])
-        '''A character is read and point is moved to the next occurrence of
-        that character. A negative count searches for previous occurrences.'''
-        pass
-
-    def character_search_backward(self, e): # (M-C-])
-        '''A character is read and point is moved to the previous occurrence
-        of that character. A negative count searches for subsequent
-        occurrences.'''
-        pass
-
-    def insert_comment(self, e): # (M-#)
-        '''Without a numeric argument, the value of the comment-begin
-        variable is inserted at the beginning of the current line. If a
-        numeric argument is supplied, this command acts as a toggle: if the
-        characters at the beginning of the line do not match the value of
-        comment-begin, the value is inserted, otherwise the characters in
-        comment-begin are deleted from the beginning of the line. In either
-        case, the line is accepted as if a newline had been typed.'''
-        pass
-
-    def dump_variables(self, e): # ()
-        '''Print all of the settable variables and their values to the
-        Readline output stream. If a numeric argument is supplied, the
-        output is formatted in such a way that it can be made part of an
-        inputrc file. This command is unbound by default.'''
-        pass
-
-    def dump_macros(self, e): # ()
-        '''Print all of the Readline key sequences bound to macros and the
-        strings they output. If a numeric argument is supplied, the output
-        is formatted in such a way that it can be made part of an inputrc
-        file. This command is unbound by default.'''
-        pass
+        #Should not finalize
 
 
     #Create key bindings:
 
     def init_editing_mode(self, e): # (C-e)
-        '''When in vi command mode, this causes a switch to emacs editing
+        u'''When in vi command mode, this causes a switch to emacs editing
         mode.'''
-        self._bind_exit_key('Control-d')
-        self._bind_exit_key('Control-z')
+        self._bind_exit_key(u'Control-d')
+        self._bind_exit_key(u'Control-z')
 
         # I often accidentally hold the shift or control while typing space
-        self._bind_key('space',       self.self_insert)
-        self._bind_key('Shift-space',       self.self_insert)
-        self._bind_key('Control-space',     self.self_insert)
-        self._bind_key('Return',            self.accept_line)
-        self._bind_key('Left',              self.backward_char)
-        self._bind_key('Control-b',         self.backward_char)
-        self._bind_key('Right',             self.forward_char)
-        self._bind_key('Control-f',         self.forward_char)
-        self._bind_key('BackSpace',         self.backward_delete_char)
-        self._bind_key('Control-BackSpace', self.backward_delete_word)
+        self._bind_key(u'space',       self.self_insert)
+        self._bind_key(u'Shift-space',       self.self_insert)
+        self._bind_key(u'Control-space',     self.self_insert)
+        self._bind_key(u'Return',            self.accept_line)
+        self._bind_key(u'Left',              self.backward_char)
+        self._bind_key(u'Control-b',         self.backward_char)
+        self._bind_key(u'Right',             self.forward_char)
+        self._bind_key(u'Control-f',         self.forward_char)
+        self._bind_key(u'BackSpace',         self.backward_delete_char)
+        self._bind_key(u'Control-BackSpace', self.backward_delete_word)
         
-        self._bind_key('Home',              self.beginning_of_line)
-        self._bind_key('End',               self.end_of_line)
-        self._bind_key('Delete',            self.delete_char)
-        self._bind_key('Control-d',         self.delete_char)
-        self._bind_key('Clear',             self.clear_screen)
-        self._bind_key('Alt-f',             self.forward_word)
-        self._bind_key('Alt-b',             self.backward_word)
-        self._bind_key('Control-l',         self.clear_screen)
-        self._bind_key('Control-p',         self.previous_history)
-        self._bind_key('Up',                self.history_search_backward)
-        self._bind_key('Control-n',         self.next_history)
-        self._bind_key('Down',              self.history_search_forward)
-        self._bind_key('Control-a',         self.beginning_of_line)
-        self._bind_key('Control-e',         self.end_of_line)
-        self._bind_key('Alt-<',             self.beginning_of_history)
-        self._bind_key('Alt->',             self.end_of_history)
-        self._bind_key('Control-r',         self.reverse_search_history)
-        self._bind_key('Control-s',         self.forward_search_history)
-        self._bind_key('Alt-p',             self.non_incremental_reverse_search_history)
-        self._bind_key('Alt-n',             self.non_incremental_forward_search_history)
-        self._bind_key('Control-z',         self.undo)
-        self._bind_key('Control-_',         self.undo)
-        self._bind_key('Escape',            self.kill_whole_line)
-        self._bind_key('Meta-d',            self.kill_word)
-        self._bind_key('Control-Delete',       self.forward_delete_word)
-        self._bind_key('Control-w',         self.unix_word_rubout)
+        self._bind_key(u'Home',              self.beginning_of_line)
+        self._bind_key(u'End',               self.end_of_line)
+        self._bind_key(u'Delete',            self.delete_char)
+        self._bind_key(u'Control-d',         self.delete_char)
+        self._bind_key(u'Clear',             self.clear_screen)
+        self._bind_key(u'Alt-f',             self.forward_word)
+        self._bind_key(u'Alt-b',             self.backward_word)
+        self._bind_key(u'Control-l',         self.clear_screen)
+        self._bind_key(u'Control-p',         self.previous_history)
+        self._bind_key(u'Up',                self.history_search_backward)
+        self._bind_key(u'Control-n',         self.next_history)
+        self._bind_key(u'Down',              self.history_search_forward)
+        self._bind_key(u'Control-a',         self.beginning_of_line)
+        self._bind_key(u'Control-e',         self.end_of_line)
+        self._bind_key(u'Alt-<',             self.beginning_of_history)
+        self._bind_key(u'Alt->',             self.end_of_history)
+        self._bind_key(u'Control-r',         self.reverse_search_history)
+        self._bind_key(u'Control-s',         self.forward_search_history)
+        self._bind_key(u'Alt-p',             self.non_incremental_reverse_search_history)
+        self._bind_key(u'Alt-n',             self.non_incremental_forward_search_history)
+        self._bind_key(u'Control-z',         self.undo)
+        self._bind_key(u'Control-_',         self.undo)
+        self._bind_key(u'Escape',            self.kill_whole_line)
+        self._bind_key(u'Meta-d',            self.kill_word)
+        self._bind_key(u'Control-Delete',       self.forward_delete_word)
+        self._bind_key(u'Control-w',         self.unix_word_rubout)
         #self._bind_key('Control-Shift-v',   self.quoted_insert)
-        self._bind_key('Control-v',         self.paste)
-        self._bind_key('Alt-v',             self.ipython_paste)
-        self._bind_key('Control-y',         self.yank)
-        self._bind_key('Control-k',         self.kill_line)
-        self._bind_key('Control-m',         self.set_mark)
-        self._bind_key('Control-q',         self.copy_region_to_clipboard)
+        self._bind_key(u'Control-v',         self.paste)
+        self._bind_key(u'Alt-v',             self.ipython_paste)
+        self._bind_key(u'Control-y',         self.yank)
+        self._bind_key(u'Control-k',         self.kill_line)
+        self._bind_key(u'Control-m',         self.set_mark)
+        self._bind_key(u'Control-q',         self.copy_region_to_clipboard)
 #        self._bind_key('Control-shift-k',  self.kill_whole_line)
-        self._bind_key('Control-Shift-v',   self.paste_mulitline_code)
-        self._bind_key("Control-Right",     self.forward_word_end)
-        self._bind_key("Control-Left",      self.backward_word)
-        self._bind_key("Shift-Right",       self.forward_char_extend_selection)
-        self._bind_key("Shift-Left",        self.backward_char_extend_selection)
-        self._bind_key("Shift-Control-Right",     self.forward_word_end_extend_selection)
-        self._bind_key("Shift-Control-Left",     self.backward_word_extend_selection)
-        self._bind_key("Shift-Home",        self.beginning_of_line_extend_selection)
-        self._bind_key("Shift-End",         self.end_of_line_extend_selection)
-        self._bind_key("numpad0",           self.self_insert)
-        self._bind_key("numpad1",           self.self_insert)
-        self._bind_key("numpad2",           self.self_insert)
-        self._bind_key("numpad3",           self.self_insert)
-        self._bind_key("numpad4",           self.self_insert)
-        self._bind_key("numpad5",           self.self_insert)
-        self._bind_key("numpad6",           self.self_insert)
-        self._bind_key("numpad7",           self.self_insert)
-        self._bind_key("numpad8",           self.self_insert)
-        self._bind_key("numpad9",           self.self_insert)
-        self._bind_key("add",               self.self_insert)
-        self._bind_key("subtract",          self.self_insert)
-        self._bind_key("multiply",          self.self_insert)
-        self._bind_key("divide",            self.self_insert)
-        self._bind_key("vk_decimal",        self.self_insert)
-        log("RUNNING INIT EMACS")
+        self._bind_key(u'Control-Shift-v',   self.paste_mulitline_code)
+        self._bind_key(u"Control-Right",     self.forward_word_end)
+        self._bind_key(u"Control-Left",      self.backward_word)
+        self._bind_key(u"Shift-Right",       self.forward_char_extend_selection)
+        self._bind_key(u"Shift-Left",        self.backward_char_extend_selection)
+        self._bind_key(u"Shift-Control-Right",     self.forward_word_end_extend_selection)
+        self._bind_key(u"Shift-Control-Left",     self.backward_word_extend_selection)
+        self._bind_key(u"Shift-Home",        self.beginning_of_line_extend_selection)
+        self._bind_key(u"Shift-End",         self.end_of_line_extend_selection)
+        self._bind_key(u"numpad0",           self.self_insert)
+        self._bind_key(u"numpad1",           self.self_insert)
+        self._bind_key(u"numpad2",           self.self_insert)
+        self._bind_key(u"numpad3",           self.self_insert)
+        self._bind_key(u"numpad4",           self.self_insert)
+        self._bind_key(u"numpad5",           self.self_insert)
+        self._bind_key(u"numpad6",           self.self_insert)
+        self._bind_key(u"numpad7",           self.self_insert)
+        self._bind_key(u"numpad8",           self.self_insert)
+        self._bind_key(u"numpad9",           self.self_insert)
+        self._bind_key(u"add",               self.self_insert)
+        self._bind_key(u"subtract",          self.self_insert)
+        self._bind_key(u"multiply",          self.self_insert)
+        self._bind_key(u"divide",            self.self_insert)
+        self._bind_key(u"vk_decimal",        self.self_insert)
+        log(u"RUNNING INIT EMACS")
+        for i in range(0,10):
+            self._bind_key(u"alt-%d"%i,      self.digit_argument)
+        self._bind_key(u"alt--",             self.digit_argument)
+
+
+
 
 # make it case insensitive
 def commonprefix(m):
-    "Given a list of pathnames, returns the longest common leading component"
+    u"Given a list of pathnames, returns the longest common leading component"
     if not m: return ''
     prefix = m[0]
     for item in m:
         for i in range(len(prefix)):
             if prefix[:i+1].lower() != item[:i+1].lower():
                 prefix = prefix[:i]
-                if i == 0: return ''
+                if i == 0: return u''
                 break
     return prefix
 
