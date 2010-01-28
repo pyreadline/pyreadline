@@ -54,6 +54,7 @@ class BaseReadline(object):
         self.bell_style = u'none'
         self.mark = -1
         self.console=MockConsole()
+        self.disable_readline = False
         # this code needs to follow l_buffer and history creation
         self.editingmodes = [mode(self) for mode in editingmodes]
         for mode in self.editingmodes:
@@ -64,7 +65,6 @@ class BaseReadline(object):
         log(u"\n".join(self.mode.rl_settings_to_string()))
 
         self.callback = None
-
 
     def parse_and_bind(self, string):
         u'''Parse and execute single line of a readline init file.'''
@@ -267,13 +267,16 @@ class BaseReadline(object):
                      inputrcpath=os.path.expanduser("~/pyreadlineconfig.ini")):
         modes = dict([(x.mode,x) for x in self.editingmodes])
         mode = self.editingmodes[0].mode
+
         def setmode(name):
             self.mode = modes[name]
+
         def bind_key(key, name):
             if hasattr(modes[mode], name):
                 modes[mode]._bind_key(key, getattr(modes[mode], name))
             else:
                 print u"Trying to bind unknown command '%s' to key '%s'"%(name, key)
+
         def un_bind_key(key):
             keyinfo = make_KeyPress_from_keydescr(key).tuple()
             if keyinfo in modes[mode].key_dispatch:
@@ -296,6 +299,9 @@ class BaseReadline(object):
 
         def setbellstyle(mode):
             self.bell_style = mode
+
+        def disable_readline(mode):
+            self.disable_readline = mode
 
         def sethistorylength(length):
             self.mode._history.history_length = int(length)
@@ -353,6 +359,7 @@ class BaseReadline(object):
                u"modes":modes,
                u"set_mode":setmode,
                u"bind_key":bind_key,
+               u"disable_readline":disable_readline,
                u"bind_exit_key":bind_exit_key,
                u"un_bind_key":un_bind_key,
                u"un_bind_exit_key":un_bind_exit_key,
@@ -556,46 +563,3 @@ class Readline(BaseReadline):
             raise KeyboardInterrupt
         return event
 
-
-
-
-# create a Readline object to contain the state
-rl = Readline()
-
-def GetOutputFile():
-    u'''Return the console object used by readline so that it can be used for printing in color.'''
-    return rl.console
-
-# make these available so this looks like the python readline module
-read_init_file = rl.read_init_file
-parse_and_bind = rl.parse_and_bind
-clear_history = rl.clear_history
-add_history = rl.add_history
-insert_text = rl.insert_text
-
-write_history_file = rl.write_history_file
-read_history_file = rl.read_history_file
-
-get_completer_delims = rl.get_completer_delims
-get_history_length = rl.get_history_length
-get_line_buffer = rl.get_line_buffer
-set_completer = rl.set_completer
-get_completer = rl.get_completer
-get_begidx = rl.get_begidx
-get_endidx = rl.get_endidx
-
-set_completer_delims = rl.set_completer_delims
-set_history_length = rl.set_history_length
-set_pre_input_hook = rl.set_pre_input_hook
-set_startup_hook = rl.set_startup_hook
-
-callback_handler_install=rl.callback_handler_install
-callback_handler_remove=rl.callback_handler_remove
-callback_read_char=rl.callback_read_char
-
-if __name__ == u'__main__':
-    res = [ rl.readline(u'In[%d] ' % i) for i in range(3) ]
-    print res
-else:
-    console.install_readline(rl.readline)
-    pass
