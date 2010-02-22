@@ -157,9 +157,9 @@ class BaseMode(object):
 
     def _bind_key(self, key, func):
         u"""setup the mapping from key to call the function."""
-        if type(func) != type(self._bind_key):
+        if not callable(func):
             print u"Trying to bind non method to keystroke:%s,%s"%(key,func)
-            raise PyreadlineError(u"Trying to bind non method to keystroke:%s,%s,%s,%s"%(key,func,type(func),type(self._bind_key)))
+            raise ReadlineError(u"Trying to bind non method to keystroke:%s,%s,%s,%s"%(key,func,type(func),type(self._bind_key)))
         keyinfo = make_KeyPress_from_keydescr(key.lower()).tuple()
         log(u">>>%s -> %s<<<"%(keyinfo,func.__name__))
         self.key_dispatch[keyinfo] = func
