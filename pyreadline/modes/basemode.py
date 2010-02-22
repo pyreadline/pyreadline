@@ -205,7 +205,6 @@ class BaseMode(object):
                     break
             log(u'text completions=<%s>' % map(ensure_unicode, completions))
         if (self.complete_filesystem == "on") and not completions:
-            print "HEJ"
             # get the filename to complete
             while self.begidx > 0:
                 self.begidx -= 1
