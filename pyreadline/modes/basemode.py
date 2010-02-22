@@ -31,6 +31,7 @@ class BaseMode(object):
         self.completer_delims = u" \t\n\"\\'`@$><=;|&{("
         self.show_all_if_ambiguous = u'off'
         self.mark_directories = u'on'
+        self.complete_filesystem = u'on'
         self.completer = None
         self.begidx = 0
         self.endidx = 0
@@ -203,7 +204,8 @@ class BaseMode(object):
                 else:
                     break
             log(u'text completions=<%s>' % map(ensure_unicode, completions))
-        if not completions:
+        if (self.complete_filesystem == "on") and not completions:
+            print "HEJ"
             # get the filename to complete
             while self.begidx > 0:
                 self.begidx -= 1

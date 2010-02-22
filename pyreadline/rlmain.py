@@ -325,6 +325,9 @@ class BaseReadline(object):
         def completer_delims(delims):
             self.mode.completer_delims = delims
         
+        def complete_filesystem(delims):
+            self.mode.complete_filesystem = delims.lower()
+        
         def debug_output(on, filename=u"pyreadline_debug_log.txt"): #Not implemented yet
             if on in [u"on", u"on_nologfile"]:
                 self.debug=True
@@ -367,6 +370,7 @@ class BaseReadline(object):
                u"mark_directories":mark_directories,
                u"show_all_if_ambiguous":show_all_if_ambiguous,
                u"completer_delims":completer_delims,
+               u"complete_filesystem":complete_filesystem,
                u"debug_output":debug_output,
                u"history_filename":sethistoryfilename,
                u"history_length":sethistorylength,
