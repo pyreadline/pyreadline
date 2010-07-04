@@ -31,7 +31,7 @@ class BaseMode(object):
         self.completer_delims = u" \t\n\"\\'`@$><=;|&{("
         self.show_all_if_ambiguous = u'off'
         self.mark_directories = u'on'
-        self.complete_filesystem = u'on'
+        self.complete_filesystem = u'off'
         self.completer = None
         self.begidx = 0
         self.endidx = 0
