@@ -22,7 +22,7 @@ name = u'pyreadline'
 
 branch = u''
 
-version = u'1.6.svn'
+version = u'1.7'
 
 revision = u'$Revision$'
 
@@ -35,21 +35,20 @@ it is based on the ctypes based UNC readline package by Gary Bishop.
 It is not complete. It has been tested for use with windows 2000 and windows xp.
 
 Features:
- *  NEW: keyboard text selection and copy/paste
+ *  keyboard text selection and copy/paste
  *  Shift-arrowkeys for text selection
- *  Control-c can be used for copy activate with allow_ctrl_c(True) is config file
+ *  Control-c can be used for copy activate with allow_ctrl_c(True) in config file
  *  Double tapping ctrl-c will raise a KeyboardInterrupt, use ctrl_c_tap_time_interval(x)
     where x is your preferred tap time window, default 0.3 s.
  *  paste pastes first line of content on clipboard. 
  *  ipython_paste, pastes tab-separated data as list of lists or numpy array if all data is numeric
  *  paste_mulitline_code  pastes multi line code, removing any empty lines.
- *  Experimental support for ironpython. At this time Ironpython has to be patched for it to work.
  
  
  The latest development version is always available at the IPython subversion
  repository_.
 
-.. _repository: http://ipython.scipy.org/svn/ipython/pyreadline/trunk#egg=pyreadline-dev
+.. _repository:
  """
 
 license = u'BSD'
@@ -61,14 +60,23 @@ authors = {u'Jorgen' : (u'Jorgen Stenarson',u'jorgen.stenarson@bostream.nu'),
 
 url = u'http://ipython.scipy.org/moin/PyReadline/Intro'
 
-download_url = u''
+download_url = u'https://launchpad.net/pyreadline/+download'
 
-platforms = [u'Windows XP/2000/NT',u'Windows 95/98/ME']
+platforms = [u'Windows XP/2000/NT',
+             u'Windows 95/98/ME']
 
-keywords = [u'readline',u'pyreadline']
+keywords = [u'readline',
+            u'pyreadline']
 
-classifiers = [u'Development Status :: 4 - Beta',
+classifiers = [u'Development Status :: 5 - Production/Stable',
                u'Environment :: Console',
-               u'Operating System :: Microsoft :: Windows',]
+               u'Operating System :: Microsoft :: Windows',
+               u'License :: OSI Approved :: BSD License',
+               u'Programming Language :: Python :: 2.4',
+               u'Programming Language :: Python :: 2.5',
+               u'Programming Language :: Python :: 2.6',
+               u'Programming Language :: Python :: 2.7',
+
+               ]
                
                

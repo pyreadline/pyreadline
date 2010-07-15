@@ -9,10 +9,13 @@ import sys
 
 try:
     pyreadline_codepage = sys.stdout.encoding
-except AttributeError:        #This error occurs when pdb imports readline and doctest has replaced 
-                              #stdout with stdout collector
-    pyreadline_codepage = u"ascii"   #assume ascii codepage
-    
+except AttributeError:        
+    # This error occurs when pdb imports readline and doctest has replaced 
+    # stdout with stdout collector. We will assume ascii codepage
+    pyreadline_codepage = u"ascii"
+
+if pyreadline_codepage is None:  
+    pyreadline_codepage = u"ascii"
 
 def ensure_unicode(text):
     u"""helper to ensure that text passed to WriteConsoleW is unicode"""
