@@ -1,1 +1,9 @@
 include pyreadline/configuration/pyreadlineconfig.ini
+
+graft doc
+exclude doc/\#*
+exclude doc/man/*.1
+
+# docs subdirs we want to skip
+prune doc/attic
+prune doc/build

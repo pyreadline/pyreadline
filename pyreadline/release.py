@@ -61,11 +61,13 @@ authors = {u'Jorgen' : (u'Jorgen Stenarson',u'jorgen.stenarson@bostream.nu'),
 
 url = u'http://ipython.scipy.org/moin/PyReadline/Intro'
 
-download_url = u''
+download_url = u'https://launchpad.net/pyreadline/+download'
 
-platforms = [u'Windows XP/2000/NT',u'Windows 95/98/ME']
+platforms = [u'Windows XP/2000/NT',
+             u'Windows 95/98/ME']
 
-keywords = [u'readline',u'pyreadline']
+keywords = [u'readline',
+            u'pyreadline']
 
 classifiers = [u'Development Status :: 4 - Beta',
                u'Environment :: Console',

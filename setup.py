@@ -19,6 +19,13 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 from distutils.core import setup
 execfile('pyreadline/release.py')
 
+try:
+    import sphinx
+    from sphinx.setup_command import BuildDoc
+    cmd_class ={'build_sphinx': BuildDoc}
+except ImportError:
+    cmd_class = None
+
 packages = ['pyreadline','pyreadline.clipboard','pyreadline.configuration',
             'pyreadline.console','pyreadline.keysyms','pyreadline.lineeditor',
             'pyreadline.modes','pyreadline.test',
@@ -35,13 +42,13 @@ setup(name=name,
       license          = license,
       classifiers      = classifiers,
       url              = url,
-#      download_url     = download_url,
+      download_url     = download_url,
       platforms        = platforms,
       keywords         = keywords,
       py_modules       = ['readline'],
       packages         = packages,
       package_data     = {'pyreadline':['configuration/*']},
-      data_files       = [('share/doc/pyreadline', glob.glob("doc/*")),
-                         ]
+      data_files       = [],
+      cmdclass = cmd_class,
       )
 
