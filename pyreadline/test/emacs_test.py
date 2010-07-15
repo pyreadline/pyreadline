@@ -344,19 +344,23 @@ class TestsHistory (unittest.TestCase):
 
     def test_complete (self):
         import rlcompleter
-        logger.sock_silent=False
+        logger.sock_silent = False
 
-        log("-"*50)
-        r=EmacsModeTest()
-        r.completer=rlcompleter.Completer().complete
-        r._bind_key("tab",r.complete)
+        log("-" * 50)
+        r = EmacsModeTest()
+        completerobj = rlcompleter.Completer()
+        def _nop(val, word):
+            return word
+        completerobj._callable_postfix = _nop
+        r.completer = completerobj.complete
+        r._bind_key("tab", r.complete)
         r.input(u'"exi(ksdjksjd)"')
         r.input(u'Control-a')
         r.input(u'Right')
         r.input(u'Right')
         r.input(u'Right')
         r.input(u'Tab')
-        self.assert_line(r,"exit(ksdjksjd)",4)
+        self.assert_line(r, u"exit(ksdjksjd)", 4)
 
         r.input(u'Escape')
         r.input(u'"exi"')
@@ -365,7 +369,7 @@ class TestsHistory (unittest.TestCase):
         r.input(u'Right')
         r.input(u'Right')
         r.input(u'Tab')
-        self.assert_line(r,"exit",4)
+        self.assert_line(r, u"exit", 4)
 
         
         

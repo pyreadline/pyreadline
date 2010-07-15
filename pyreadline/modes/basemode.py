@@ -196,13 +196,15 @@ class BaseMode(object):
             while 1:
                 try:
                     r = ensure_unicode(self.completer(text, i))
-                except:
+                except IndexError:
                     break
                 i += 1
-                if r and r not in completions:
+                if r is None:
+                    break
+                elif r and r not in completions:
                     completions.append(r)
                 else:
-                    break
+                    pass
             log(u'text completions=<%s>' % map(ensure_unicode, completions))
         if (self.complete_filesystem == "on") and not completions:
             # get the filename to complete

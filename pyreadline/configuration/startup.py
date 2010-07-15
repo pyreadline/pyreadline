@@ -15,6 +15,14 @@ except ImportError:
 else:
     #import tab completion functionality
     import rlcompleter
+
+    #Override completer from rlcompleter to disable automatic ( on callable
+    completer_obj = rlcompleter.Completer()
+    def nop(val, word):
+        return word
+    completer_obj._callable_postfix = nop
+    readline.set_completer(completer_obj.complete)
+
     #activate tab completion
     readline.parse_and_bind("tab: complete")
     readline.read_history_file()
