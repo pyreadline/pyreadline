@@ -35,20 +35,24 @@ class SocketStream(object):
     def close(self):
         pass
 
-socket_handler = logging.StreamHandler(SocketStream(host, port))
-socket_handler.setFormatter(formatter)
+socket_handler = None
 root_logger.addHandler(NULLHandler())
 
-
 def start_socket_log():
+    global socket_handler
+    socket_handler = logging.StreamHandler(SocketStream(host, port))
+    socket_handler.setFormatter(formatter)
     root_logger.addHandler(socket_handler)
 
 def stop_socket_log():
-    root_logger.removeHandler(socket_handler)
+    global socket_handler
+    if socket_handler:
+        root_logger.removeHandler(socket_handler)
+        socket_handler = None
 
 def start_file_log(filename):
     global file_handler
-    file_handler = logging.handlers.FileHandler(filename, "w")
+    file_handler = logging.FileHandler(filename, "w")
     root_logger.addHandler(file_handler)
 
 def stop_file_log():
@@ -58,7 +62,11 @@ def stop_file_log():
         file_handler.close()
         file_handler = None
 
+def stop_logging():
+    log(u"STOPING LOG")
+    stop_file_log()
+    stop_socket_log()
+
 def log(s):
     s = ensure_str(s)
     root_logger.debug(s)
-

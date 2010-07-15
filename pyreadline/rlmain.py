@@ -520,7 +520,11 @@ class Readline(BaseReadline):
             event = c.getkeypress()
         except KeyboardInterrupt:
             event = self.handle_ctrl_c()
-        result = self.mode.process_keyevent(event.keyinfo)
+        try:
+            result = self.mode.process_keyevent(event.keyinfo)
+        except EOFError:
+            logger.stop_logging()
+            raise
         self._update_line()
         return result
 
