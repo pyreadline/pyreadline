@@ -24,7 +24,7 @@ try:
     from sphinx.setup_command import BuildDoc
     cmd_class ={'build_sphinx': BuildDoc}
 except ImportError:
-    cmd_class = None
+    cmd_class = {}
 
 packages = ['pyreadline','pyreadline.clipboard','pyreadline.configuration',
             'pyreadline.console','pyreadline.keysyms','pyreadline.lineeditor',
