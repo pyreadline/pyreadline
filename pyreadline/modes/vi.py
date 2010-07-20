@@ -327,6 +327,7 @@ class ViCommand:
         self.readline._vi_multiplier2 = ''
         self.set_override_multiplier (0)
         self.skip_multipler = False
+        self.tabstop = 4
         self.dct_fcn = {
             ord('$') : self.key_dollar,
             ord('^') : self.key_hat,
