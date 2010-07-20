@@ -600,6 +600,7 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode, SearchPromptMode
         self._bind_key(u'Control-b',         self.backward_char)
         self._bind_key(u'Right',             self.forward_char)
         self._bind_key(u'Control-f',         self.forward_char)
+        self._bind_key(u'Control-h',         self.backward_delete_char)
         self._bind_key(u'BackSpace',         self.backward_delete_char)
         self._bind_key(u'Control-BackSpace', self.backward_delete_word)
         
