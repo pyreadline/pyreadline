@@ -83,6 +83,8 @@ class LineHistory(object):
 
     def add_history(self, line):
         u'''Append a line to the history buffer, as if it was the last line typed.'''
+        if not hasattr(line, "get_line_text"):
+            line = lineobj.ReadLineTextBuffer(line)
         if not line.get_line_text():
             pass
         elif len(self.history) > 0 and self.history[-1].get_line_text() == line.get_line_text():
