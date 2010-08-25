@@ -22,7 +22,7 @@ name = u'pyreadline'
 
 branch = u''
 
-version = u'1.6.1'
+version = u'1.6.2'
 
 revision = u'$Revision$'
 
