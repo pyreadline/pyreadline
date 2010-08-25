@@ -255,10 +255,11 @@ class BaseMode(object):
         completions = self._get_completions()
         if completions:
             cprefix = commonprefix(completions)
-            rep = [ c for c in cprefix ]
-            point=self.l_buffer.point
-            self.l_buffer[self.begidx:self.endidx] = rep
-            self.l_buffer.point = point + len(rep) - (self.endidx - self.begidx)
+            if len(cprefix) > 0:
+                rep = [ c for c in cprefix ]
+                point=self.l_buffer.point
+                self.l_buffer[self.begidx:self.endidx] = rep
+                self.l_buffer.point = point + len(rep) - (self.endidx - self.begidx)
             if len(completions) > 1:
                 if self.show_all_if_ambiguous == u'on':
                     self._display_completions(completions)
