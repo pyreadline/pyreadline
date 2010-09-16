@@ -33,10 +33,26 @@ class LineHistory(object):
         self.lastcommand = None
         self.query = u""
 
+    def get_current_history_length(self):
+        u'''Return the number of lines currently in the history.
+        (This is different from get_history_length(), which returns 
+        the maximum number of lines that will be written to a history file.)'''
+        value = len(self.history)
+        log(u"get_current_history_length:%d"%value)
+        return value
+
     def get_history_length(self):
+        u'''Return the desired length of the history file. Negative values imply
+        unlimited history file size.'''
         value = self._history_length
         log(u"get_history_length:%d"%value)
         return value
+
+    def get_history_item(self, index):
+        u'''Return the current contents of history item at index.'''
+        item = self.history[index]
+        log(u"get_history_item: index:%d item:%r"%(index, item))
+        return item.get_line_text()
 
     def set_history_length(self, value):
         log(u"set_history_length: old:%d new:%d"%(self._history_length, value))
