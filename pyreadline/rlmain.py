@@ -78,7 +78,7 @@ class BaseReadline(object):
                     var_name = m.group(1)
                     val = m.group(2)
                     try:
-                        setattr(self, var_name.replace(u'-',u'_'), val)
+                        setattr(self.mode, var_name.replace(u'-',u'_'), val)
                     except AttributeError:
                         log(u'unknown var="%s" val="%s"' % (var_name, val))
                 else:
