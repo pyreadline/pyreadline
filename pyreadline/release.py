@@ -45,10 +45,6 @@ Features:
  *  paste_mulitline_code  pastes multi line code, removing any empty lines.
  
  
- The latest development version is always available at the IPython subversion
- repository_.
-
-.. _repository:
  """
 
 license = u'BSD'
