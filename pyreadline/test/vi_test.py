@@ -52,8 +52,8 @@ class ViModeTest (ViMode):
             lst_key = [keytext]
         for key in lst_key:
             keyinfo, event = keytext_to_keyinfo_and_event (key)
-            dispatch_func = self.key_dispatch.get( keyinfo.tuple(),self.vi_key)
-            self.tested_commands[dispatch_func.__name__]=dispatch_func
+            dispatch_func = self.key_dispatch.get(keyinfo.tuple(), self.vi_key)
+            self.tested_commands[dispatch_func.__name__] = dispatch_func
             dispatch_func (event)
 
     def vi_accept_line (self, e):

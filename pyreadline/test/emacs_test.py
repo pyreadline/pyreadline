@@ -71,7 +71,7 @@ class EmacsModeTest (EmacsMode):
             self.l_buffer.reset_line ()
 
     def mock_completer (self, text, state):
-        return self.lst_completions [state]
+        return self.lst_completions[state]
 
 #----------------------------------------------------------------------
 
@@ -347,16 +347,21 @@ class TestsHistory (unittest.TestCase):
         logger.sock_silent=False
 
         log("-"*50)
-        r=EmacsModeTest()
-        r.completer=rlcompleter.Completer().complete
-        r._bind_key("tab",r.complete)
+        r = EmacsModeTest()
+        completer_obj = rlcompleter.Completer()
+        def nop(val, word):
+            return word
+        completer_obj._callable_postfix = nop
+
+        r.completer = completer_obj.complete
+        r._bind_key("tab", r.complete)
         r.input(u'"exi(ksdjksjd)"')
         r.input(u'Control-a')
         r.input(u'Right')
         r.input(u'Right')
         r.input(u'Right')
         r.input(u'Tab')
-        self.assert_line(r,"exit(ksdjksjd)",4)
+        self.assert_line(r, "exit(ksdjksjd)",4)
 
         r.input(u'Escape')
         r.input(u'"exi"')
@@ -369,9 +374,9 @@ class TestsHistory (unittest.TestCase):
 
         
         
-    def assert_line(self,r,line,cursor):
-        self.assertEqual (r.line, line)
-        self.assertEqual (r.line_cursor, cursor)
+    def assert_line(self, r, line,cursor):
+        self.assertEqual(r.line, line)
+        self.assertEqual(r.line_cursor, cursor)
         
 #----------------------------------------------------------------------
 # utility functions

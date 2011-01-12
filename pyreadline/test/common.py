@@ -56,6 +56,10 @@ class Event:
             self.char=u'\x1b'
         elif char==u"backspace":
             self.char=u'\x08'
+        elif char==u"tab":
+            self.char=u'\t'
+        elif char==u"space":
+            self.char=u' '
         else:
             self.char = char
 

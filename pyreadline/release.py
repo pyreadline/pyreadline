@@ -42,7 +42,7 @@ Features:
     where x is your preferred tap time window, default 0.3 s.
  *  paste pastes first line of content on clipboard. 
  *  ipython_paste, pastes tab-separated data as list of lists or numpy array if all data is numeric
- *  paste_mulitline_code  pastes multi line code, removing any empty lines.
+ *  paste_mulitline_code pastes multi line code, removing any empty lines.
  
  
  """
@@ -72,7 +72,6 @@ classifiers = [u'Development Status :: 5 - Production/Stable',
                u'Programming Language :: Python :: 2.5',
                u'Programming Language :: Python :: 2.6',
                u'Programming Language :: Python :: 2.7',
-
                ]
                
                
