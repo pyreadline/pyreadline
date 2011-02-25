@@ -340,7 +340,10 @@ class BaseReadline(object):
         
         def complete_filesystem(delims):
             self.mode.complete_filesystem = delims.lower()
-        
+
+        def enable_ipython_paste_for_paths(boolean):
+            self.mode.enable_ipython_paste_for_paths = boolean
+
         def debug_output(on, filename=u"pyreadline_debug_log.txt"): #Not implemented yet
             if on in [u"on", u"on_nologfile"]:
                 self.debug=True
@@ -392,6 +395,7 @@ class BaseReadline(object):
                u"allow_ctrl_c":allow_ctrl_c,
                u"ctrl_c_tap_time_interval":ctrl_c_tap_time_interval,
                u"kill_ring_to_clipboard":setkill_ring_to_clipboard,
+               u"enable_ipython_paste_for_paths":enable_ipython_paste_for_paths,
               }
         if os.path.isfile(inputrcpath): 
             try:
