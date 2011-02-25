@@ -11,6 +11,8 @@ like python library can also be useful when implementing commandline like
 interfaces in GUIs. The use of pyreadline for anything but the windows 
 console is still under development.
 
+The pyreadline module does not yet support Python 3.x this will be targeted for the 2.0 version.
+
 
 Dependencies
 ------------
@@ -25,3 +27,7 @@ Unfortunately the module rlcompleter, the module that provides tab completion, i
 
 .. literalinclude:: ../../readline.py
 
+
+History
+-------
+The pyreadline package is based on the ctypes based UNC readline package by Gary Bishop. 

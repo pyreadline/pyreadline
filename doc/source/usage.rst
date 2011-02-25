@@ -41,6 +41,25 @@ a python syntax is used instead. The available commands are:
     debug_output
       Turn on debug output (on|off). Not implemented yet.
 
+    disable_readline
+      Disable pyreadline completely (True|False).
+
+    allow_ctrl_c
+      Allows use of ctrl-c as copy key, still propagate keyboardinterrupt when not waiting for input.
+
+    ctrl_c_tap_time_interval
+      Set the ctrl-c double tap time interval to be used before issuing a KeyboadInterupt. Used
+      to be able to have ctrl-c bound to copy.
+
+    history_filename
+      Set name of history file. Default is %USERPROFILE%/.pythonhistory
+
+    history_length
+      Set max length of history file default 200
+      
+      
+    
+
 Here is the example config file shipped with pyreadline:
 
 .. literalinclude:: ../../pyreadline/configuration/pyreadlineconfig.ini

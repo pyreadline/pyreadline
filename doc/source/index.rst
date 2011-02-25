@@ -13,8 +13,9 @@ Contents:
    introduction
    installation
    usage
-   known_issues
    bindable_commands
+   known_issues
+   changelog
    
 Indices and tables
 ==================
