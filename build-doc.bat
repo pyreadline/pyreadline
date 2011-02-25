@@ -1,4 +1,4 @@
-SET VERSION=1.6.1
+SET VERSION=1.6.2
 python setup.py build_sphinx
 python setup.py build_sphinx -b latex
 
