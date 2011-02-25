@@ -11,7 +11,9 @@ __all__ = [ 'parse_and_bind',
             'read_init_file',
             'read_history_file',
             'write_history_file',
+            'get_current_history_length',
             'get_history_length',
+            'get_history_item',
             'set_history_length',
             'set_startup_hook',
             'set_pre_input_hook',
@@ -54,7 +56,9 @@ else:
     read_history_file = rl.read_history_file
 
     get_completer_delims = rl.get_completer_delims
+    get_current_history_length = rl.get_current_history_length
     get_history_length = rl.get_history_length
+    get_history_item = rl.get_history_item
     get_line_buffer = rl.get_line_buffer
     set_completer = rl.set_completer
     get_completer = rl.get_completer

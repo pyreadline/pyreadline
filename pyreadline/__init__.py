@@ -9,4 +9,3 @@
 import unicode_helper, logger, clipboard, lineeditor, modes, console
 from rlmain import *
 import rlmain
-import release 

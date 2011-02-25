@@ -128,6 +128,12 @@ class BaseReadline(object):
         u'''Append a line to the history buffer, as if it was the last line typed.'''
         self.mode._history.add_history(line)
 
+    def get_current_history_length(self ):
+        u'''Return the number of lines currently in the history.
+        (This is different from get_history_length(), which returns 
+        the maximum number of lines that will be written to a history file.)'''
+        return self.mode._history.get_current_history_length()
+
     def get_history_length(self ):
         u'''Return the desired length of the history file.
 
@@ -141,6 +147,10 @@ class BaseReadline(object):
         when saving. Negative values imply unlimited history file size.
         '''
         self.mode._history.set_history_length(length)
+
+    def get_history_item(self, index): 
+        u'''Return the current contents of history item at index.'''
+        return self.mode._history.get_history_item(index)
 
     def clear_history(self):
         u'''Clear readline history'''
