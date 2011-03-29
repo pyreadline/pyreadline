@@ -9,11 +9,11 @@
 import socket, logging, logging.handlers
 from pyreadline.unicode_helper import ensure_str
 
-host = u"localhost"
+host = "localhost"
 port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
 
 
-pyreadline_logger = logging.getLogger(u'PYREADLINE')
+pyreadline_logger = logging.getLogger('PYREADLINE')
 pyreadline_logger.setLevel(logging.DEBUG)
 pyreadline_logger.propagate = False
 formatter = logging.Formatter('%(message)s')
@@ -64,7 +64,7 @@ def stop_file_log():
         file_handler = None
 
 def stop_logging():
-    log(u"STOPING LOG")
+    log("STOPING LOG")
     stop_file_log()
     stop_socket_log()
 

@@ -12,25 +12,25 @@ try:
 except AttributeError:        
     # This error occurs when pdb imports readline and doctest has replaced 
     # stdout with stdout collector. We will assume ascii codepage
-    pyreadline_codepage = u"ascii"
+    pyreadline_codepage = "ascii"
 
 if pyreadline_codepage is None:  
-    pyreadline_codepage = u"ascii"
+    pyreadline_codepage = "ascii"
 
 def ensure_unicode(text):
-    u"""helper to ensure that text passed to WriteConsoleW is unicode"""
+    """helper to ensure that text passed to WriteConsoleW is unicode"""
     if isinstance(text, str):
         try:
-            return text.decode(pyreadline_codepage, u"replace")
+            return text.decode(pyreadline_codepage, "replace")
         except (LookupError, TypeError):
-            return text.decode(u"ascii", u"replace")
+            return text.decode("ascii", "replace")
     return text
 
 def ensure_str(text):
-    u"""Convert unicode to str using pyreadline_codepage"""
-    if isinstance(text, unicode):
+    """Convert unicode to str using pyreadline_codepage"""
+    if isinstance(text, str):
         try:
-            return text.encode(pyreadline_codepage, u"replace")
+            return text.encode(pyreadline_codepage, "replace")
         except (LookupError, TypeError):
-            return text.encode(u"ascii", u"replace")
+            return text.encode("ascii", "replace")
     return text

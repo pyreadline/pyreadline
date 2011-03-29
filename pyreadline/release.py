@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Release data for the pyreadline project.
+"""Release data for the pyreadline project.
 
 $Id$"""
 
@@ -13,23 +13,23 @@ $Id$"""
 
 # Name of the package for release purposes.  This is the name which labels
 # the tarballs and RPMs made by distutils, so it's best to lowercase it.
-name = u'pyreadline'
+name = 'pyreadline'
 
 # For versions with substrings (like 0.6.16.svn), use an extra . to separate
 # the new substring.  We have to avoid using either dashes or underscores,
 # because bdist_rpm does not accept dashes (an RPM) convention, and
 # bdist_deb does not accept underscores (a Debian convention).
 
-branch = u''
+branch = ''
 
-version = u'1.7'
+version = '1.7'
 
-revision = u'$Revision$'
+revision = '$Revision$'
 
-description = u"A python implmementation of GNU readline."
+description = "A python implmementation of GNU readline."
 
 long_description = \
-u"""
+"""
 The pyreadline package is a python implementation of GNU readline functionality
 it is based on the ctypes based UNC readline package by Gary Bishop. 
 It is not complete. It has been tested for use with windows 2000 and windows xp.
@@ -51,31 +51,31 @@ Features:
 .. _repository:
  """
 
-license = u'BSD'
+license = 'BSD'
 
-authors = {u'Jorgen' : (u'Jorgen Stenarson',u'jorgen.stenarson@bostream.nu'),
-           u'Gary':    (u'Gary Bishop', ''),         
-           u'Jack':    (u'Jack Trainor', ''),         
+authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@bostream.nu'),
+           'Gary':    ('Gary Bishop', ''),         
+           'Jack':    ('Jack Trainor', ''),         
            }
 
-url = u'http://ipython.scipy.org/moin/PyReadline/Intro'
+url = 'http://ipython.scipy.org/moin/PyReadline/Intro'
 
-download_url = u'https://launchpad.net/pyreadline/+download'
+download_url = 'https://launchpad.net/pyreadline/+download'
 
-platforms = [u'Windows XP/2000/NT',
-             u'Windows 95/98/ME']
+platforms = ['Windows XP/2000/NT',
+             'Windows 95/98/ME']
 
-keywords = [u'readline',
-            u'pyreadline']
+keywords = ['readline',
+            'pyreadline']
 
-classifiers = [u'Development Status :: 5 - Production/Stable',
-               u'Environment :: Console',
-               u'Operating System :: Microsoft :: Windows',
-               u'License :: OSI Approved :: BSD License',
-               u'Programming Language :: Python :: 2.4',
-               u'Programming Language :: Python :: 2.5',
-               u'Programming Language :: Python :: 2.6',
-               u'Programming Language :: Python :: 2.7',
+classifiers = ['Development Status :: 5 - Production/Stable',
+               'Environment :: Console',
+               'Operating System :: Microsoft :: Windows',
+               'License :: OSI Approved :: BSD License',
+               'Programming Language :: Python :: 2.4',
+               'Programming Language :: Python :: 2.5',
+               'Programming Language :: Python :: 2.6',
+               'Programming Language :: Python :: 2.7',
                ]
                
                

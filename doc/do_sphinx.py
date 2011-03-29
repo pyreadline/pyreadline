@@ -61,7 +61,7 @@ if sys.platform != 'win32':
         elif 'makechapterhead' in line:
             # Already have altered manual.cls: don't need to again.
             unmodified=False
-        print line,
+        print(line, end=' ')
 
     # Copying the makefile produced by sphinx...
     oscmd('pdflatex pyreadline.tex')

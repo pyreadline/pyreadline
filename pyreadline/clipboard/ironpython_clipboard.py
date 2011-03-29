@@ -6,7 +6,7 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 import clr
-clr.AddReferenceByPartialName(u"System.Windows.Forms")
+clr.AddReferenceByPartialName("System.Windows.Forms")
 import System.Windows.Forms.Clipboard as cb
 
 def GetClipboardText():
@@ -19,9 +19,9 @@ def GetClipboardText():
 def SetClipboardText(text):
     cb.SetText(text)    
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
     txt = GetClipboardText()                            # display last text clipped
-    print txt
+    print(txt)
      
      
      
