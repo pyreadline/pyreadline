@@ -13,9 +13,9 @@ from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
 from pyreadline.logger import log
 import pyreadline.logger as logger
-from .common import *
+from common import *
 
-from .common import *
+from common import *
 #----------------------------------------------------------------------
 
 class ViModeTest (ViMode):

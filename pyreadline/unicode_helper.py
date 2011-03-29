@@ -19,7 +19,7 @@ if pyreadline_codepage is None:
 
 def ensure_unicode(text):
     """helper to ensure that text passed to WriteConsoleW is unicode"""
-    if isinstance(text, str):
+    if isinstance(text, bytes):
         try:
             return text.decode(pyreadline_codepage, "replace")
         except (LookupError, TypeError):

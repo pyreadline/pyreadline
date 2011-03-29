@@ -196,7 +196,7 @@ class BaseMode(object):
             i = 0
             while 1:
                 try:
-                    r = ensure_unicode(self.completer(text, i))
+                    r = self.completer(ensure_unicode(text), i)
                 except IndexError:
                     break
                 i += 1
@@ -216,7 +216,7 @@ class BaseMode(object):
                     break
             text = ensure_str(''.join(buf[self.begidx:self.endidx]))
             log('file complete text="%s"' % ensure_unicode(text))
-            completions = list(map(ensure_unicode, glob.glob(os.path.expanduser(text) + '*')))
+            completions = list(map(ensure_unicode, glob.glob(os.path.expanduser(text) + b'*')))
             if self.mark_directories == 'on':
                 mc = []
                 for f in completions:
