@@ -19,7 +19,7 @@ import pyreadline.console as console
 import pyreadline.logger as logger 
 
 from pyreadline.keysyms.common import make_KeyPress_from_keydescr
-from pyreadline.unicode_helper import ensure_unicode
+from pyreadline.unicode_helper import ensure_str
 from .logger import log
 from .modes import editingmodes
 from .error import ReadlineError, GetSetError
@@ -161,7 +161,7 @@ class BaseReadline(object):
         '''Load a readline history file. The default filename is ~/.history.'''
         if filename is None:
             filename = self.mode._history.history_filename
-        log("read_history_file from %s"%ensure_unicode(filename))
+        log("read_history_file from %s"%ensure_str(filename))
         self.mode._history.read_history_file(filename)
 
     def write_history_file(self, filename=None): 

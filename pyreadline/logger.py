@@ -7,7 +7,7 @@
 #*****************************************************************************
 
 import socket, logging, logging.handlers
-from pyreadline.unicode_helper import ensure_str
+from pyreadline.unicode_helper import ensure_bytes
 
 host = "localhost"
 port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
@@ -28,7 +28,7 @@ class SocketStream(object):
         self.logsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
     def write(self, s):
-        self.logsocket.sendto(ensure_str(s), (host, port))
+        self.logsocket.sendto(ensure_bytes(s), (host, port))
 
     def flush(self):
         pass
@@ -69,5 +69,5 @@ def stop_logging():
     stop_socket_log()
 
 def log(s):
-    s = ensure_str(s)
+    s = ensure_bytes(s)
     pyreadline_logger.debug(s)

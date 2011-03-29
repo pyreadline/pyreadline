@@ -34,7 +34,7 @@
 
 from ctypes import *
 from pyreadline.keysyms.winconstants import CF_TEXT, GHND
-from pyreadline.unicode_helper import ensure_unicode,ensure_str
+from pyreadline.unicode_helper import ensure_str,ensure_bytes
 
 OpenClipboard = windll.user32.OpenClipboard
 OpenClipboard.argtypes = [c_int]
@@ -88,10 +88,10 @@ def GetClipboardText():
             text = GlobalLock(hClipMem)
             GlobalUnlock(hClipMem)
         CloseClipboard()
-    return ensure_unicode(text)
+    return ensure_str(text)
 
 def SetClipboardText(text):
-    buffer = c_buffer(ensure_str(text))
+    buffer = c_buffer(ensure_bytes(text))
     bufferSize = sizeof(buffer)
     hGlobalMem = GlobalAlloc(c_int(GHND), c_int(bufferSize))
     GlobalLock.restype = c_void_p

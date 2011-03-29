@@ -17,7 +17,7 @@ except AttributeError:
 if pyreadline_codepage is None:  
     pyreadline_codepage = "ascii"
 
-def ensure_unicode(text):
+def ensure_str(text):
     """helper to ensure that text passed to WriteConsoleW is unicode"""
     if isinstance(text, bytes):
         try:
@@ -26,7 +26,7 @@ def ensure_unicode(text):
             return text.decode("ascii", "replace")
     return text
 
-def ensure_str(text):
+def ensure_bytes(text):
     """Convert unicode to str using pyreadline_codepage"""
     if isinstance(text, str):
         try:

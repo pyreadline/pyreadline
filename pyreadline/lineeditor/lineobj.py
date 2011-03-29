@@ -10,7 +10,7 @@ import re, operator, sys
 from . import wordmatcher
 import pyreadline.clipboard as clipboard
 from pyreadline.logger import  log
-from pyreadline.unicode_helper import ensure_unicode
+from pyreadline.unicode_helper import ensure_str
 
 kill_ring_to_clipboard = False #set to true to copy every addition to kill ring to clipboard
 
@@ -248,11 +248,11 @@ class TextLine(object):
     def quoted_text(self):
         quoted = [ quote_char(c) for c in self.line_buffer ]
         self.line_char_width = [ len(c) for c in quoted ]
-        return ''.join(map(ensure_unicode, quoted))
+        return ''.join(map(ensure_str, quoted))
 
     def get_line_text(self):
         buf = self.line_buffer
-        buf = list(map(ensure_unicode, buf))
+        buf = list(map(ensure_str, buf))
         return ''.join(buf)
             
     def set_line(self, text, cursor = None):

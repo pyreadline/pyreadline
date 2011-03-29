@@ -20,7 +20,7 @@ import re
 import pyreadline.unicode_helper as unicode_helper
 
 from pyreadline.logger import log
-from pyreadline.unicode_helper import ensure_unicode, ensure_str
+from pyreadline.unicode_helper import ensure_str, ensure_bytes
 from pyreadline.keysyms import make_KeyPress, KeyPress
 from pyreadline.console.ansi import AnsiState,AnsiWriter
 
@@ -306,7 +306,7 @@ class Console(object):
         w, h = self.size()
         scroll = 0 # the result
         # split the string into ordinary characters and funny characters
-        chunks = self.motion_char_re.split(ensure_str(text))
+        chunks = self.motion_char_re.split(ensure_bytes(text))
         for chunk in chunks:
             n = self.write_color(chunk, attr)
             if len(chunk) == 1: # the funny characters will be alone
@@ -345,7 +345,7 @@ class Console(object):
         return scroll
 
     def write_color(self, text, attr=None):
-        text = ensure_unicode(text)
+        text = ensure_str(text)
         n, res= self.ansiwriter.write_color(text, attr)
         junk = c_int(0)
         for attr,chunk in res:
@@ -359,14 +359,14 @@ class Console(object):
 
     def write_plain(self, text, attr=None):
         '''write text at current cursor position.'''
-        text = ensure_unicode(text)
+        text = ensure_str(text)
         log('write("%s", %s)' %(text, attr))
         if attr is None:
             attr = self.attr
         n = c_int(0)
         self.SetConsoleTextAttribute(self.hout, attr)
         for short_chunk in split_block(chunk):
-            self.WriteConsoleW(self.hout, ensure_unicode(short_chunk), 
+            self.WriteConsoleW(self.hout, ensure_str(short_chunk), 
                                len(short_chunk), byref(junk), None)
         return len(text)
 
@@ -374,7 +374,7 @@ class Console(object):
     #Emacs sets the EMACS environment variable
     if "EMACS" in os.environ:
         def write_color(self, text, attr=None):
-            text = ensure_str(text)
+            text = ensure_bytes(text)
             junk = c_int(0)
             self.WriteFile(self.hout, text, len(text), byref(junk), None)
             return len(text)
@@ -382,7 +382,7 @@ class Console(object):
 
     # make this class look like a file object
     def write(self, text):
-        text = ensure_unicode(text)
+        text = ensure_str(text)
         log('write("%s")' % text)
         return self.write_color(text)
 
@@ -455,7 +455,7 @@ class Console(object):
         source = SMALL_RECT(x0, y0, x1 - 1, y1 - 1)
         dest = self.fixcoord(x0 + dx, y0 + dy)
         style = CHAR_INFO()
-        style.Char.AsciiChar = ensure_str(fill[0])
+        style.Char.AsciiChar = ensure_bytes(fill[0])
         style.Attributes = attr
 
         return self.ScrollConsoleScreenBufferW(self.hout, byref(source), 
@@ -688,7 +688,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:
         # call the Python hook
-        res = ensure_str(readline_hook(prompt))
+        res = ensure_bytes(readline_hook(prompt))
         # make sure it returned the right sort of thing
         if res and not isinstance(res, bytes):
             raise TypeError('readline must return a string.')
@@ -712,7 +712,7 @@ def hook_wrapper(prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
     try:
         # call the Python hook
-        res = ensure_str(readline_hook(prompt))
+        res = ensure_bytes(readline_hook(prompt))
         # make sure it returned the right sort of thing
         if res and not isinstance(res, bytes):
             raise TypeError('readline must return a string.')

@@ -13,7 +13,7 @@ from pyreadline.lineeditor.lineobj import Point
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 from . import basemode
-from pyreadline.unicode_helper import ensure_unicode
+from pyreadline.unicode_helper import ensure_str
 
 
 def format(keyinfo):

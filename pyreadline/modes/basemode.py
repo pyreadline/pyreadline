@@ -14,7 +14,7 @@ import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
 from pyreadline.error import ReadlineError,GetSetError
-from pyreadline.unicode_helper import ensure_str, ensure_unicode
+from pyreadline.unicode_helper import ensure_bytes, ensure_str
 import collections
 in_ironpython="IronPython" in sys.version
 
@@ -191,12 +191,12 @@ class BaseMode(object):
                 if buf[self.begidx] in self.completer_delims:
                     self.begidx += 1
                     break
-            text = ensure_str(''.join(buf[self.begidx:self.endidx]))
-            log('complete text="%s"' % ensure_unicode(text))
+            text = ensure_bytes(''.join(buf[self.begidx:self.endidx]))
+            log('complete text="%s"' % ensure_str(text))
             i = 0
             while 1:
                 try:
-                    r = self.completer(ensure_unicode(text), i)
+                    r = self.completer(ensure_str(text), i)
                 except IndexError:
                     break
                 i += 1
@@ -206,7 +206,7 @@ class BaseMode(object):
                     completions.append(r)
                 else:
                     pass
-            log('text completions=<%s>' % list(map(ensure_unicode, completions)))
+            log('text completions=<%s>' % list(map(ensure_str, completions)))
         if (self.complete_filesystem == "on") and not completions:
             # get the filename to complete
             while self.begidx > 0:
@@ -214,9 +214,9 @@ class BaseMode(object):
                 if buf[self.begidx] in ' \t\n':
                     self.begidx += 1
                     break
-            text = ensure_str(''.join(buf[self.begidx:self.endidx]))
-            log('file complete text="%s"' % ensure_unicode(text))
-            completions = list(map(ensure_unicode, glob.glob(os.path.expanduser(text) + b'*')))
+            text = ensure_bytes(''.join(buf[self.begidx:self.endidx]))
+            log('file complete text="%s"' % ensure_str(text))
+            completions = list(map(ensure_str, glob.glob(os.path.expanduser(text) + b'*')))
             if self.mark_directories == 'on':
                 mc = []
                 for f in completions:
@@ -225,7 +225,7 @@ class BaseMode(object):
                     else:
                         mc.append(f)
                 completions = mc
-            log('fnames=<%s>' % list(map(ensure_unicode, completions)))
+            log('fnames=<%s>' % list(map(ensure_str, completions)))
         return completions
 
 
