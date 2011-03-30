@@ -283,9 +283,9 @@ class BaseReadline(object):
             self.mode = modes[name]
 
         def bind_key(key, name):
-            import new
+            import types
             if isinstance(name, collections.Callable):
-                modes[mode]._bind_key(key, new.instancemethod(name, modes[mode], modes[mode].__class__))
+                modes[mode]._bind_key(key, types.MethodType(name, modes[mode]))
             elif hasattr(modes[mode], name):
                 modes[mode]._bind_key(key, getattr(modes[mode], name))
             else:
