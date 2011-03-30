@@ -91,7 +91,7 @@ class LineHistory(object):
         fp = open(filename, 'wb')
         for line in self.history[-self.history_length:]:
             fp.write(ensure_bytes(line.get_line_text()))
-            fp.write('\n')
+            fp.write(b'\n')
         fp.close()
 
 
