@@ -14,7 +14,7 @@ from pyreadline.rlmain import BaseReadline
 from pyreadline.keysyms.common import KeyPress
 import pyreadline.logger as log
 log.sock_silent=False
-import tkinter,sys
+import Tkinter,sys
 
 translate={"plus":"+","minus":"-","asterisk":"*","slash":"/","exclam":"!","quotedbl":'"',
            "parenleft":"(","parenright":")",}
@@ -41,17 +41,17 @@ def KeyPress_from_event(event):
 
 class App:
     def __init__(self, master):
-        self.frame=frame=tkinter.Frame(master)
+        self.frame=frame=Tkinter.Frame(master)
         frame.pack()
         self.lines=["Hello"]
         self.RL=BaseReadline()
         self.RL.read_inputrc()
         self.prompt=">>>"
         self.readline_setup(self.prompt)
-        self.textvar = tkinter.StringVar()
+        self.textvar = Tkinter.StringVar()
         self._update_line()
-        self.text=tkinter.Label(frame, textvariable=self.textvar,width=50,height=40,justify=tkinter.LEFT,anchor=tkinter.NW)
-        self.text.pack(side=tkinter.LEFT)
+        self.text=Tkinter.Label(frame, textvariable=self.textvar,width=50,height=40,justify=Tkinter.LEFT,anchor=Tkinter.NW)
+        self.text.pack(side=Tkinter.LEFT)
         master.bind("<Key>",self.handler)
         self.locals={}
         
@@ -83,7 +83,7 @@ class App:
         
         
         
-root=tkinter.Tk()
+root=Tkinter.Tk()
 
 display=App(root)
 root.mainloop()

@@ -12,7 +12,7 @@ import pyreadline.logger as logger
 from   pyreadline.logger import log
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
-from . import basemode
+import basemode
 
 class ViMode(basemode.BaseMode):
     mode="vi"
@@ -232,15 +232,15 @@ class ViMode(basemode.BaseMode):
             self.vi_error ()
             self.vi_undo ()
             return
-        if not self.vi_search (list(range(position, -1, -1))):
+        if not self.vi_search (range (position, -1, -1)):
             # Here: search text not found
             self.vi_undo ()
 
     def vi_search_again_backward (self):
-        self.vi_search (list(range(self._history.history_cursor-1, -1, -1)))
+        self.vi_search (range (self._history.history_cursor-1, -1, -1))
 
     def vi_search_again_forward (self):
-        self.vi_search (list(range(self._history.history_cursor+1, len(self._history.history))))
+        self.vi_search (range (self._history.history_cursor+1, len(self._history.history)))
 
     def vi_up (self, e):
         if self._history.history_cursor == len(self._history.history):

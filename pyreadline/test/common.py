@@ -13,7 +13,7 @@ from pyreadline.keysyms.common import make_KeyPress_from_keydescr
 import unittest
 class MockReadline:
     def __init__ (self):
-        self.l_buffer=lineobj.ReadLineTextBuffer("")
+        self.l_buffer=lineobj.ReadLineTextBuffer(u"")
         self._history=history.LineHistory()
 
     def add_history (self, line):
@@ -26,7 +26,7 @@ class MockReadline:
         pass
 
     def insert_text(self, string):
-        '''Insert text into the command line.'''
+        u'''Insert text into the command line.'''
         self.l_buffer.insert_text(string)
 
 
@@ -52,20 +52,20 @@ class MockConsole:
 
 class Event:
     def __init__ (self, char):
-        if char=="escape":
-            self.char='\x1b'
-        elif char=="backspace":
-            self.char='\x08'
-        elif char=="tab":
-            self.char='\t'
-        elif char=="space":
-            self.char=' '
+        if char==u"escape":
+            self.char=u'\x1b'
+        elif char==u"backspace":
+            self.char=u'\x08'
+        elif char==u"tab":
+            self.char=u'\t'
+        elif char==u"space":
+            self.char=u' '
         else:
             self.char = char
 
 def keytext_to_keyinfo_and_event (keytext):
     keyinfo = keysyms.common.make_KeyPress_from_keydescr (keytext)
-    if len(keytext) == 3 and keytext[0] == '"' and keytext[2] == '"':
+    if len(keytext) == 3 and keytext[0] == u'"' and keytext[2] == u'"':
         event = Event (keytext[1])
     else:
         event = Event (keyinfo.tuple() [3])

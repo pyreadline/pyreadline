@@ -7,7 +7,7 @@
 #*****************************************************************************
 
 
-mybuffer = ""
+mybuffer = u""
 
 def GetClipboardText():
     return mybuffer

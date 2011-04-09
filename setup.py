@@ -17,7 +17,7 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 #
 
 from distutils.core import setup
-exec(compile(open('pyreadline/release.py').read(), 'pyreadline/release.py', 'exec'))
+execfile('pyreadline/release.py')
 
 try:
     import sphinx

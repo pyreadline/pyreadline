@@ -39,7 +39,7 @@ if rl.disable_readline:
         globals()[funk] = dummy
 else:
     def GetOutputFile():
-        '''Return the console object used by readline so that it can be used for printing in color.'''
+        u'''Return the console object used by readline so that it can be used for printing in color.'''
         return rl.console
     __all__.append("GetOutputFile")
 

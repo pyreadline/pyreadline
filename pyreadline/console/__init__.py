@@ -5,13 +5,13 @@ in_ironpython = "IronPython" in sys.version
 
 if in_ironpython:
     try:
-        from .ironpython_console import *
+        from ironpython_console import *
         success = True
     except ImportError:
         raise
 else:
     try:
-        from .console import *
+        from console import *
         success = True
     except ImportError:
         pass

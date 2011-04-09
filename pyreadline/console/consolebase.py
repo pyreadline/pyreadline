@@ -6,18 +6,18 @@ class baseconsole:
         raise NotImplementedError
 
     def pos(self, x=None, y=None):
-        '''Move or query the window cursor.'''
+        u'''Move or query the window cursor.'''
         raise NotImplementedError
 
     def size(self):
         raise NotImplementedError
 
-    def rectangle(self, rect, attr=None, fill=' '):
-        '''Fill Rectangle.'''
+    def rectangle(self, rect, attr=None, fill=u' '):
+        u'''Fill Rectangle.'''
         raise NotImplementedError
 
     def write_scrolling(self, text, attr=None):
-        '''write text at current cursor position while watching for scrolling.
+        u'''write text at current cursor position while watching for scrolling.
 
         If the window scrolls because you are at the bottom of the screen
         buffer, all positions that you are storing will be shifted by the
@@ -33,14 +33,14 @@ class baseconsole:
         raise NotImplementedError
     
     def getkeypress(self):
-        '''Return next key press event from the queue, ignoring others.'''
+        u'''Return next key press event from the queue, ignoring others.'''
         raise NotImplementedError
         
     def write(self, text):
         raise NotImplementedError
     
     def page(self, attr=None, fill=' '):
-        '''Fill the entire screen.'''
+        u'''Fill the entire screen.'''
         raise NotImplementedError
 
     def isatty(self):

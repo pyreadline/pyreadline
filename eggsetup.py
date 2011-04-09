@@ -8,7 +8,7 @@
 #*****************************************************************************
 import glob
 from setuptools import setup,find_packages
-exec(compile(open('pyreadline/release.py').read(), 'pyreadline/release.py', 'exec'))
+execfile('pyreadline/release.py')
 
 setup(name=name,
       version          = version,
