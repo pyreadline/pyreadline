@@ -30,6 +30,9 @@ try:
 except ImportError:
     raise ImportError(u"You need ctypes to run this code")
 
+if sys.version_info < (2, 6):
+    bytes = str
+
 def nolog(string):
     pass
     
@@ -690,7 +693,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
         # call the Python hook
         res = ensure_str(readline_hook(prompt))
         # make sure it returned the right sort of thing
-        if res and not isinstance(res, str):
+        if res and not isinstance(res, bytes):
             raise TypeError, u'readline must return a string.'
     except KeyboardInterrupt:
         # GNU readline returns 0 on keyboard interrupt
@@ -714,7 +717,7 @@ def hook_wrapper(prompt):
         # call the Python hook
         res = ensure_str(readline_hook(prompt))
         # make sure it returned the right sort of thing
-        if res and not isinstance(res, str):
+        if res and not isinstance(res, bytes):
             raise TypeError, u'readline must return a string.'
     except KeyboardInterrupt:
         # GNU readline returns 0 on keyboard interrupt
@@ -738,7 +741,7 @@ def install_readline(hook):
     readline_hook = hook
     # get the address of PyOS_ReadlineFunctionPointer so we can update it
     PyOS_RFP = c_int.from_address(Console.GetProcAddress(sys.dllhandle,
-                                            "PyOS_ReadlineFunctionPointer"))
+                           "PyOS_ReadlineFunctionPointer".encode('ascii')))
     # save a reference to the generated C-callable so it doesn't go away
     if sys.version < '2.3':
         readline_ref = HOOKFUNC22(hook_wrapper)
