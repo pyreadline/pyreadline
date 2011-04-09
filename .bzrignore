@@ -1,2 +1,4 @@
 build
+dist
+pyreadline.egg-info/
 __pycache__/

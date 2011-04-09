@@ -53,7 +53,7 @@ Features:
 
 license = 'BSD'
 
-authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@bostream.n'),
+authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@bostream.nu'),
            'Gary':    ('Gary Bishop', ''),         
            'Jack':    ('Jack Trainor', ''),         
            }
@@ -76,6 +76,7 @@ classifiers = ['Development Status :: 5 - Production/Stable',
                'Programming Language :: Python :: 2.5',
                'Programming Language :: Python :: 2.6',
                'Programming Language :: Python :: 2.7',
+               'Programming Language :: Python :: 3.2',
                ]
                
                
