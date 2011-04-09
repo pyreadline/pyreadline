@@ -15,9 +15,7 @@ else:
 
 import lineobj
 
-import exceptions
-
-class EscapeHistory(exceptions.Exception):
+class EscapeHistory(Exception):
     pass
 
 from pyreadline.logger import log
