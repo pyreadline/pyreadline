@@ -11,7 +11,7 @@ like python library can also be useful when implementing commandline like
 interfaces in GUIs. The use of pyreadline for anything but the windows 
 console is still under development.
 
-The pyreadline module does not yet support Python 3.x this will be targeted for the 2.0 version.
+The pyreadline module support also Python 3.x.
 
 
 Dependencies
