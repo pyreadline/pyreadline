@@ -7,15 +7,15 @@
 #*****************************************************************************
 
 import sys, unittest,pdb
-sys.path.append (u'../..')
+sys.path.insert(0, u'../..')
 from pyreadline.modes.vi import *
 from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
 from pyreadline.logger import log
 import pyreadline.logger as logger
-from common import *
+from pyreadline.test.common import *
 
-from common import *
+from pyreadline.test.common import *
 #----------------------------------------------------------------------
 
 class ViModeTest (ViMode):
