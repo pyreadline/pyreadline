@@ -75,8 +75,8 @@ class IncrementalSearchPromptMode(object):
 
         self.subsearch_oldprompt = self.prompt
 
-        if (self.previous_func != self.history_search_forward and
-            self.previous_func != self.history_search_backward):
+        if (self.previous_func != self.reverse_search_history and
+            self.previous_func != self.forward_search_history):
             self.subsearch_query = self.l_buffer[0:Point].get_line_text()
 
         if self.subsearch_direction < 0:

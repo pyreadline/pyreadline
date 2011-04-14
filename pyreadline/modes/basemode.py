@@ -133,7 +133,7 @@ class BaseMode(object):
         u"""Every bindable command should call this function for cleanup. 
         Except those that want to set argument to a non-zero value.
         """
-        self.argument=0
+        self.argument = 0
 
 
     def add_history(self, text):

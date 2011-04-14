@@ -22,7 +22,6 @@ class EscapeHistory(exceptions.Exception):
 
 from pyreadline.logger import log
 
-_ignore_leading_spaces = False
 
 class LineHistory(object):
     def __init__(self):
@@ -32,6 +31,7 @@ class LineHistory(object):
         self.history_filename = os.path.expanduser('~/.history') #Cannot expand unicode strings correctly on python2.4
         self.lastcommand = None
         self.query = u""
+        self.last_search_for = u""
 
     def get_current_history_length(self):
         u'''Return the number of lines currently in the history.
@@ -140,34 +140,58 @@ class LineHistory(object):
     def reverse_search_history(self, searchfor, startpos=None):
         if startpos is None:
             startpos = self.history_cursor
-        if _ignore_leading_spaces:
-            res = [(idx, line.lstrip())  
-                    for idx, line in enumerate(self.history[startpos:0:-1]) 
-                        if line.lstrip().startswith(searchfor.lstrip())]
-        else:
-            res = [(idx, line)
-                    for idx, line in enumerate(self.history[startpos:0:-1]) 
-                        if line.startswith(searchfor)]
-        if res:
-            self.history_cursor -= res[0][0]
-            return res[0][1].get_line_text()
-        return u""
+
+        result =  lineobj.ReadLineTextBuffer("")
+
+        for idx, line in list(enumerate(self.history))[startpos:0:-1]:
+            if searchfor in line:
+                startpos = idx
+                break
+
+        #If we get a new search without change in search term it means
+        #someone pushed ctrl-r and we should find the next match
+        if self.last_search_for == searchfor:
+            startpos -= 1
+            for idx, line in list(enumerate(self.history))[startpos:0:-1]:
+                if searchfor in line:
+                    startpos = idx
+                    break
+
+        result = self.history[startpos]
+        self.history_cursor = startpos
+        self.last_search_for = searchfor
+        return result.get_line_text()
         
     def forward_search_history(self, searchfor, startpos=None):
         if startpos is None:
             startpos = self.history_cursor
-        if _ignore_leading_spaces:
-            res = [(idx, line.lstrip()) 
-                    for idx, line in enumerate(self.history[startpos:]) 
-                        if line.lstrip().startswith(searchfor.lstrip())]
+        origpos = startpos
+        
+        result =  lineobj.ReadLineTextBuffer("")
+
+        for idx, line in list(enumerate(self.history))[startpos:]:
+            if searchfor in line:
+                startpos = idx
+                break
+
+        #If we get a new search without change in search term it means
+        #someone pushed ctrl-r and we should find the next match
+        if self.last_search_for == searchfor:
+            startpos += 1
+            for idx, line in list(enumerate(self.history))[startpos:]:
+                if searchfor in line:
+                    startpos = idx
+                    break
+        if len(self.history) == startpos:
+            if origpos == len(self.history):
+                return u""
+            else:
+                return self.history[origpos]
         else:
-            res = [(idx, line) 
-                        for idx, line in enumerate(self.history[startpos:]) 
-                            if line.startswith(searchfor)]
-        if res:
-            self.history_cursor += res[0][0]
-            return res[0][1].get_line_text()
-        return u""
+            result = self.history[startpos]
+        self.history_cursor = startpos
+        self.last_search_for = searchfor
+        return result.get_line_text()
 
     def _search(self, direction, partial):
         try:
