@@ -1,12 +1,12 @@
 SET VERSION=1.7
 python setup.py build_sphinx
-python setup.py build_sphinx -b latex
+rem python setup.py build_sphinx -b latex
 
-pushd build\sphinx\latex
-pdflatex pyreadline.tex
-pdflatex pyreadline.tex
-pdflatex pyreadline.tex
-popd
+rem pushd build\sphinx\latex
+rem pdflatex pyreadline.tex
+rem pdflatex pyreadline.tex
+rem pdflatex pyreadline.tex
+rem popd
 
 mkdir dist
 copy build\sphinx\latex\pyreadline.pdf dist\pyreadline-%VERSION%.pdf

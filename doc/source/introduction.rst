@@ -13,6 +13,10 @@ console is still under development.
 
 The pyreadline module does not yet support Python 3.x this will be targeted for the 2.0 version.
 
+Version 1.7 will be the last release with compatibility with 2.4 and 2.5. The next
+major release will target 2.6, 2.7 and 3.x. The 1.7 series will only receive bugfixes
+from now on.
+
 
 Dependencies
 ------------
