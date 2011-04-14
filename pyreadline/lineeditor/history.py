@@ -49,8 +49,8 @@ class LineHistory(object):
         return value
 
     def get_history_item(self, index):
-        u'''Return the current contents of history item at index.'''
-        item = self.history[index]
+        u'''Return the current contents of history item at index (starts with index 1).'''
+        item = self.history[index - 1]
         log(u"get_history_item: index:%d item:%r"%(index, item))
         return item.get_line_text()
 
