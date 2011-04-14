@@ -140,6 +140,7 @@ class LineHistory(object):
     def reverse_search_history(self, searchfor, startpos=None):
         if startpos is None:
             startpos = self.history_cursor
+        origpos = startpos
 
         result =  lineobj.ReadLineTextBuffer("")
 
@@ -150,21 +151,25 @@ class LineHistory(object):
 
         #If we get a new search without change in search term it means
         #someone pushed ctrl-r and we should find the next match
-        if self.last_search_for == searchfor:
+        if self.last_search_for == searchfor and startpos > 0:
             startpos -= 1
             for idx, line in list(enumerate(self.history))[startpos:0:-1]:
                 if searchfor in line:
                     startpos = idx
                     break
 
-        result = self.history[startpos]
+        if self.history:                    
+            result = self.history[startpos].get_line_text()
+        else:
+            result = u""
         self.history_cursor = startpos
         self.last_search_for = searchfor
-        return result.get_line_text()
+        log(u"reverse_search_history: old:%d new:%d result:%r"%(origpos, self.history_cursor, result))
+        return result
         
     def forward_search_history(self, searchfor, startpos=None):
         if startpos is None:
-            startpos = self.history_cursor
+            startpos = min(self.history_cursor, max(0, self.get_current_history_length()-1))
         origpos = startpos
         
         result =  lineobj.ReadLineTextBuffer("")
@@ -176,22 +181,20 @@ class LineHistory(object):
 
         #If we get a new search without change in search term it means
         #someone pushed ctrl-r and we should find the next match
-        if self.last_search_for == searchfor:
+        if self.last_search_for == searchfor and startpos < self.get_current_history_length()-1:
             startpos += 1
             for idx, line in list(enumerate(self.history))[startpos:]:
                 if searchfor in line:
                     startpos = idx
                     break
-        if len(self.history) == startpos:
-            if origpos == len(self.history):
-                return u""
-            else:
-                return self.history[origpos]
+
+        if self.history:                    
+            result = self.history[startpos].get_line_text()
         else:
-            result = self.history[startpos]
+            result = u""
         self.history_cursor = startpos
         self.last_search_for = searchfor
-        return result.get_line_text()
+        return result
 
     def _search(self, direction, partial):
         try:
@@ -247,7 +250,10 @@ class LineHistory(object):
         return q
 
 if __name__==u"__main__":
+    import pdb
     q = LineHistory()
+    r = LineHistory()
+    s = LineHistory()
     RL = lineobj.ReadLineTextBuffer
     q.add_history(RL(u"aaaa"))
     q.add_history(RL(u"aaba"))
@@ -255,3 +261,4 @@ if __name__==u"__main__":
     q.add_history(RL(u"akca"))
     q.add_history(RL(u"bbb"))
     q.add_history(RL(u"ako"))
+    r.add_history(RL(u"ako"))

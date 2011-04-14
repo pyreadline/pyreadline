@@ -112,7 +112,7 @@ class Test_history_search_incr_fwd_backwd(unittest.TestCase):
 
     def test_forward_1(self):
         q = self.q
-        self.assertEqual(q.forward_search_history(u"a"), u"") 
+        self.assertEqual(q.forward_search_history(u"a"), u"ako") 
 
     def test_forward_2(self):
         q = self.q
@@ -124,6 +124,18 @@ class Test_history_search_incr_fwd_backwd(unittest.TestCase):
         self.assertEqual(q.forward_search_history(u"ak"), u"akca") 
         self.assertEqual(q.forward_search_history(u"ako"), u"ako") 
         
+class Test_empty_history_search_incr_fwd_backwd(unittest.TestCase):
+    def setUp(self):
+        self.q = q = LineHistory()
+
+    def test_backward_1(self):
+        q = self.q
+        self.assertEqual(q.reverse_search_history(u"b"), u"") 
+
+    def test_forward_1(self):
+        q = self.q
+        self.assertEqual(q.forward_search_history(u"a"), u"") 
+
 
 #----------------------------------------------------------------------
 # utility functions

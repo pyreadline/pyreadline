@@ -31,7 +31,18 @@ class IncrementalSearchPromptMode(object):
         pass
 
     def _process_incremental_search_keyevent(self, keyinfo):
+        log("_process_incremental_search_keyevent")
         keytuple = keyinfo.tuple()
+        #dispatch_func = self.key_dispatch.get(keytuple, default)
+        revtuples = []
+        fwdtuples = []
+        for ktuple, func in self.key_dispatch.iteritems():
+            if func == self.reverse_search_history:
+                revtuples.append(ktuple)
+            elif func == self.forward_search_history:
+                fwdtuples.append(ktuple)
+        
+        
         log(u"IncrementalSearchPromptMode %s %s"%(keyinfo, keytuple))
         if keyinfo.keyname == u'backspace':
             self.subsearch_query = self.subsearch_query[:-1]
@@ -47,25 +58,29 @@ class IncrementalSearchPromptMode(object):
             self._history.history_cursor = len(self._history.history)
             if keyinfo.keyname == u'escape':
                 self.l_buffer.set_line(self.subsearch_old_line)
-            return False
+            return True
         elif keyinfo.keyname:
             pass
-        elif keytuple == self.subsearch_init_event:
-            self._history.history_cursor += self.subsearch_direction
+        elif keytuple in revtuples:
+            self.subsearch_fun = self._history.reverse_search_history
+            self.subsearch_prompt = u"reverse-i-search%d`%s': "
+            self.line = self.subsearch_fun(self.subsearch_query)
+        elif keytuple in fwdtuples:
+            self.subsearch_fun = self._history.forward_search_history
+            self.subsearch_prompt = u"forward-i-search%d`%s': "
             self.line = self.subsearch_fun(self.subsearch_query)
         elif keyinfo.control == False and keyinfo.meta == False:
             self.subsearch_query += keyinfo.char
             self.line = self.subsearch_fun(self.subsearch_query)
         else:
             pass
-        self.prompt = self.subsearch_prompt%self.subsearch_query
+        self.prompt = self.subsearch_prompt%(self._history.history_cursor, self.subsearch_query)
         self.l_buffer.set_line(self.line)
 
-    def _init_incremental_search(self, searchfun, direction, init_event):
+    def _init_incremental_search(self, searchfun, init_event):
         u"""Initialize search prompt
         """
-        self.subsearch_init_event = init_event.tuple()
-        self.subsearch_direction = direction
+        log("init_incremental_search")
         self.subsearch_query = u''
         self.subsearch_fun = searchfun
         self.subsearch_old_line = self.l_buffer.get_line_text()
@@ -79,12 +94,12 @@ class IncrementalSearchPromptMode(object):
             self.previous_func != self.forward_search_history):
             self.subsearch_query = self.l_buffer[0:Point].get_line_text()
 
-        if self.subsearch_direction < 0:
-            self.subsearch_prompt = u"reverse-i-search`%s': "
+        if self.subsearch_fun == self.reverse_search_history:
+            self.subsearch_prompt = u"reverse-i-search%d`%s': "
         else:
-            self.subsearch_prompt = u"forward-i-search`%s': "
+            self.subsearch_prompt = u"forward-i-search%d`%s': "
 
-        self.prompt = self.subsearch_prompt%""
+        self.prompt = self.subsearch_prompt%(self._history.history_cursor, "")
 
         if self.subsearch_query:
             self.line = self._process_incremental_search_keyevent(init_event)
@@ -302,16 +317,16 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode,
     def reverse_search_history(self, e):  # (C-r)
         u'''Search backward starting at the current line and moving up
         through the history as necessary. This is an incremental search.'''
-        self._init_incremental_search(self._history.reverse_search_history,
-                                      -1, e)
+        log("rev_search_history")
+        self._init_incremental_search(self._history.reverse_search_history, e)
         self.finalize()
 
     def forward_search_history(self, e):  # (C-s)
         u'''Search forward starting at the current line and moving down
         through the the history as necessary. This is an incremental
         search.'''
-        self._init_incremental_search(self._history.forward_search_history,
-                                      1, e)
+        log("fwd_search_history")
+        self._init_incremental_search(self._history.forward_search_history, e)
         self.finalize()
 
     def history_search_forward(self, e):  # ()
@@ -644,6 +659,7 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode,
         self._bind_key(u'Alt->',             self.end_of_history)
         self._bind_key(u'Control-r',         self.reverse_search_history)
         self._bind_key(u'Control-s',         self.forward_search_history)
+        self._bind_key(u'Control-Shift-r',         self.forward_search_history)
         self._bind_key(u'Alt-p',
                        self.non_incremental_reverse_search_history)
         self._bind_key(u'Alt-n',
