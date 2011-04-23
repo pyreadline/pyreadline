@@ -10,7 +10,7 @@ import re, operator, sys
 import wordmatcher
 import pyreadline.clipboard as clipboard
 from pyreadline.logger import  log
-from pyreadline.unicode_helper import ensure_unicode
+from pyreadline.unicode_helper import ensure_unicode, biter
 
 kill_ring_to_clipboard = False #set to true to copy every addition to kill ring to clipboard
 
@@ -272,12 +272,12 @@ class TextLine(object):
     def _insert_text(self, text, argument=1):
         text = text * argument
         if self.overwrite:
-            for c in text:
+            for c in biter(text):
                 #if self.point:
                 self.line_buffer[self.point] = c
                 self.point += 1
         else:            
-            for c in text:
+            for c in biter(text):
                 self.line_buffer.insert(self.point, c)
                 self.point += 1
     
