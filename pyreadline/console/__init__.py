@@ -15,7 +15,7 @@ else:
         success = True
     except ImportError:
         pass
-
+        raise
 
 if not success:
     raise ImportError(
