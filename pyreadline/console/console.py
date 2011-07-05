@@ -644,8 +644,6 @@ if True:
     Console.SetConsoleTextAttribute.argtypes = [HWND, c_short] #HANDLE, WORD 
     Console.SetConsoleTitleW.restype = BOOL
     Console.SetConsoleTitleW.argtypes = [c_wchar_p] #LPCTSTR
-    Console.SetConsoleTitleW.restype = BOOL
-    Console.SetConsoleTitleW.argtypes = [c_wchar_p] #LPCTSTR
     Console.SetConsoleWindowInfo.restype = BOOL
     Console.SetConsoleWindowInfo.argtypes = [HWND, BOOL, HWND] #HANDLE, BOOL, SMALL_RECT*
     Console.WriteConsoleW.restype = BOOL
@@ -742,6 +740,10 @@ HOOKFUNC23 = CFUNCTYPE(c_char_p, c_void_p, c_void_p, c_char_p)
 
 readline_hook = None # the python hook goes here
 readline_ref = None  # reference to the c-callable to keep it alive
+cdll.msvcrt.strncpy.restype = c_char_p
+cdll.msvcrt.strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
+cdll.msvcrt._strdup.restype = c_char_p
+cdll.msvcrt._strdup.argtypes = [c_char_p]
 
 def hook_wrapper_23(stdin, stdout, prompt):
     u'''Wrap a Python readline so it behaves like GNU readline.'''
@@ -764,7 +766,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
     # we have to make a copy because the caller expects to free the result
     n = len(res)
     p = Console.PyMem_Malloc(n + 1)
-    cdll.msvcrt.strncpy(p, res, n + 1)
+    cdll.msvcrt.strncpy(cast(p, c_char_p), res, n + 1)
     return p
 
 def hook_wrapper(prompt):
