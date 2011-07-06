@@ -25,8 +25,10 @@ from pyreadline.keysyms import make_KeyPress, KeyPress
 from pyreadline.console.ansi import AnsiState,AnsiWriter
 
 try:
+    import ctypes.util
     from ctypes import *
     from _ctypes import call_function
+    from ctypes.wintypes import HWND, LPCSTR, UINT, WORD, DWORD, BOOL#, TCHAR
     from ctypes.wintypes import HWND, LPCSTR, UINT, WORD, DWORD, BOOL#, TCHAR
 except ImportError:
     raise ImportError(u"You need ctypes to run this code")
@@ -215,6 +217,7 @@ class Console(object):
         self.pythondll = \
             CDLL(u'python%s%s' % (sys.version[0], sys.version[2]))
         self.pythondll.PyMem_Malloc.restype = c_size_t
+        self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
         self.inputHookPtr = \
             c_int.from_address(addressof(self.pythondll.PyOS_InputHook)).value
         setattr(Console, u'PyMem_Malloc', self.pythondll.PyMem_Malloc)
@@ -597,61 +600,65 @@ class Console(object):
 for func in funcs:
     setattr(Console, func, getattr(windll.kernel32, func))
 
-windll.kernel32.SetConsoleTitleW.argtypes = [c_wchar_p]
-windll.kernel32.GetConsoleTitleW.argtypes = [c_wchar_p, c_short]
 
-if True:
-    from ctypes.wintypes import HWND, LPCSTR, UINT, WORD, DWORD, BOOL#, TCHAR
-    Console.AllocConsole.restype = BOOL
-    Console.AllocConsole.argtypes = [] #void
-    Console.CreateConsoleScreenBuffer.restype = HWND
-    Console.CreateConsoleScreenBuffer.argtypes = [DWORD, DWORD, HWND, DWORD, HWND] #DWORD, DWORD, SECURITY_ATTRIBUTES*, DWORD, LPVOID  
-    Console.FillConsoleOutputAttribute.restype = BOOL 
-    Console.FillConsoleOutputAttribute.argtypes = [HWND, WORD, DWORD, c_int, HWND] #HANDLE, WORD, DWORD, COORD, LPDWORD
-    Console.FillConsoleOutputCharacterW.restype = BOOL
-    Console.FillConsoleOutputCharacterW.argtypes = [HWND, c_uint, DWORD, c_int, HWND] #HANDLE, TCHAR, DWORD, COORD, LPDWORD
-    Console.FreeConsole.restype = BOOL
-    Console.FreeConsole.argtypes = [] #void
-    Console.GetConsoleCursorInfo.restype = BOOL
-    Console.GetConsoleCursorInfo.argtypes = [HWND, HWND] #HWND, PCONSOLE_CURSOR_INFO  
-    Console.GetConsoleMode.restype = BOOL
-    Console.GetConsoleMode.argtypes = [HWND, HWND] #HWND, LPDWORD  
-    Console.GetConsoleScreenBufferInfo.restype = BOOL
-    Console.GetConsoleScreenBufferInfo.argtypes = [HWND, HWND] #HWND, PCONSOLE_SCREEN_BUFFER_INFO 
-    Console.GetConsoleTitleW.restype = DWORD
-    Console.GetConsoleTitleW.argtypes = [c_wchar_p, c_short] #LPTSTR , DWORD
-    Console.GetProcAddress.restype = HWND
-    Console.GetProcAddress.argtypes = [HWND, c_char_p] #HMODULE , LPCSTR 
-    Console.GetStdHandle.restype = HWND
-    Console.GetStdHandle.argtypes = [DWORD]
-    Console.PeekConsoleInputW.restype = BOOL
-    Console.PeekConsoleInputW.argtypes = [HWND, HWND, DWORD, HWND] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
-    Console.ReadConsoleInputW.restype = BOOL
-    Console.ReadConsoleInputW.argtypes = [HWND, HWND, DWORD, HWND] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
-    Console.ScrollConsoleScreenBufferW.restype = BOOL
-    Console.ScrollConsoleScreenBufferW.argtypes = [HWND, HWND, HWND, c_int, HWND] #HANDLE, SMALL_RECT*, SMALL_RECT*, COORD, LPDWORD
-    Console.SetConsoleActiveScreenBuffer.restype = BOOL
-    Console.SetConsoleActiveScreenBuffer.argtypes = [HWND] #HANDLE
-    Console.SetConsoleCursorInfo.restype = BOOL
-    Console.SetConsoleCursorInfo.argtypes = [HWND, HWND] #HANDLE, CONSOLE_CURSOR_INFO* 
-    Console.SetConsoleCursorPosition.restype = BOOL
-    Console.SetConsoleCursorPosition.argtypes = [HWND, c_int] #HANDLE, COORD 
-    Console.SetConsoleMode.restype = BOOL
-    Console.SetConsoleMode.argtypes = [HWND, DWORD] #HANDLE, DWORD
-    Console.SetConsoleScreenBufferSize.restype = BOOL
-    Console.SetConsoleScreenBufferSize.argtypes = [HWND, c_int] #HANDLE, COORD 
-    Console.SetConsoleTextAttribute.restype = BOOL
-    Console.SetConsoleTextAttribute.argtypes = [HWND, c_short] #HANDLE, WORD 
-    Console.SetConsoleTitleW.restype = BOOL
-    Console.SetConsoleTitleW.argtypes = [c_wchar_p] #LPCTSTR
-    Console.SetConsoleWindowInfo.restype = BOOL
-    Console.SetConsoleWindowInfo.argtypes = [HWND, BOOL, HWND] #HANDLE, BOOL, SMALL_RECT*
-    Console.WriteConsoleW.restype = BOOL
-    Console.WriteConsoleW.argtypes = [HWND, HWND, DWORD, HWND, HWND] #HANDLE, VOID*, DWORD, LPDWORD, LPVOID
-    Console.WriteConsoleOutputCharacterW.restype = BOOL
-    Console.WriteConsoleOutputCharacterW.argtypes = [HWND, HWND, DWORD, c_int, HWND] #HANDLE, LPCTSTR, DWORD, COORD, LPDWORD
-    Console.WriteFile.restype = BOOL
-    Console.WriteFile.argtypes = [HWND, HWND, DWORD, HWND, HWND] #HANDLE, LPCVOID , DWORD, LPDWORD , LPOVERLAPPED 
+msvcrt = cdll.LoadLibrary(ctypes.util.find_msvcrt())
+_strncpy = msvcrt.strncpy
+_strncpy.restype = c_char_p
+_strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
+_strdup = msvcrt._strdup
+_strdup.restype = c_char_p
+_strdup.argtypes = [c_char_p]
+
+Console.AllocConsole.restype = BOOL
+Console.AllocConsole.argtypes = [] #void
+Console.CreateConsoleScreenBuffer.restype = HWND
+Console.CreateConsoleScreenBuffer.argtypes = [DWORD, DWORD, HWND, DWORD, HWND] #DWORD, DWORD, SECURITY_ATTRIBUTES*, DWORD, LPVOID  
+Console.FillConsoleOutputAttribute.restype = BOOL 
+Console.FillConsoleOutputAttribute.argtypes = [HWND, WORD, DWORD, c_int, HWND] #HANDLE, WORD, DWORD, COORD, LPDWORD
+Console.FillConsoleOutputCharacterW.restype = BOOL
+Console.FillConsoleOutputCharacterW.argtypes = [HWND, c_uint, DWORD, c_int, HWND] #HANDLE, TCHAR, DWORD, COORD, LPDWORD
+Console.FreeConsole.restype = BOOL
+Console.FreeConsole.argtypes = [] #void
+Console.GetConsoleCursorInfo.restype = BOOL
+Console.GetConsoleCursorInfo.argtypes = [HWND, HWND] #HWND, PCONSOLE_CURSOR_INFO  
+Console.GetConsoleMode.restype = BOOL
+Console.GetConsoleMode.argtypes = [HWND, HWND] #HWND, LPDWORD  
+Console.GetConsoleScreenBufferInfo.restype = BOOL
+Console.GetConsoleScreenBufferInfo.argtypes = [HWND, HWND] #HWND, PCONSOLE_SCREEN_BUFFER_INFO 
+Console.GetConsoleTitleW.restype = DWORD
+Console.GetConsoleTitleW.argtypes = [c_wchar_p, c_short] #LPTSTR , DWORD
+Console.GetProcAddress.restype = HWND
+Console.GetProcAddress.argtypes = [HWND, c_char_p] #HMODULE , LPCSTR 
+Console.GetStdHandle.restype = HWND
+Console.GetStdHandle.argtypes = [DWORD]
+Console.PeekConsoleInputW.restype = BOOL
+Console.PeekConsoleInputW.argtypes = [HWND, HWND, DWORD, HWND] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
+Console.ReadConsoleInputW.restype = BOOL
+Console.ReadConsoleInputW.argtypes = [HWND, HWND, DWORD, HWND] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
+Console.ScrollConsoleScreenBufferW.restype = BOOL
+Console.ScrollConsoleScreenBufferW.argtypes = [HWND, HWND, HWND, c_int, HWND] #HANDLE, SMALL_RECT*, SMALL_RECT*, COORD, LPDWORD
+Console.SetConsoleActiveScreenBuffer.restype = BOOL
+Console.SetConsoleActiveScreenBuffer.argtypes = [HWND] #HANDLE
+Console.SetConsoleCursorInfo.restype = BOOL
+Console.SetConsoleCursorInfo.argtypes = [HWND, HWND] #HANDLE, CONSOLE_CURSOR_INFO* 
+Console.SetConsoleCursorPosition.restype = BOOL
+Console.SetConsoleCursorPosition.argtypes = [HWND, c_int] #HANDLE, COORD 
+Console.SetConsoleMode.restype = BOOL
+Console.SetConsoleMode.argtypes = [HWND, DWORD] #HANDLE, DWORD
+Console.SetConsoleScreenBufferSize.restype = BOOL
+Console.SetConsoleScreenBufferSize.argtypes = [HWND, c_int] #HANDLE, COORD 
+Console.SetConsoleTextAttribute.restype = BOOL
+Console.SetConsoleTextAttribute.argtypes = [HWND, c_short] #HANDLE, WORD 
+Console.SetConsoleTitleW.restype = BOOL
+Console.SetConsoleTitleW.argtypes = [c_wchar_p] #LPCTSTR
+Console.SetConsoleWindowInfo.restype = BOOL
+Console.SetConsoleWindowInfo.argtypes = [HWND, BOOL, HWND] #HANDLE, BOOL, SMALL_RECT*
+Console.WriteConsoleW.restype = BOOL
+Console.WriteConsoleW.argtypes = [HWND, HWND, DWORD, HWND, HWND] #HANDLE, VOID*, DWORD, LPDWORD, LPVOID
+Console.WriteConsoleOutputCharacterW.restype = BOOL
+Console.WriteConsoleOutputCharacterW.argtypes = [HWND, HWND, DWORD, c_int, HWND] #HANDLE, LPCTSTR, DWORD, COORD, LPDWORD
+Console.WriteFile.restype = BOOL
+Console.WriteFile.argtypes = [HWND, HWND, DWORD, HWND, HWND] #HANDLE, LPCVOID , DWORD, LPDWORD , LPOVERLAPPED 
 
 
 
@@ -740,10 +747,6 @@ HOOKFUNC23 = CFUNCTYPE(c_char_p, c_void_p, c_void_p, c_char_p)
 
 readline_hook = None # the python hook goes here
 readline_ref = None  # reference to the c-callable to keep it alive
-cdll.msvcrt.strncpy.restype = c_char_p
-cdll.msvcrt.strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
-cdll.msvcrt._strdup.restype = c_char_p
-cdll.msvcrt._strdup.argtypes = [c_char_p]
 
 def hook_wrapper_23(stdin, stdout, prompt):
     u'''Wrap a Python readline so it behaves like GNU readline.'''
@@ -766,7 +769,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
     # we have to make a copy because the caller expects to free the result
     n = len(res)
     p = Console.PyMem_Malloc(n + 1)
-    cdll.msvcrt.strncpy(cast(p, c_char_p), res, n + 1)
+    _strncpy(cast(p, c_char_p), res, n + 1)
     return p
 
 def hook_wrapper(prompt):
@@ -788,7 +791,7 @@ def hook_wrapper(prompt):
         traceback.print_exc()
         res = u'\n'
     # we have to make a copy because the caller expects to free the result
-    p = cdll.msvcrt._strdup(res)
+    p = _strdup(res)
     return p
 
 def install_readline(hook):
@@ -798,7 +801,7 @@ def install_readline(hook):
     # save the hook so the wrapper can call it
     readline_hook = hook
     # get the address of PyOS_ReadlineFunctionPointer so we can update it
-    PyOS_RFP = c_int.from_address(Console.GetProcAddress(sys.dllhandle,
+    PyOS_RFP = c_void_p.from_address(Console.GetProcAddress(sys.dllhandle,
                                             "PyOS_ReadlineFunctionPointer"))
     # save a reference to the generated C-callable so it doesn't go away
     if sys.version < '2.3':
@@ -806,7 +809,7 @@ def install_readline(hook):
     else:
         readline_ref = HOOKFUNC23(hook_wrapper_23)
     # get the address of the function
-    func_start = c_int.from_address(addressof(readline_ref)).value
+    func_start = c_void_p.from_address(addressof(readline_ref)).value
     # write the function address into PyOS_ReadlineFunctionPointer
     PyOS_RFP.value = func_start
 
