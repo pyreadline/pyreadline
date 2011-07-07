@@ -28,8 +28,7 @@ try:
     import ctypes.util
     from ctypes import *
     from _ctypes import call_function
-    from ctypes.wintypes import HWND, LPCSTR, UINT, WORD, DWORD, BOOL#, TCHAR
-    from ctypes.wintypes import HWND, LPCSTR, UINT, WORD, DWORD, BOOL#, TCHAR
+    from ctypes.wintypes import *
 except ImportError:
     raise ImportError(u"You need ctypes to run this code")
 
@@ -219,7 +218,7 @@ class Console(object):
         self.pythondll.PyMem_Malloc.restype = c_size_t
         self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
         self.inputHookPtr = \
-            c_int.from_address(addressof(self.pythondll.PyOS_InputHook)).value
+            c_void_p.from_address(addressof(self.pythondll.PyOS_InputHook)).value
         setattr(Console, u'PyMem_Malloc', self.pythondll.PyMem_Malloc)
 
     def __del__(self):
@@ -351,7 +350,7 @@ class Console(object):
     def write_color(self, text, attr=None):
         text = ensure_unicode(text)
         n, res= self.ansiwriter.write_color(text, attr)
-        junk = c_int(0)
+        junk = DWORD(0)
         for attr,chunk in res:
             log(u"console.attr:%s"%unicode(attr))
             log(u"console.chunk:%s"%unicode(chunk))
@@ -367,7 +366,7 @@ class Console(object):
         log(u'write("%s", %s)' %(text, attr))
         if attr is None:
             attr = self.attr
-        n = c_int(0)
+        junk = DWORD(0)
         self.SetConsoleTextAttribute(self.hout, attr)
         for short_chunk in split_block(chunk):
             self.WriteConsoleW(self.hout, ensure_unicode(short_chunk), 
@@ -379,7 +378,7 @@ class Console(object):
     if os.environ.has_key(u"EMACS"):
         def write_color(self, text, attr=None):
             text = ensure_str(text)
-            junk = c_int(0)
+            junk = DWORD(0)
             self.WriteFile(self.hout, text, len(text), byref(junk), None)
             return len(text)
         write_plain = write_color
@@ -410,7 +409,7 @@ class Console(object):
             self.SetConsoleCursorPosition(self.hout, self.fixcoord(0, 0))
 
         w = info.dwSize.X
-        n = c_int(0)
+        n = DWORD(0)
         for y in range(info.dwSize.Y):
             self.FillConsoleOutputAttribute(self.hout, attr, 
                                             w, self.fixcoord(0, y), byref(n))
@@ -425,7 +424,7 @@ class Console(object):
             attr = self.attr
 
         pos = self.fixcoord(x, y)
-        n = c_int(0)
+        n = DWORD(0)
         self.WriteConsoleOutputCharacterW(self.hout, text, 
                                           len(text), pos, byref(n))
         self.FillConsoleOutputAttribute(self.hout, attr, n, pos, byref(n))
@@ -441,7 +440,7 @@ class Console(object):
     def rectangle(self, rect, attr=None, fill=u' '):
         u'''Fill Rectangle.'''
         x0, y0, x1, y1 = rect
-        n = c_int(0)
+        n = DWORD(0)
         if attr is None:
             attr = self.attr
         for y in range(y0, y1):
@@ -493,10 +492,10 @@ class Console(object):
 
     def get(self):
         u'''Get next event from queue.'''
-        inputHookFunc = c_int.from_address(self.inputHookPtr).value
+        inputHookFunc = c_void_p.from_address(self.inputHookPtr).value
 
         Cevent = INPUT_RECORD()
-        count = c_int(0)
+        count = DWORD(0)
         while 1:
             if inputHookFunc:
                 call_function(inputHookFunc, ())
@@ -528,7 +527,7 @@ class Console(object):
         u'''Get next character from queue.'''
 
         Cevent = INPUT_RECORD()
-        count = c_int(0)
+        count = DWORD(0)
         while 1:
             status = self.ReadConsoleInputW(self.hin, 
                                             byref(Cevent), 1, byref(count))
@@ -544,7 +543,7 @@ class Console(object):
     def peek(self):
         u'''Check event queue.'''
         Cevent = INPUT_RECORD()
-        count = c_int(0)
+        count = DWORD(0)
         status = self.PeekConsoleInputW(self.hin, 
                                 byref(Cevent), 1, byref(count))
         if status and count == 1:
@@ -609,56 +608,61 @@ _strdup = msvcrt._strdup
 _strdup.restype = c_char_p
 _strdup.argtypes = [c_char_p]
 
+LPVOID = c_void_p
+LPCVOID = c_void_p
+FARPROC = c_void_p
+LPDWORD = POINTER(DWORD)
+
 Console.AllocConsole.restype = BOOL
 Console.AllocConsole.argtypes = [] #void
-Console.CreateConsoleScreenBuffer.restype = HWND
-Console.CreateConsoleScreenBuffer.argtypes = [DWORD, DWORD, HWND, DWORD, HWND] #DWORD, DWORD, SECURITY_ATTRIBUTES*, DWORD, LPVOID  
+Console.CreateConsoleScreenBuffer.restype = HANDLE
+Console.CreateConsoleScreenBuffer.argtypes = [DWORD, DWORD, c_void_p, DWORD, LPVOID] #DWORD, DWORD, SECURITY_ATTRIBUTES*, DWORD, LPVOID  
 Console.FillConsoleOutputAttribute.restype = BOOL 
-Console.FillConsoleOutputAttribute.argtypes = [HWND, WORD, DWORD, c_int, HWND] #HANDLE, WORD, DWORD, COORD, LPDWORD
+Console.FillConsoleOutputAttribute.argtypes = [HANDLE, WORD, DWORD, c_int, LPDWORD] #HANDLE, WORD, DWORD, COORD, LPDWORD
 Console.FillConsoleOutputCharacterW.restype = BOOL
-Console.FillConsoleOutputCharacterW.argtypes = [HWND, c_uint, DWORD, c_int, HWND] #HANDLE, TCHAR, DWORD, COORD, LPDWORD
+Console.FillConsoleOutputCharacterW.argtypes = [HANDLE, c_ushort, DWORD, c_int, LPDWORD] #HANDLE, TCHAR, DWORD, COORD, LPDWORD
 Console.FreeConsole.restype = BOOL
 Console.FreeConsole.argtypes = [] #void
 Console.GetConsoleCursorInfo.restype = BOOL
-Console.GetConsoleCursorInfo.argtypes = [HWND, HWND] #HWND, PCONSOLE_CURSOR_INFO  
+Console.GetConsoleCursorInfo.argtypes = [HANDLE, c_void_p] #HANDLE, PCONSOLE_CURSOR_INFO  
 Console.GetConsoleMode.restype = BOOL
-Console.GetConsoleMode.argtypes = [HWND, HWND] #HWND, LPDWORD  
+Console.GetConsoleMode.argtypes = [HANDLE, LPDWORD] #HANDLE, LPDWORD  
 Console.GetConsoleScreenBufferInfo.restype = BOOL
-Console.GetConsoleScreenBufferInfo.argtypes = [HWND, HWND] #HWND, PCONSOLE_SCREEN_BUFFER_INFO 
+Console.GetConsoleScreenBufferInfo.argtypes = [HANDLE, c_void_p] #HANDLE, PCONSOLE_SCREEN_BUFFER_INFO 
 Console.GetConsoleTitleW.restype = DWORD
-Console.GetConsoleTitleW.argtypes = [c_wchar_p, c_short] #LPTSTR , DWORD
-Console.GetProcAddress.restype = HWND
-Console.GetProcAddress.argtypes = [HWND, c_char_p] #HMODULE , LPCSTR 
-Console.GetStdHandle.restype = HWND
+Console.GetConsoleTitleW.argtypes = [c_wchar_p, DWORD] #LPTSTR , DWORD
+Console.GetProcAddress.restype = FARPROC
+Console.GetProcAddress.argtypes = [HMODULE, c_char_p] #HMODULE , LPCSTR 
+Console.GetStdHandle.restype = HANDLE
 Console.GetStdHandle.argtypes = [DWORD]
 Console.PeekConsoleInputW.restype = BOOL
-Console.PeekConsoleInputW.argtypes = [HWND, HWND, DWORD, HWND] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
+Console.PeekConsoleInputW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
 Console.ReadConsoleInputW.restype = BOOL
-Console.ReadConsoleInputW.argtypes = [HWND, HWND, DWORD, HWND] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
+Console.ReadConsoleInputW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
 Console.ScrollConsoleScreenBufferW.restype = BOOL
-Console.ScrollConsoleScreenBufferW.argtypes = [HWND, HWND, HWND, c_int, HWND] #HANDLE, SMALL_RECT*, SMALL_RECT*, COORD, LPDWORD
+Console.ScrollConsoleScreenBufferW.argtypes = [HANDLE, c_void_p, c_void_p, c_int, c_void_p] #HANDLE, SMALL_RECT*, SMALL_RECT*, COORD, LPDWORD
 Console.SetConsoleActiveScreenBuffer.restype = BOOL
-Console.SetConsoleActiveScreenBuffer.argtypes = [HWND] #HANDLE
+Console.SetConsoleActiveScreenBuffer.argtypes = [HANDLE] #HANDLE
 Console.SetConsoleCursorInfo.restype = BOOL
-Console.SetConsoleCursorInfo.argtypes = [HWND, HWND] #HANDLE, CONSOLE_CURSOR_INFO* 
+Console.SetConsoleCursorInfo.argtypes = [HANDLE, c_void_p] #HANDLE, CONSOLE_CURSOR_INFO* 
 Console.SetConsoleCursorPosition.restype = BOOL
-Console.SetConsoleCursorPosition.argtypes = [HWND, c_int] #HANDLE, COORD 
+Console.SetConsoleCursorPosition.argtypes = [HANDLE, c_int] #HANDLE, COORD 
 Console.SetConsoleMode.restype = BOOL
-Console.SetConsoleMode.argtypes = [HWND, DWORD] #HANDLE, DWORD
+Console.SetConsoleMode.argtypes = [HANDLE, DWORD] #HANDLE, DWORD
 Console.SetConsoleScreenBufferSize.restype = BOOL
-Console.SetConsoleScreenBufferSize.argtypes = [HWND, c_int] #HANDLE, COORD 
+Console.SetConsoleScreenBufferSize.argtypes = [HANDLE, c_int] #HANDLE, COORD 
 Console.SetConsoleTextAttribute.restype = BOOL
-Console.SetConsoleTextAttribute.argtypes = [HWND, c_short] #HANDLE, WORD 
+Console.SetConsoleTextAttribute.argtypes = [HANDLE, WORD] #HANDLE, WORD 
 Console.SetConsoleTitleW.restype = BOOL
 Console.SetConsoleTitleW.argtypes = [c_wchar_p] #LPCTSTR
 Console.SetConsoleWindowInfo.restype = BOOL
-Console.SetConsoleWindowInfo.argtypes = [HWND, BOOL, HWND] #HANDLE, BOOL, SMALL_RECT*
+Console.SetConsoleWindowInfo.argtypes = [HANDLE, BOOL, c_void_p] #HANDLE, BOOL, SMALL_RECT*
 Console.WriteConsoleW.restype = BOOL
-Console.WriteConsoleW.argtypes = [HWND, HWND, DWORD, HWND, HWND] #HANDLE, VOID*, DWORD, LPDWORD, LPVOID
+Console.WriteConsoleW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD, LPVOID] #HANDLE, VOID*, DWORD, LPDWORD, LPVOID
 Console.WriteConsoleOutputCharacterW.restype = BOOL
-Console.WriteConsoleOutputCharacterW.argtypes = [HWND, HWND, DWORD, c_int, HWND] #HANDLE, LPCTSTR, DWORD, COORD, LPDWORD
+Console.WriteConsoleOutputCharacterW.argtypes = [HANDLE, c_wchar_p, DWORD, c_int, LPDWORD] #HANDLE, LPCTSTR, DWORD, COORD, LPDWORD
 Console.WriteFile.restype = BOOL
-Console.WriteFile.argtypes = [HWND, HWND, DWORD, HWND, HWND] #HANDLE, LPCVOID , DWORD, LPDWORD , LPOVERLAPPED 
+Console.WriteFile.argtypes = [HANDLE, LPCVOID, DWORD, LPDWORD, c_void_p] #HANDLE, LPCVOID , DWORD, LPDWORD , LPOVERLAPPED 
 
 
 
