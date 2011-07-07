@@ -599,8 +599,10 @@ class Console(object):
 for func in funcs:
     setattr(Console, func, getattr(windll.kernel32, func))
 
-
-msvcrt = cdll.LoadLibrary(ctypes.util.find_msvcrt())
+if sys.version_info[:2] < (2, 6):
+    msvcrt = cdll.msvcrt
+else:
+    msvcrt = cdll.LoadLibrary(ctypes.util.find_msvcrt())
 _strncpy = msvcrt.strncpy
 _strncpy.restype = c_char_p
 _strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
