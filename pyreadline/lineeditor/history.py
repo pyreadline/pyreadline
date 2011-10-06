@@ -15,9 +15,7 @@ else:
 
 import lineobj
 
-import exceptions
-
-class EscapeHistory(exceptions.Exception):
+class EscapeHistory(Exception):
     pass
 
 from pyreadline.logger import log
@@ -93,7 +91,7 @@ class LineHistory(object):
         fp = open(filename, u'wb')
         for line in self.history[-self.history_length:]:
             fp.write(ensure_str(line.get_line_text()))
-            fp.write(u'\n')
+            fp.write('\n'.encode('ascii'))
         fp.close()
 
 

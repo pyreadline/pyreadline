@@ -32,6 +32,9 @@ try:
 except ImportError:
     raise ImportError(u"You need ctypes to run this code")
 
+if sys.version_info < (2, 6):
+    bytes = str
+
 def nolog(string):
     pass
     
@@ -289,7 +292,7 @@ class Console(object):
 
     # This pattern should match all characters that change the cursor position differently
     # than a normal character.
-    motion_char_re = re.compile(u'([\n\r\t\010\007])')
+    motion_char_re = re.compile('([\n\r\t\010\007])'.encode('ascii'))
 
     def write_scrolling(self, text, attr=None):
         u'''write text at current cursor position while watching for scrolling.
@@ -309,7 +312,7 @@ class Console(object):
         w, h = self.size()
         scroll = 0 # the result
         # split the string into ordinary characters and funny characters
-        chunks = self.motion_char_re.split(text)
+        chunks = self.motion_char_re.split(ensure_str(text))
         for chunk in chunks:
             n = self.write_color(chunk, attr)
             if len(chunk) == 1: # the funny characters will be alone
@@ -760,7 +763,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
         # call the Python hook
         res = ensure_str(readline_hook(prompt))
         # make sure it returned the right sort of thing
-        if res and not isinstance(res, str):
+        if res and not isinstance(res, bytes):
             raise TypeError, u'readline must return a string.'
     except KeyboardInterrupt:
         # GNU readline returns 0 on keyboard interrupt
@@ -784,7 +787,7 @@ def hook_wrapper(prompt):
         # call the Python hook
         res = ensure_str(readline_hook(prompt))
         # make sure it returned the right sort of thing
-        if res and not isinstance(res, str):
+        if res and not isinstance(res, bytes):
             raise TypeError, u'readline must return a string.'
     except KeyboardInterrupt:
         # GNU readline returns 0 on keyboard interrupt
@@ -808,7 +811,7 @@ def install_readline(hook):
     readline_hook = hook
     # get the address of PyOS_ReadlineFunctionPointer so we can update it
     PyOS_RFP = c_void_p.from_address(Console.GetProcAddress(sys.dllhandle,
-                                            "PyOS_ReadlineFunctionPointer"))
+                           "PyOS_ReadlineFunctionPointer".encode('ascii')))
     # save a reference to the generated C-callable so it doesn't go away
     if sys.version < '2.3':
         readline_ref = HOOKFUNC22(hook_wrapper)

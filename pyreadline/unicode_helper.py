@@ -17,9 +17,14 @@ except AttributeError:
 if pyreadline_codepage is None:  
     pyreadline_codepage = u"ascii"
 
+if sys.version_info < (2, 6):
+    bytes = str
+
+PY3 = (sys.version_info >= (3, 0))
+
 def ensure_unicode(text):
     u"""helper to ensure that text passed to WriteConsoleW is unicode"""
-    if isinstance(text, str):
+    if isinstance(text, bytes):
         try:
             return text.decode(pyreadline_codepage, u"replace")
         except (LookupError, TypeError):
@@ -34,3 +39,9 @@ def ensure_str(text):
         except (LookupError, TypeError):
             return text.encode(u"ascii", u"replace")
     return text
+
+def biter(text):
+    if PY3 and isinstance(text, bytes):
+        return (s.to_bytes(1, 'big') for s in text)
+    else:
+        return iter(text)
