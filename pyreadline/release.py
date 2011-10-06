@@ -22,7 +22,7 @@ name = u'pyreadline'
 
 branch = u''
 
-version = u'1.7'
+version = u'1.7.1'
 
 revision = u'$Revision$'
 
@@ -33,6 +33,9 @@ u"""
 The pyreadline package is a python implementation of GNU readline functionality
 it is based on the ctypes based UNC readline package by Gary Bishop. 
 It is not complete. It has been tested for use with windows 2000 and windows xp.
+
+Version 1.7.1 includes fixes for 64-bit windows, thanks to Christoph Gohlke for
+helping out.
 
 Version 1.7 will be the last release with compatibility with 2.4 and 2.5. The next
 major release will target 2.6, 2.7 and 3.x. The 1.7 series will only receive bugfixes
