@@ -606,9 +606,11 @@ if sys.version_info[:2] < (2, 6):
     msvcrt = cdll.msvcrt
 else:
     msvcrt = cdll.LoadLibrary(ctypes.util.find_msvcrt())
+
 _strncpy = msvcrt.strncpy
-_strncpy.restype = c_char_p
-_strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
+if sys.version [:1] == 2:  #Bad fix for crash on python3
+    _strncpy.restype = c_char_p
+    _strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
 _strdup = msvcrt._strdup
 _strdup.restype = c_char_p
 _strdup.argtypes = [c_char_p]
