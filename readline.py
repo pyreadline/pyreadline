@@ -4,30 +4,6 @@
 #of a readline module
 from pyreadline.rlmain import Readline
 
-__all__ = [ 'parse_and_bind',
-            'get_line_buffer',
-            'insert_text',
-            'clear_history',
-            'read_init_file',
-            'read_history_file',
-            'write_history_file',
-            'get_current_history_length',
-            'get_history_length',
-            'get_history_item',
-            'set_history_length',
-            'set_startup_hook',
-            'set_pre_input_hook',
-            'set_completer',
-            'get_completer',
-            'get_begidx',
-            'get_endidx',
-            'set_completer_delims',
-            'get_completer_delims',
-            'add_history',
-            'callback_handler_install',
-            'callback_handler_remove',
-            'callback_read_char',] #Some other objects are added below
-
 
 # create a Readline object to contain the state
 rl = Readline()
@@ -41,7 +17,6 @@ else:
     def GetOutputFile():
         u'''Return the console object used by readline so that it can be used for printing in color.'''
         return rl.console
-    __all__.append("GetOutputFile")
 
     import pyreadline.console as console
 
@@ -55,20 +30,26 @@ else:
     write_history_file = rl.write_history_file
     read_history_file = rl.read_history_file
 
-    get_completer_delims = rl.get_completer_delims
+    get_begidx = rl.get_begidx
+    get_endidx = rl.get_endidx
     get_current_history_length = rl.get_current_history_length
     get_history_length = rl.get_history_length
     get_history_item = rl.get_history_item
     get_line_buffer = rl.get_line_buffer
     set_completer = rl.set_completer
     get_completer = rl.get_completer
-    get_begidx = rl.get_begidx
-    get_endidx = rl.get_endidx
+    get_completer_delims = rl.get_completer_delims
+    get_completion_type = rl.get_completion_type
+
+    remove_history_item = rl.remove_history_item
+    replace_history_item = rl.replace_history_item
+    redisplay = rl.redisplay
 
     set_completer_delims = rl.set_completer_delims
     set_history_length = rl.set_history_length
     set_pre_input_hook = rl.set_pre_input_hook
     set_startup_hook = rl.set_startup_hook
+    set_completion_display_matches_hook = rl.set_completion_display_matches_hook
 
     callback_handler_install=rl.callback_handler_install
     callback_handler_remove=rl.callback_handler_remove
@@ -76,4 +57,3 @@ else:
 
     console.install_readline(rl.readline)
 
-__all__.append("rl")

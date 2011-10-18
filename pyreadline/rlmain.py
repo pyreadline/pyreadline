@@ -9,7 +9,7 @@
 u''' an attempt to implement readline for Python in Python using ctypes'''
 import sys,os,re,time
 from glob import glob
-
+from logging import warn
 import release
 
 import pyreadline.lineeditor.lineobj as lineobj
@@ -156,6 +156,14 @@ class BaseReadline(object):
         u'''Clear readline history'''
         self.mode._history.clear_history()
 
+    def remove_history_item(self, pos):
+        u'''Remove history item specified by its position from the history.'''
+        self.mode._history.remove_history_item(pos)
+
+    def replace_history_item(self, pos, line):
+        u'''Replace history item specified by its position with the given line.'''
+        self.mode._history.replace_history_item(pos, line)
+
     def read_history_file(self, filename=None): 
         u'''Load a readline history file. The default filename is ~/.history.'''
         if filename is None:
@@ -187,6 +195,12 @@ class BaseReadline(object):
         '''
         log(u'get_completer')
         return self.mode.completer
+
+    def get_completion_type(self): 
+        u'''Get the completion type. Not implemented returns empty string
+        '''
+        log(u'get_completion_type')
+        return ""
 
     def get_begidx(self):
         u'''Get the beginning index of the readline tab-completion scope.'''
@@ -227,7 +241,25 @@ class BaseReadline(object):
         '''
         self.mode.pre_input_hook = function
 
+    def set_completion_display_matches_hook(self, function=None):
+        u'''Set or remove the completion display function.
+        
+        NOT IMPLEMENTED
+        
+        If function is specified, it will be used as the new completion display function;
+        if omitted or None, any completion display function already installed is removed. 
+        The completion display function is called as function(substitution, [matches], 
+        longest_match_length) once each time matches need to be displayed.
+        '''
+        warn("set_completion_display_matches_hook in pyreadline is not implemented!!")
+
 #Functions that are not relevant for all Readlines but should at least have a NOP
+    def redisplay(self):
+        u'''Change what is displayed on the screen to reflect the current contents of the line buffer.
+        
+        Not implemented yet
+        '''
+        warn("redisplay in pyreadline is not implemented!!")
 
     def _bell(self):
         pass

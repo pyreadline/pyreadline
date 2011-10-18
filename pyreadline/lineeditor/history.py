@@ -70,6 +70,12 @@ class LineHistory(object):
     history_length = property(get_history_length, set_history_length)
     history_cursor = property(get_history_cursor, set_history_cursor)
 
+    def remove_history_item(self, pos):
+        del self.history[pos - 1]
+
+    def replace_history_item(self, pos, line):
+        self.history[pos - 1] = lineobj.ReadLineTextBuffer(line)
+
     def clear_history(self):
         u'''Clear readline history.'''
         self.history[:] = []
