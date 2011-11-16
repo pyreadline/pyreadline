@@ -202,7 +202,10 @@ class BaseReadline(object):
 
     def get_completer_delims(self):
         u'''Get the readline word delimiters for tab-completion.'''
-        return self.mode.completer_delims.encode("ascii") 
+        if sys.version_info[0] < 3:
+            return self.mode.completer_delims.encode("ascii") 
+        else:
+            return self.mode.completer_delims
 
     def set_startup_hook(self, function=None): 
         u'''Set or remove the startup_hook function.
