@@ -253,7 +253,7 @@ class TextLine(object):
 
     def get_line_text(self):
         buf = self.line_buffer
-        buf = map(ensure_unicode, buf)
+        buf = list(map(ensure_unicode, buf))
         return ''.join(buf)
             
     def set_line(self, text, cursor = None):
