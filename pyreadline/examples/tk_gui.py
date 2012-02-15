@@ -10,6 +10,7 @@
 
 
 """
+from __future__ import print_function, unicode_literals, absolute_import
 from pyreadline.rlmain import BaseReadline
 from pyreadline.keysyms.common import KeyPress
 import pyreadline.logger as log

@@ -7,6 +7,7 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 # table for translating virtual keys to X windows key symbols
+from __future__ import print_function, unicode_literals, absolute_import
 
 try:
     set
@@ -15,31 +16,31 @@ except NameError:
     
 from pyreadline.unicode_helper import ensure_unicode
 
-validkey =set([u'cancel',      u'backspace',    u'tab',          u'clear',
-               u'return',      u'shift_l',      u'control_l',    u'alt_l',
-               u'pause',       u'caps_lock',    u'escape',       u'space',
-               u'prior',       u'next',         u'end',          u'home',
-               u'left',        u'up',           u'right',        u'down',
-               u'select',      u'print',        u'execute',      u'snapshot',
-               u'insert',      u'delete',       u'help',         u'f1',
-               u'f2',          u'f3',           u'f4',           u'f5',
-               u'f6',          u'f7',           u'f8',           u'f9',
-               u'f10',         u'f11',          u'f12',          u'f13',
-               u'f14',         u'f15',          u'f16',          u'f17',
-               u'f18',         u'f19',          u'f20',          u'f21',
-               u'f22',         u'f23',          u'f24',          u'num_lock',
-               u'scroll_lock', u'vk_apps',      u'vk_processkey',u'vk_attn',
-               u'vk_crsel',    u'vk_exsel',     u'vk_ereof',     u'vk_play',
-               u'vk_zoom',     u'vk_noname',    u'vk_pa1',       u'vk_oem_clear',
-               u'numpad0',     u'numpad1',      u'numpad2',      u'numpad3',
-               u'numpad4',     u'numpad5',      u'numpad6',      u'numpad7',
-               u'numpad8',     u'numpad9',      u'divide',       u'multiply',
-               u'add',         u'subtract',     u'vk_decimal'])
+validkey =set(['cancel',      'backspace',    'tab',          'clear',
+               'return',      'shift_l',      'control_l',    'alt_l',
+               'pause',       'caps_lock',    'escape',       'space',
+               'prior',       'next',         'end',          'home',
+               'left',        'up',           'right',        'down',
+               'select',      'print',        'execute',      'snapshot',
+               'insert',      'delete',       'help',         'f1',
+               'f2',          'f3',           'f4',           'f5',
+               'f6',          'f7',           'f8',           'f9',
+               'f10',         'f11',          'f12',          'f13',
+               'f14',         'f15',          'f16',          'f17',
+               'f18',         'f19',          'f20',          'f21',
+               'f22',         'f23',          'f24',          'num_lock',
+               'scroll_lock', 'vk_apps',      'vk_processkey','vk_attn',
+               'vk_crsel',    'vk_exsel',     'vk_ereof',     'vk_play',
+               'vk_zoom',     'vk_noname',    'vk_pa1',       'vk_oem_clear',
+               'numpad0',     'numpad1',      'numpad2',      'numpad3',
+               'numpad4',     'numpad5',      'numpad6',      'numpad7',
+               'numpad8',     'numpad9',      'divide',       'multiply',
+               'add',         'subtract',     'vk_decimal'])
 
-escape_sequence_to_special_key = {u"\\e[a" : u"up", u"\\e[b" : u"down", u"del" : u"delete"}
+escape_sequence_to_special_key = {"\\e[a" : "up", "\\e[b" : "down", "del" : "delete"}
 
 class KeyPress(object):
-    def __init__(self, char=u"", shift=False, control=False, meta=False, keyname=u""):
+    def __init__(self, char="", shift=False, control=False, meta=False, keyname=""):
         if control or meta or shift:
             char = char.upper()
         self.info = dict(char=char,
@@ -55,14 +56,14 @@ class KeyPress(object):
         def set(self, value):
             self.info[name] = value
         return property(get, set)
-    char = create(u"char")
-    shift = create(u"shift")
-    control = create(u"control")
-    meta = create(u"meta")
-    keyname = create(u"keyname")
+    char = create("char")
+    shift = create("shift")
+    control = create("control")
+    meta = create("meta")
+    keyname = create("keyname")
         
     def __repr__(self):
-        return u"(%s,%s,%s,%s)"%tuple(map(ensure_unicode, self.tuple()))
+        return "(%s,%s,%s,%s)"%tuple(map(ensure_unicode, self.tuple()))
 
     def tuple(self):
         if self.keyname:
@@ -83,32 +84,32 @@ class KeyPress(object):
 
 def make_KeyPress_from_keydescr(keydescr):
     keyinfo = KeyPress()
-    if len(keydescr) > 2 and keydescr[:1] == u'"' and keydescr[-1:] == u'"':
+    if len(keydescr) > 2 and keydescr[:1] == '"' and keydescr[-1:] == '"':
         keydescr = keydescr[1:-1]
         
     while 1:
         lkeyname = keydescr.lower()
-        if lkeyname.startswith(u'control-'):
+        if lkeyname.startswith('control-'):
             keyinfo.control = True
             keydescr = keydescr[8:]
-        elif lkeyname.startswith(u'ctrl-'):
+        elif lkeyname.startswith('ctrl-'):
             keyinfo.control = True
             keydescr = keydescr[5:]
-        elif keydescr.lower().startswith(u'\\c-'):
+        elif keydescr.lower().startswith('\\c-'):
             keyinfo.control = True
             keydescr = keydescr[3:]
-        elif keydescr.lower().startswith(u'\\m-'):
+        elif keydescr.lower().startswith('\\m-'):
             keyinfo.meta = True
             keydescr = keydescr[3:]
         elif keydescr in escape_sequence_to_special_key:
             keydescr = escape_sequence_to_special_key[keydescr]
-        elif lkeyname.startswith(u'meta-'):
+        elif lkeyname.startswith('meta-'):
             keyinfo.meta = True
             keydescr = keydescr[5:]
-        elif lkeyname.startswith(u'alt-'):
+        elif lkeyname.startswith('alt-'):
             keyinfo.meta = True
             keydescr = keydescr[4:]
-        elif lkeyname.startswith(u'shift-'):
+        elif lkeyname.startswith('shift-'):
             keyinfo.shift = True
             keydescr = keydescr[6:]
         else:
@@ -117,11 +118,11 @@ def make_KeyPress_from_keydescr(keydescr):
                     keyinfo.keyname = keydescr.strip().lower()
                     keyinfo.char = ""
                 else:
-                    raise IndexError(u"Not a valid key: '%s'"%keydescr)
+                    raise IndexError("Not a valid key: '%s'"%keydescr)
             else:
                 keyinfo.char = keydescr
             return keyinfo
 
-if __name__ == u"__main__":
+if __name__ == "__main__":
     import startup
     

@@ -1,17 +1,18 @@
+from __future__ import print_function, unicode_literals, absolute_import
 import sys
 success = True
-in_ironpython = u"IronPython" in sys.version
+in_ironpython = "IronPython" in sys.version
 if in_ironpython:
     try:
-        from ironpython_clipboard import GetClipboardText, SetClipboardText
+        from .ironpython_clipboard import GetClipboardText, SetClipboardText
     except ImportError:
-        from no_clipboard import GetClipboardText, SetClipboardText
+        from .no_clipboard import GetClipboardText, SetClipboardText
 
 else:
     try:
-        from win32_clipboard import GetClipboardText, SetClipboardText
+        from .win32_clipboard import GetClipboardText, SetClipboardText
     except ImportError:
-        from no_clipboard import GetClipboardText, SetClipboardText
+        from .no_clipboard import GetClipboardText, SetClipboardText
     
 
 def send_data(lists):
@@ -22,15 +23,15 @@ def set_clipboard_text(toclipboard):
     SetClipboardText(str(toclipboard))
 
 def make_tab(lists):
-    if hasattr(lists, u"tolist"):
+    if hasattr(lists, "tolist"):
         lists = lists.tolist()
     ut = []
     for rad in lists:
         if type(rad) in [list, tuple]:
-            ut.append(u"\t".join([u"%s"%x for x in rad]))
+            ut.append("\t".join(["%s"%x for x in rad]))
         else:
-            ut.append(u"%s"%rad)
-    return u"\n".join(ut)            
+            ut.append("%s"%rad)
+    return "\n".join(ut)            
     
 def make_list_of_list(txt):
     def make_num(x):
@@ -47,8 +48,8 @@ def make_list_of_list(txt):
         return x                
     ut = []
     flag = False
-    for rad in [x for x in txt.split(u"\r\n") if x != u""]:
-        raden=[make_num(x) for x in rad.split(u"\t")]
+    for rad in [x for x in txt.split("\r\n") if x != ""]:
+        raden=[make_num(x) for x in rad.split("\t")]
         if str in map(type,raden):
             flag = True
         ut.append(raden)
@@ -56,17 +57,17 @@ def make_list_of_list(txt):
 
 
 def get_clipboard_text_and_convert(paste_list=False):
-    u"""Get txt from clipboard. if paste_list==True the convert tab separated 
+    """Get txt from clipboard. if paste_list==True the convert tab separated 
     data to list of lists. Enclose list of list in array() if all elements are 
     numeric"""
     txt = GetClipboardText()
     if txt:
-        if paste_list and u"\t" in txt:
+        if paste_list and "\t" in txt:
             array, flag = make_list_of_list(txt)
             if flag:
                 txt = repr(array)
             else:
-                txt = u"array(%s)"%repr(array)
-            txt = u"".join([c for c in txt if c not in u" \t\r\n"])
+                txt = "array(%s)"%repr(array)
+            txt = "".join([c for c in txt if c not in " \t\r\n"])
     return txt
 

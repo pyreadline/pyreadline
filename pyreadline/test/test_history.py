@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2007 Jörgen Stenarson. <>
+from __future__ import print_function, unicode_literals, absolute_import
 
 import sys, unittest
-sys.path.append (u'../..')
+sys.path.append ('../..')
 #from pyreadline.modes.vi import *
 #from pyreadline import keysyms
 from pyreadline.lineeditor import lineobj
@@ -19,110 +20,110 @@ from pyreadline.logger import log
 RL=lineobj.ReadLineTextBuffer
 
 class Test_prev_next_history(unittest.TestCase):
-    t = u"test text"
+    t = "test text"
 
     def setUp(self):
         self.q = q = LineHistory()
-        for x in [u"aaaa", u"aaba", u"aaca", u"akca", u"bbb", u"ako"]:
+        for x in ["aaaa", "aaba", "aaca", "akca", "bbb", "ako"]:
             q.add_history(RL(x))
 
     def test_previous_history (self):
         hist = self.q
         assert hist.history_cursor == 6
-        l = RL(u"")
+        l = RL("")
         hist.previous_history(l)
-        assert l.get_line_text() == u"ako"
+        assert l.get_line_text() == "ako"
         hist.previous_history(l)
-        assert l.get_line_text() == u"bbb"
+        assert l.get_line_text() == "bbb"
         hist.previous_history(l)
-        assert l.get_line_text() == u"akca"
+        assert l.get_line_text() == "akca"
         hist.previous_history(l)
-        assert l.get_line_text() == u"aaca"
+        assert l.get_line_text() == "aaca"
         hist.previous_history(l)
-        assert l.get_line_text() == u"aaba"
+        assert l.get_line_text() == "aaba"
         hist.previous_history(l)
-        assert l.get_line_text() == u"aaaa"
+        assert l.get_line_text() == "aaaa"
         hist.previous_history(l)
-        assert l.get_line_text() == u"aaaa"
+        assert l.get_line_text() == "aaaa"
 
     def test_next_history (self):
         hist=self.q
         hist.beginning_of_history()
         assert hist.history_cursor==0
-        l=RL(u"")
+        l=RL("")
         hist.next_history(l)
-        assert l.get_line_text()==u"aaba"
+        assert l.get_line_text()=="aaba"
         hist.next_history(l)
-        assert l.get_line_text()==u"aaca"
+        assert l.get_line_text()=="aaca"
         hist.next_history(l)
-        assert l.get_line_text()==u"akca"
+        assert l.get_line_text()=="akca"
         hist.next_history(l)
-        assert l.get_line_text()==u"bbb"
+        assert l.get_line_text()=="bbb"
         hist.next_history(l)
-        assert l.get_line_text()==u"ako"
+        assert l.get_line_text()=="ako"
         hist.next_history(l)
-        assert l.get_line_text()==u"ako"
+        assert l.get_line_text()=="ako"
 
 class Test_prev_next_history(unittest.TestCase):
-    t = u"test text"
+    t = "test text"
 
     def setUp(self):
         self.q = q = LineHistory()
-        for x in [u"aaaa",u"aaba",u"aaca",u"akca",u"bbb",u"ako"]:
+        for x in ["aaaa","aaba","aaca","akca","bbb","ako"]:
             q.add_history(RL(x))
         
     def test_history_search_backward (self):
         q = LineHistory()
-        for x in [u"aaaa",u"aaba",u"aaca",u"    aacax",u"akca",u"bbb",u"ako"]:
+        for x in ["aaaa","aaba","aaca","    aacax","akca","bbb","ako"]:
             q.add_history(RL(x))
-        a=RL(u"aa",point=2)
-        for x in [u"aaca",u"aaba",u"aaaa",u"aaaa"]:
+        a=RL("aa",point=2)
+        for x in ["aaca","aaba","aaaa","aaaa"]:
             res=q.history_search_backward(a)
             assert res.get_line_text()==x
         
     def test_history_search_forward (self):
         q = LineHistory()
-        for x in [u"aaaa",u"aaba",u"aaca",u"    aacax",u"akca",u"bbb",u"ako"]:
+        for x in ["aaaa","aaba","aaca","    aacax","akca","bbb","ako"]:
             q.add_history(RL(x))
         q.beginning_of_history()
-        a=RL(u"aa",point=2)
-        for x in [u"aaba",u"aaca",u"aaca"]:
+        a=RL("aa",point=2)
+        for x in ["aaba","aaca","aaca"]:
             res=q.history_search_forward(a)
             assert res.get_line_text()==x
 
 class Test_history_search_incr_fwd_backwd(unittest.TestCase):
     def setUp(self):
         self.q = q = LineHistory()
-        for x in [u"aaaa",u"aaba",u"aaca",u"akca",u"bbb",u"ako"]:
+        for x in ["aaaa","aaba","aaca","akca","bbb","ako"]:
             q.add_history(RL(x))
 
     def test_backward_1(self):
         q = self.q
-        self.assertEqual(q.reverse_search_history(u"b"), u"bbb") 
-        self.assertEqual(q.reverse_search_history(u"b"), u"aaba") 
-        self.assertEqual(q.reverse_search_history(u"bb"), u"aaba") 
+        self.assertEqual(q.reverse_search_history("b"), "bbb") 
+        self.assertEqual(q.reverse_search_history("b"), "aaba") 
+        self.assertEqual(q.reverse_search_history("bb"), "aaba") 
 
     def test_backward_2(self):
         q = self.q
-        self.assertEqual(q.reverse_search_history(u"a"), u"ako") 
-        self.assertEqual(q.reverse_search_history(u"aa"), u"aaca") 
-        self.assertEqual(q.reverse_search_history(u"a"), u"aaca") 
-        self.assertEqual(q.reverse_search_history(u"ab"), u"aaba") 
+        self.assertEqual(q.reverse_search_history("a"), "ako") 
+        self.assertEqual(q.reverse_search_history("aa"), "aaca") 
+        self.assertEqual(q.reverse_search_history("a"), "aaca") 
+        self.assertEqual(q.reverse_search_history("ab"), "aaba") 
 
 
     def test_forward_1(self):
         q = self.q
-        self.assertEqual(q.forward_search_history(u"a"), u"ako") 
+        self.assertEqual(q.forward_search_history("a"), "ako") 
 
     def test_forward_2(self):
         q = self.q
         q.history_cursor = 0
-        self.assertEqual(q.forward_search_history(u"a"), u"aaaa") 
-        self.assertEqual(q.forward_search_history(u"a"), u"aaba") 
-        self.assertEqual(q.forward_search_history(u"ak"), u"akca") 
-        self.assertEqual(q.forward_search_history(u"akl"), u"akca") 
-        self.assertEqual(q.forward_search_history(u"ak"), u"akca") 
-        self.assertEqual(q.forward_search_history(u"ako"), u"ako") 
+        self.assertEqual(q.forward_search_history("a"), "aaaa") 
+        self.assertEqual(q.forward_search_history("a"), "aaba") 
+        self.assertEqual(q.forward_search_history("ak"), "akca") 
+        self.assertEqual(q.forward_search_history("akl"), "akca") 
+        self.assertEqual(q.forward_search_history("ak"), "akca") 
+        self.assertEqual(q.forward_search_history("ako"), "ako") 
         
 class Test_empty_history_search_incr_fwd_backwd(unittest.TestCase):
     def setUp(self):
@@ -130,11 +131,11 @@ class Test_empty_history_search_incr_fwd_backwd(unittest.TestCase):
 
     def test_backward_1(self):
         q = self.q
-        self.assertEqual(q.reverse_search_history(u"b"), u"") 
+        self.assertEqual(q.reverse_search_history("b"), "") 
 
     def test_forward_1(self):
         q = self.q
-        self.assertEqual(q.forward_search_history(u"a"), u"") 
+        self.assertEqual(q.forward_search_history("a"), "") 
 
 
 #----------------------------------------------------------------------
@@ -142,7 +143,7 @@ class Test_empty_history_search_incr_fwd_backwd(unittest.TestCase):
 
 #----------------------------------------------------------------------
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
     unittest.main()
 
-    l=lineobj.ReadLineTextBuffer(u"First Second Third")
+    l=lineobj.ReadLineTextBuffer("First Second Third")

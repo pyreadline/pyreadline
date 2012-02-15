@@ -1,5 +1,6 @@
 #This file contains constants that are normally found in win32all
 #But included here to avoid the dependency
+from __future__ import print_function, unicode_literals, absolute_import
 
 VK_LBUTTON=1
 VK_RBUTTON=2

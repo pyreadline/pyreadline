@@ -5,21 +5,22 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
+from __future__ import print_function, unicode_literals, absolute_import
 import cPickle
 import logging
 import logging.handlers
 import SocketServer
-import struct,socket
+import struct, socket
 
 try:
     import msvcrt
 except ImportError:
     msvcrt = None
-    print u"problem"
+    print "problem"
 
 
 port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
-host = u'localhost'
+host = 'localhost'
 
 def check_key():
     if msvcrt is None:
@@ -28,18 +29,18 @@ def check_key():
         if msvcrt.kbhit() != 0:
             q = msvcrt.getch()
             return q
-    return u""
+    return ""
 
 
 singleline=False
 
 def main():
-    print u"Starting TCP logserver on port:", port
-    print u"Press q to quit logserver", port
-    print u"Press c to clear screen", port
+    print "Starting TCP logserver on port:", port
+    print "Press q to quit logserver", port
+    print "Press c to clear screen", port
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    s.bind((u"", port))
+    s.bind(("", port))
     s.settimeout(1)
     while 1:
         try:
@@ -47,11 +48,11 @@ def main():
             print data,
         except socket.timeout:
             key = check_key().lower()
-            if u"q" == key:
-                print u"Quitting logserver"
+            if "q" == key:
+                print "Quitting logserver"
                 break
-            elif u"c" == key:
-                print u"\n" * 100            
+            elif "c" == key:
+                print "\n" * 100            
 
-if __name__ == u"__main__":
+if __name__ == "__main__":
     main()

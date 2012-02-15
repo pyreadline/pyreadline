@@ -31,6 +31,7 @@
 # hence this contribution.
 #
 ###################################################################################
+from __future__ import print_function, unicode_literals, absolute_import
 
 from ctypes import *
 from pyreadline.keysyms.winconstants import CF_TEXT, GHND
@@ -80,7 +81,7 @@ def getformatname(format):
     return buffer.value
 
 def GetClipboardText():
-    text = u""
+    text = ""
     if OpenClipboard(0):
         hClipMem = GetClipboardData(CF_TEXT)
         if hClipMem:        
@@ -103,6 +104,6 @@ def SetClipboardText(text):
         SetClipboardData(c_int(CF_TEXT), c_int(hGlobalMem))
         CloseClipboard()
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
     txt = GetClipboardText()                            # display last text clipped
-    print txt
+    print(txt)

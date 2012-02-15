@@ -6,20 +6,21 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
+from __future__ import print_function, unicode_literals, absolute_import
 import os
 import pyreadline.logger as logger
 from   pyreadline.logger import log
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
-import basemode
+from . import basemode
 
 class NotEmacsMode(basemode.BaseMode):
-    mode=u"notemacs"
+    mode="notemacs"
     def __init__(self,rlobj):
         super(NotEmacsMode,self).__init__(rlobj)
 
     def __repr__(self):
-        return u"<NotEmacsMode>"
+        return "<NotEmacsMode>"
 
     def _readline_from_keyboard(self):
         c=self.console
@@ -37,7 +38,7 @@ class NotEmacsMode(basemode.BaseMode):
                     raise EOFError
 
             dispatch_func = self.key_dispatch.get(event.keyinfo,self.self_insert)
-            log(u"readline from keyboard:%s"%(event.keyinfo,))
+            log("readline from keyboard:%s"%(event.keyinfo,))
             r = None
             if dispatch_func:
                 r = dispatch_func(event)
@@ -49,7 +50,7 @@ class NotEmacsMode(basemode.BaseMode):
                 break
 
     def readline(self, prompt=''):
-        u'''Try to act like GNU readline.'''
+        '''Try to act like GNU readline.'''
         # handle startup_hook
         if self.first_prompt:
             self.first_prompt = False
@@ -57,7 +58,7 @@ class NotEmacsMode(basemode.BaseMode):
                 try:
                     self.startup_hook()
                 except:
-                    print u'startup hook failed'
+                    print('startup hook failed')
                     traceback.print_exc()
 
         c = self.console
@@ -69,64 +70,64 @@ class NotEmacsMode(basemode.BaseMode):
             try:
                 self.pre_input_hook()
             except:
-                print u'pre_input_hook failed'
+                print('pre_input_hook failed')
                 traceback.print_exc()
                 self.pre_input_hook = None
 
-        log(u"in readline: %s"%self.paste_line_buffer)
+        log("in readline: %s"%self.paste_line_buffer)
         if len(self.paste_line_buffer)>0:
             self.l_buffer=lineobj.ReadlineTextBuffer(self.paste_line_buffer[0])
             self._update_line()
             self.paste_line_buffer=self.paste_line_buffer[1:]
-            c.write(u'\r\n')
+            c.write('\r\n')
         else:
             self._readline_from_keyboard()
-            c.write(u'\r\n')
+            c.write('\r\n')
 
         self.add_history(self.l_buffer.copy())
 
-        log(u'returning(%s)' % self.l_buffer.get_line_text())
+        log('returning(%s)' % self.l_buffer.get_line_text())
         return self.l_buffer.get_line_text() + '\n'
 
     ### Methods below here are bindable emacs functions
 
     def beginning_of_line(self, e): # (C-a)
-        u'''Move to the start of the current line. '''
+        '''Move to the start of the current line. '''
         self.l_buffer.beginning_of_line()
 
     def end_of_line(self, e): # (C-e)
-        u'''Move to the end of the line. '''
+        '''Move to the end of the line. '''
         self.l_buffer.end_of_line()
 
     def forward_char(self, e): # (C-f)
-        u'''Move forward a character. '''
+        '''Move forward a character. '''
         self.l_buffer.forward_char()
 
     def backward_char(self, e): # (C-b)
-        u'''Move back a character. '''
+        '''Move back a character. '''
         self.l_buffer.backward_char()
 
     def forward_word(self, e): # (M-f)
-        u'''Move forward to the end of the next word. Words are composed of
+        '''Move forward to the end of the next word. Words are composed of
         letters and digits.'''
         self.l_buffer.forward_word()
 
     def backward_word(self, e): # (M-b)
-        u'''Move back to the start of the current or previous word. Words are
+        '''Move back to the start of the current or previous word. Words are
         composed of letters and digits.'''
         self.l_buffer.backward_word()
 
     def clear_screen(self, e): # (C-l)
-        u'''Clear the screen and redraw the current line, leaving the current
+        '''Clear the screen and redraw the current line, leaving the current
         line at the top of the screen.'''
         self.console.page()
 
     def redraw_current_line(self, e): # ()
-        u'''Refresh the current line. By default, this is unbound.'''
+        '''Refresh the current line. By default, this is unbound.'''
         pass
 
     def accept_line(self, e): # (Newline or Return)
-        u'''Accept the line regardless of where the cursor is. If this line
+        '''Accept the line regardless of where the cursor is. If this line
         is non-empty, it may be added to the history list for future recall
         with add_history(). If this line is a modified history line, the
         history line is restored to its original state.'''
@@ -134,47 +135,47 @@ class NotEmacsMode(basemode.BaseMode):
 
 #########  History commands
     def previous_history(self, e): # (C-p)
-        u'''Move back through the history list, fetching the previous command. '''
+        '''Move back through the history list, fetching the previous command. '''
         self._history.previous_history(self.l_buffer)
 
     def next_history(self, e): # (C-n)
-        u'''Move forward through the history list, fetching the next command. '''
+        '''Move forward through the history list, fetching the next command. '''
         self._history.next_history(self.l_buffer)
 
     def beginning_of_history(self, e): # (M-<)
-        u'''Move to the first line in the history.'''
+        '''Move to the first line in the history.'''
         self._history.beginning_of_history()
 
     def end_of_history(self, e): # (M->)
-        u'''Move to the end of the input history, i.e., the line currently
+        '''Move to the end of the input history, i.e., the line currently
         being entered.'''
         self._history.end_of_history(self.l_buffer)
 
     def _i_search(self, searchfun, direction, init_event):
         c = self.console
         line = self.get_line_buffer()
-        query = u''
+        query = ''
         hc_start = self._history.history_cursor #+ direction
         while 1:
             x, y = self.prompt_end_pos
             c.pos(0, y)
             if direction < 0:
-                prompt = u'reverse-i-search'
+                prompt = 'reverse-i-search'
             else:
-                prompt = u'forward-i-search'
+                prompt = 'forward-i-search'
 
-            scroll = c.write_scrolling(u"%s`%s': %s" % (prompt, query, line))
+            scroll = c.write_scrolling("%s`%s': %s" % (prompt, query, line))
             self._update_prompt_pos(scroll)
             self._clear_after()
 
             event = c.getkeypress()
-            if event.keysym == u'BackSpace':
+            if event.keysym == 'BackSpace':
                 if len(query) > 0:
                     query = query[:-1]
                     self._history.history_cursor = hc_start
                 else:
                     self._bell()
-            elif event.char in string.letters + string.digits + string.punctuation + u' ':
+            elif event.char in string.letters + string.digits + string.punctuation + ' ':
                 self._history.history_cursor = hc_start
                 query += event.char
             elif event.keyinfo == init_event.keyinfo:
@@ -182,7 +183,7 @@ class NotEmacsMode(basemode.BaseMode):
                 line=searchfun(query)                
                 pass
             else:
-                if event.keysym != u'Return':
+                if event.keysym != 'Return':
                     self._bell()
                 break
             line=searchfun(query)
@@ -194,46 +195,46 @@ class NotEmacsMode(basemode.BaseMode):
         self._history.history_cursor=len(self._history.history)
 
     def reverse_search_history(self, e): # (C-r)
-        u'''Search backward starting at the current line and moving up
+        '''Search backward starting at the current line and moving up
         through the history as necessary. This is an incremental search.'''
-#        print "HEJ"
+#        print("HEJ")
 #        self.console.bell()
         self._i_search(self._history.reverse_search_history, -1, e)
 
     def forward_search_history(self, e): # (C-s)
-        u'''Search forward starting at the current line and moving down
+        '''Search forward starting at the current line and moving down
         through the the history as necessary. This is an incremental search.'''
-#        print "HEJ"
+#        print("HEJ")
 #        self.console.bell()
         self._i_search(self._history.forward_search_history, 1, e)
 
 
     def non_incremental_reverse_search_history(self, e): # (M-p)
-        u'''Search backward starting at the current line and moving up
+        '''Search backward starting at the current line and moving up
         through the history as necessary using a non-incremental search for
         a string supplied by the user.'''
         self._history.non_incremental_reverse_search_history(self.l_buffer)
 
     def non_incremental_forward_search_history(self, e): # (M-n)
-        u'''Search forward starting at the current line and moving down
+        '''Search forward starting at the current line and moving down
         through the the history as necessary using a non-incremental search
         for a string supplied by the user.'''
         self._history.non_incremental_reverse_search_history(self.l_buffer)
 
     def history_search_forward(self, e): # ()
-        u'''Search forward through the history for the string of characters
+        '''Search forward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
         self.l_buffer=self._history.history_search_forward(self.l_buffer)
 
     def history_search_backward(self, e): # ()
-        u'''Search backward through the history for the string of characters
+        '''Search backward through the history for the string of characters
         between the start of the current line and the point. This is a
         non-incremental search. By default, this command is unbound.'''
         self.l_buffer=self._history.history_search_backward(self.l_buffer)
 
     def yank_nth_arg(self, e): # (M-C-y)
-        u'''Insert the first argument to the previous command (usually the
+        '''Insert the first argument to the previous command (usually the
         second word on the previous line) at point. With an argument n,
         insert the nth word from the previous command (the words in the
         previous command begin with word 0). A negative argument inserts the
@@ -241,76 +242,76 @@ class NotEmacsMode(basemode.BaseMode):
         pass
 
     def yank_last_arg(self, e): # (M-. or M-_)
-        u'''Insert last argument to the previous command (the last word of
+        '''Insert last argument to the previous command (the last word of
         the previous history entry). With an argument, behave exactly like
         yank-nth-arg. Successive calls to yank-last-arg move back through
         the history list, inserting the last argument of each line in turn.'''
         pass
 
     def delete_char(self, e): # (C-d)
-        u'''Delete the character at point. If point is at the beginning of
+        '''Delete the character at point. If point is at the beginning of
         the line, there are no characters in the line, and the last
         character typed was not bound to delete-char, then return EOF.'''
         self.l_buffer.delete_char()
 
     def backward_delete_char(self, e): # (Rubout)
-        u'''Delete the character behind the cursor. A numeric argument means
+        '''Delete the character behind the cursor. A numeric argument means
         to kill the characters instead of deleting them.'''
         self.l_buffer.backward_delete_char()
 
     def forward_backward_delete_char(self, e): # ()
-        u'''Delete the character under the cursor, unless the cursor is at
+        '''Delete the character under the cursor, unless the cursor is at
         the end of the line, in which case the character behind the cursor
         is deleted. By default, this is not bound to a key.'''
         pass
 
     def quoted_insert(self, e): # (C-q or C-v)
-        u'''Add the next character typed to the line verbatim. This is how to
+        '''Add the next character typed to the line verbatim. This is how to
         insert key sequences like C-q, for example.'''
         e = self.console.getkeypress()
         self.insert_text(e.char)
 
     def tab_insert(self, e): # (M-TAB)
-        u'''Insert a tab character. '''
+        '''Insert a tab character. '''
         cursor = min(self.l_buffer.point, len(self.l_buffer.line_buffer))
         ws = ' ' * (self.tabstop - (cursor % self.tabstop))
         self.insert_text(ws)
 
     def self_insert(self, e): # (a, b, A, 1, !, ...)
-        u'''Insert yourself. '''
+        '''Insert yourself. '''
         if ord(e.char)!=0: #don't insert null character in buffer, can happen with dead keys.
             self.insert_text(e.char)
 
     def transpose_chars(self, e): # (C-t)
-        u'''Drag the character before the cursor forward over the character
+        '''Drag the character before the cursor forward over the character
         at the cursor, moving the cursor forward as well. If the insertion
         point is at the end of the line, then this transposes the last two
         characters of the line. Negative arguments have no effect.'''
         self.l_buffer.transpose_chars()
 
     def transpose_words(self, e): # (M-t)
-        u'''Drag the word before point past the word after point, moving
+        '''Drag the word before point past the word after point, moving
         point past that word as well. If the insertion point is at the end
         of the line, this transposes the last two words on the line.'''
         self.l_buffer.transpose_words()
 
     def upcase_word(self, e): # (M-u)
-        u'''Uppercase the current (or following) word. With a negative
+        '''Uppercase the current (or following) word. With a negative
         argument, uppercase the previous word, but do not move the cursor.'''
         self.l_buffer.upcase_word()
 
     def downcase_word(self, e): # (M-l)
-        u'''Lowercase the current (or following) word. With a negative
+        '''Lowercase the current (or following) word. With a negative
         argument, lowercase the previous word, but do not move the cursor.'''
         self.l_buffer.downcase_word()
 
     def capitalize_word(self, e): # (M-c)
-        u'''Capitalize the current (or following) word. With a negative
+        '''Capitalize the current (or following) word. With a negative
         argument, capitalize the previous word, but do not move the cursor.'''
         self.l_buffer.capitalize_word()
 
     def overwrite_mode(self, e): # ()
-        u'''Toggle overwrite mode. With an explicit positive numeric
+        '''Toggle overwrite mode. With an explicit positive numeric
         argument, switches to overwrite mode. With an explicit non-positive
         numeric argument, switches to insert mode. This command affects only
         emacs mode; vi mode does overwrite differently. Each call to
@@ -321,54 +322,54 @@ class NotEmacsMode(basemode.BaseMode):
         pass
         
     def kill_line(self, e): # (C-k)
-        u'''Kill the text from point to the end of the line. '''
+        '''Kill the text from point to the end of the line. '''
         self.l_buffer.kill_line()
         
     def backward_kill_line(self, e): # (C-x Rubout)
-        u'''Kill backward to the beginning of the line. '''
+        '''Kill backward to the beginning of the line. '''
         self.l_buffer.backward_kill_line()
 
     def unix_line_discard(self, e): # (C-u)
-        u'''Kill backward from the cursor to the beginning of the current line. '''
+        '''Kill backward from the cursor to the beginning of the current line. '''
         # how is this different from backward_kill_line?
         self.l_buffer.unix_line_discard()
 
     def kill_whole_line(self, e): # ()
-        u'''Kill all characters on the current line, no matter where point
+        '''Kill all characters on the current line, no matter where point
         is. By default, this is unbound.'''
         self.l_buffer.kill_whole_line()
 
     def kill_word(self, e): # (M-d)
-        u'''Kill from point to the end of the current word, or if between
+        '''Kill from point to the end of the current word, or if between
         words, to the end of the next word. Word boundaries are the same as
         forward-word.'''
         self.l_buffer.kill_word()
 
     def backward_kill_word(self, e): # (M-DEL)
-        u'''Kill the word behind point. Word boundaries are the same as
+        '''Kill the word behind point. Word boundaries are the same as
         backward-word. '''
         self.l_buffer.backward_kill_word()
 
     def unix_word_rubout(self, e): # (C-w)
-        u'''Kill the word behind point, using white space as a word
+        '''Kill the word behind point, using white space as a word
         boundary. The killed text is saved on the kill-ring.'''
         self.l_buffer.unix_word_rubout()
 
     def delete_horizontal_space(self, e): # ()
-        u'''Delete all spaces and tabs around point. By default, this is unbound. '''
+        '''Delete all spaces and tabs around point. By default, this is unbound. '''
         pass
 
     def kill_region(self, e): # ()
-        u'''Kill the text in the current region. By default, this command is unbound. '''
+        '''Kill the text in the current region. By default, this command is unbound. '''
         pass
 
     def copy_region_as_kill(self, e): # ()
-        u'''Copy the text in the region to the kill buffer, so it can be
+        '''Copy the text in the region to the kill buffer, so it can be
         yanked right away. By default, this command is unbound.'''
         pass
 
     def copy_region_to_clipboard(self, e): # ()
-        u'''Copy the text in the region to the windows clipboard.'''
+        '''Copy the text in the region to the windows clipboard.'''
         if self.enable_win32_clipboard:
                 mark=min(self.l_buffer.mark,len(self.l_buffer.line_buffer))
                 cursor=min(self.l_buffer.point,len(self.l_buffer.line_buffer))
@@ -376,72 +377,72 @@ class NotEmacsMode(basemode.BaseMode):
                         return
                 begin=min(cursor,mark)
                 end=max(cursor,mark)
-                toclipboard=u"".join(self.l_buffer.line_buffer[begin:end])
+                toclipboard="".join(self.l_buffer.line_buffer[begin:end])
                 clipboard.SetClipboardText(str(toclipboard))
 
     def copy_backward_word(self, e): # ()
-        u'''Copy the word before point to the kill buffer. The word
+        '''Copy the word before point to the kill buffer. The word
         boundaries are the same as backward-word. By default, this command
         is unbound.'''
         pass
 
     def copy_forward_word(self, e): # ()
-        u'''Copy the word following point to the kill buffer. The word
+        '''Copy the word following point to the kill buffer. The word
         boundaries are the same as forward-word. By default, this command is
         unbound.'''
         pass
 
     def paste(self,e):
-        u'''Paste windows clipboard'''
+        '''Paste windows clipboard'''
         if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(False)
                 self.insert_text(txt)
 
     def paste_mulitline_code(self,e):
-        u'''Paste windows clipboard'''
-        reg=re.compile(u"\r?\n")
+        '''Paste windows clipboard'''
+        reg=re.compile("\r?\n")
         if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(False)
                 t=reg.split(txt)
-                t=[row for row in t if row.strip()!=u""] #remove empty lines
-                if t!=[u""]:
+                t=[row for row in t if row.strip()!=""] #remove empty lines
+                if t!=[""]:
                     self.insert_text(t[0])
                     self.add_history(self.l_buffer.copy())
                     self.paste_line_buffer=t[1:]
-                    log(u"multi: %s"%self.paste_line_buffer)
+                    log("multi: %s"%self.paste_line_buffer)
                     return True
                 else:
                     return False
         
     def ipython_paste(self,e):
-        u'''Paste windows clipboard. If enable_ipython_paste_list_of_lists is 
+        '''Paste windows clipboard. If enable_ipython_paste_list_of_lists is 
         True then try to convert tabseparated data to repr of list of lists or 
         repr of array'''
         if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(
                                                 self.enable_ipython_paste_list_of_lists)
                 if self.enable_ipython_paste_for_paths:
-                        if len(txt)<300 and (u"\t" not in txt) and (u"\n" not in txt):
-                                txt=txt.replace(u"\\", u"/").replace(u" ", ur"\ ")
+                        if len(txt)<300 and ("\t" not in txt) and ("\n" not in txt):
+                                txt=txt.replace("\\", "/").replace(" ", r"\ ")
                 self.insert_text(txt)
 
     def yank(self, e): # (C-y)
-        u'''Yank the top of the kill ring into the buffer at point. '''
+        '''Yank the top of the kill ring into the buffer at point. '''
         pass
 
     def yank_pop(self, e): # (M-y)
-        u'''Rotate the kill-ring, and yank the new top. You can only do this
+        '''Rotate the kill-ring, and yank the new top. You can only do this
         if the prior command is yank or yank-pop.'''
         pass
 
 
     def digit_argument(self, e): # (M-0, M-1, ... M--)
-        u'''Add this digit to the argument already accumulating, or start a
+        '''Add this digit to the argument already accumulating, or start a
         new argument. M-- starts a negative argument.'''
         pass
 
     def universal_argument(self, e): # ()
-        u'''This is another way to specify an argument. If this command is
+        '''This is another way to specify an argument. If this command is
         followed by one or more digits, optionally with a leading minus
         sign, those digits define the argument. If the command is followed
         by digits, executing universal-argument again ends the numeric
@@ -455,83 +456,83 @@ class NotEmacsMode(basemode.BaseMode):
         pass
 
     def delete_char_or_list(self, e): # ()
-        u'''Deletes the character under the cursor if not at the beginning or
+        '''Deletes the character under the cursor if not at the beginning or
         end of the line (like delete-char). If at the end of the line,
         behaves identically to possible-completions. This command is unbound
         by default.'''
         pass
 
     def start_kbd_macro(self, e): # (C-x ()
-        u'''Begin saving the characters typed into the current keyboard macro. '''
+        '''Begin saving the characters typed into the current keyboard macro. '''
         pass
 
     def end_kbd_macro(self, e): # (C-x ))
-        u'''Stop saving the characters typed into the current keyboard macro
+        '''Stop saving the characters typed into the current keyboard macro
         and save the definition.'''
         pass
 
     def call_last_kbd_macro(self, e): # (C-x e)
-        u'''Re-execute the last keyboard macro defined, by making the
+        '''Re-execute the last keyboard macro defined, by making the
         characters in the macro appear as if typed at the keyboard.'''
         pass
 
     def re_read_init_file(self, e): # (C-x C-r)
-        u'''Read in the contents of the inputrc file, and incorporate any
+        '''Read in the contents of the inputrc file, and incorporate any
         bindings or variable assignments found there.'''
         pass
 
     def abort(self, e): # (C-g)
-        u'''Abort the current editing command and ring the terminals bell
+        '''Abort the current editing command and ring the terminals bell
              (subject to the setting of bell-style).'''
         self._bell()
 
     def do_uppercase_version(self, e): # (M-a, M-b, M-x, ...)
-        u'''If the metafied character x is lowercase, run the command that is
+        '''If the metafied character x is lowercase, run the command that is
         bound to the corresponding uppercase character.'''
         pass
 
     def prefix_meta(self, e): # (ESC)
-        u'''Metafy the next character typed. This is for keyboards without a
+        '''Metafy the next character typed. This is for keyboards without a
         meta key. Typing ESC f is equivalent to typing M-f. '''
         self.next_meta = True
 
     def undo(self, e): # (C-_ or C-x C-u)
-        u'''Incremental undo, separately remembered for each line.'''
+        '''Incremental undo, separately remembered for each line.'''
         self.l_buffer.pop_undo()
 
     def revert_line(self, e): # (M-r)
-        u'''Undo all changes made to this line. This is like executing the
+        '''Undo all changes made to this line. This is like executing the
         undo command enough times to get back to the beginning.'''
         pass
 
     def tilde_expand(self, e): # (M-~)
-        u'''Perform tilde expansion on the current word.'''
+        '''Perform tilde expansion on the current word.'''
         pass
 
     def set_mark(self, e): # (C-@)
-        u'''Set the mark to the point. If a numeric argument is supplied, the
+        '''Set the mark to the point. If a numeric argument is supplied, the
         mark is set to that position.'''
         self.l_buffer.set_mark()
 
     def exchange_point_and_mark(self, e): # (C-x C-x)
-        u'''Swap the point with the mark. The current cursor position is set
+        '''Swap the point with the mark. The current cursor position is set
         to the saved position, and the old cursor position is saved as the
         mark.'''
         pass
 
     def character_search(self, e): # (C-])
-        u'''A character is read and point is moved to the next occurrence of
+        '''A character is read and point is moved to the next occurrence of
         that character. A negative count searches for previous occurrences.'''
         pass
 
     def character_search_backward(self, e): # (M-C-])
-        u'''A character is read and point is moved to the previous occurrence
+        '''A character is read and point is moved to the previous occurrence
         of that character. A negative count searches for subsequent
         occurrences.'''
         pass
 
     def insert_comment(self, e): # (M-#)
-        u'''Without a numeric argument, the value of the comment-begin
+        '''Without a numeric argument, the value of the comment-begin
         variable is inserted at the beginning of the current line. If a
         numeric argument is supplied, this command acts as a toggle: if the
         characters at the beginning of the line do not match the value of
@@ -541,21 +542,21 @@ class NotEmacsMode(basemode.BaseMode):
         pass
 
     def dump_functions(self, e): # ()
-        u'''Print all of the functions and their key bindings to the Readline
+        '''Print all of the functions and their key bindings to the Readline
         output stream. If a numeric argument is supplied, the output is
         formatted in such a way that it can be made part of an inputrc
         file. This command is unbound by default.'''
         pass
 
     def dump_variables(self, e): # ()
-        u'''Print all of the settable variables and their values to the
+        '''Print all of the settable variables and their values to the
         Readline output stream. If a numeric argument is supplied, the
         output is formatted in such a way that it can be made part of an
         inputrc file. This command is unbound by default.'''
         pass
 
     def dump_macros(self, e): # ()
-        u'''Print all of the Readline key sequences bound to macros and the
+        '''Print all of the Readline key sequences bound to macros and the
         strings they output. If a numeric argument is supplied, the output
         is formatted in such a way that it can be made part of an inputrc
         file. This command is unbound by default.'''
@@ -565,38 +566,38 @@ class NotEmacsMode(basemode.BaseMode):
     #Create key bindings:
 
     def init_editing_mode(self, e): # (C-e)
-        u'''When in vi command mode, this causes a switch to emacs editing
+        '''When in vi command mode, this causes a switch to emacs editing
         mode.'''
 
-        self._bind_exit_key(u'Control-d')
-        self._bind_exit_key(u'Control-z')
+        self._bind_exit_key('Control-d')
+        self._bind_exit_key('Control-z')
 
         # I often accidentally hold the shift or control while typing space
-        self._bind_key(u'Shift-space',       self.self_insert)
-        self._bind_key(u'Control-space',     self.self_insert)
-        self._bind_key(u'Return',            self.accept_line)
-        self._bind_key(u'Left',              self.backward_char)
-        self._bind_key(u'Control-b',         self.backward_char)
-        self._bind_key(u'Right',             self.forward_char)
-        self._bind_key(u'Control-f',         self.forward_char)
-        self._bind_key(u'BackSpace',         self.backward_delete_char)
-        self._bind_key(u'Home',              self.beginning_of_line)
-        self._bind_key(u'End',               self.end_of_line)
-        self._bind_key(u'Delete',            self.delete_char)
-        self._bind_key(u'Control-d',         self.delete_char)
-        self._bind_key(u'Clear',             self.clear_screen)
+        self._bind_key('Shift-space',       self.self_insert)
+        self._bind_key('Control-space',     self.self_insert)
+        self._bind_key('Return',            self.accept_line)
+        self._bind_key('Left',              self.backward_char)
+        self._bind_key('Control-b',         self.backward_char)
+        self._bind_key('Right',             self.forward_char)
+        self._bind_key('Control-f',         self.forward_char)
+        self._bind_key('BackSpace',         self.backward_delete_char)
+        self._bind_key('Home',              self.beginning_of_line)
+        self._bind_key('End',               self.end_of_line)
+        self._bind_key('Delete',            self.delete_char)
+        self._bind_key('Control-d',         self.delete_char)
+        self._bind_key('Clear',             self.clear_screen)
 
 
 # make it case insensitive
 def commonprefix(m):
-    u"Given a list of pathnames, returns the longest common leading component"
-    if not m: return u''
+    "Given a list of pathnames, returns the longest common leading component"
+    if not m: return ''
     prefix = m[0]
     for item in m:
         for i in range(len(prefix)):
             if prefix[:i+1].lower() != item[:i+1].lower():
                 prefix = prefix[:i]
-                if i == 0: return u''
+                if i == 0: return ''
                 break
     return prefix
 

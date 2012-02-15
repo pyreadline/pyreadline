@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
 # Example snippet to use in a PYTHONSTARTUP file
+from __future__ import print_function, unicode_literals, absolute_import
 try:
     import pyreadline.rlmain
     #pyreadline.rlmain.config_path=r"c:\xxx\pyreadlineconfig.ini"
-    import readline,atexit
+    import readline, atexit
     import pyreadline.unicode_helper
     #
     #
@@ -11,7 +12,7 @@ try:
     #if you need to change this uncomment the following line
     #pyreadline.unicode_helper.pyreadline_codepage="utf8"
 except ImportError:
-    print "Module readline not available."
+    print("Module readline not available.")
 else:
     #import tab completion functionality
     import rlcompleter
@@ -27,4 +28,4 @@ else:
     readline.parse_and_bind("tab: complete")
     readline.read_history_file()
     atexit.register(readline.write_history_file)
-    del readline,rlcompleter,atexit
+    del readline, rlcompleter, atexit
