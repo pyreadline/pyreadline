@@ -385,14 +385,14 @@ class TestsHistory (unittest.TestCase):
 
 if __name__ == '__main__':
     Tester()
-    tested=EmacsModeTest.tested_commands.keys()    
+    tested=list(EmacsModeTest.tested_commands.keys())    
     tested.sort()
 #    print(" Tested functions ".center(60,"-"))
 #    print( "\n".join(tested))
 #    print()
     
-    all_funcs=dict([(x.__name__,x) for x in EmacsModeTest().key_dispatch.values()])
-    all_funcs=all_funcs.keys()
+    all_funcs=dict([(x.__name__,x) for x in list(EmacsModeTest().key_dispatch.values())])
+    all_funcs=list(all_funcs.keys())
     not_tested=[x for x in all_funcs if x not in tested]
     not_tested.sort()
     print(" Not tested functions ".center(60,"-"))

@@ -16,7 +16,7 @@ from pyreadline.logger import log
 import pyreadline.logger as logger
 from pyreadline.test.common import *
 
-from pyreadline.test.common import *
+from pyreadline.py3k_compat import StringIO
 #----------------------------------------------------------------------
 
 class ViModeTest (ViMode):
@@ -68,10 +68,9 @@ class ViModeTest (ViMode):
 
 class ViExternalEditorTest (ViExternalEditor):
     def __init__ (self, line):
-        import StringIO
-        self.sio_write = StringIO.StringIO ()
-        self.sio_read = StringIO.StringIO ('qwerty after')
-        ViExternalEditor.__init__ (self, line)
+        self.sio_write = StringIO()
+        self.sio_read = StringIO('qwerty after')
+        ViExternalEditor.__init__(self, line)
 
     def get_tempfile (self):
         return 'temp.py'
@@ -294,13 +293,13 @@ class Tests (unittest.TestCase):
         self.assertEqual (4, vi_pos_back_long ('abc def... ghi...', 16, count=2))
 
     def test_pos_find_char_forward (self):
-        self.assertEqual (-1, vi_pos_find_char_forward ('', u'x'))
-        self.assertEqual (-1, vi_pos_find_char_forward ('abc def', u'x'))
-        self.assertEqual (4, vi_pos_find_char_forward ('abc def', u'd'))
-        self.assertEqual (4, vi_pos_find_char_forward ('abc def', u'd', 3))
-        self.assertEqual (-1, vi_pos_find_char_forward ('abc def', u'd', 4))
-        self.assertEqual (-1, vi_pos_find_char_forward ('abc def', u'd', count=2))
-        self.assertEqual (12, vi_pos_find_char_forward ('abc def abc def', u'd', count=2))
+        self.assertEqual (-1, vi_pos_find_char_forward ('', 'x'))
+        self.assertEqual (-1, vi_pos_find_char_forward ('abc def', 'x'))
+        self.assertEqual (4, vi_pos_find_char_forward ('abc def', 'd'))
+        self.assertEqual (4, vi_pos_find_char_forward ('abc def', 'd', 3))
+        self.assertEqual (-1, vi_pos_find_char_forward ('abc def', 'd', 4))
+        self.assertEqual (-1, vi_pos_find_char_forward ('abc def', 'd', count=2))
+        self.assertEqual (12, vi_pos_find_char_forward ('abc def abc def', 'd', count=2))
 
     def test_pos_find_char_backward (self):
         self.assertEqual (-1, vi_pos_find_char_backward ('', 'x'))
@@ -2131,15 +2130,15 @@ class Tests (unittest.TestCase):
 if __name__  == '__main__':
     Tester()
 
-    tested = ViModeTest.tested_commands.keys()    
+    tested=list(ViModeTest.tested_commands.keys())    
     tested.sort()
-    print( " Tested functions ".center(60,"-"))
-    print( "\n".join(tested))
+    print(" Tested functions ".center(60,"-"))
+    print("\n".join(tested))
     print()
     
-    all_funcs = dict([(x.__name__,x) for x in ViModeTest().key_dispatch.values()])
-    all_funcs = all_funcs.keys()
-    not_tested = [x for x in all_funcs if x not in tested]
+    all_funcs=dict([(x.__name__,x) for x in list(ViModeTest().key_dispatch.values())])
+    all_funcs=list(all_funcs.keys())
+    not_tested=[x for x in all_funcs if x not in tested]
     not_tested.sort()
     print(" Not tested functions ".center(60,"-"))
     print("\n".join(not_tested))
