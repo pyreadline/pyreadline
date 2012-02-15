@@ -37,7 +37,7 @@ class IncrementalSearchPromptMode(object):
         #dispatch_func = self.key_dispatch.get(keytuple, default)
         revtuples = []
         fwdtuples = []
-        for ktuple, func in self.key_dispatch.iteritems():
+        for ktuple, func in self.key_dispatch.items():
             if func == self.reverse_search_history:
                 revtuples.append(ktuple)
             elif func == self.forward_search_history:

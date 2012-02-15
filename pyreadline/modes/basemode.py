@@ -8,6 +8,7 @@
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
 import os, re, math, glob, sys, time
+from pyreadline.py3k_compat import callable
 import pyreadline.logger as logger
 from   pyreadline.logger import log
 from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
@@ -149,7 +150,7 @@ class BaseMode(object):
         out.append("------------- key bindings ------------")
         tablepat="%-7s %-7s %-7s %-15s %-15s "
         out.append(tablepat%("Control","Meta","Shift","Keycode/char","Function"))
-        bindings=[(k[0],k[1],k[2],k[3],v.__name__) for k,v in self.key_dispatch.iteritems()]
+        bindings=[(k[0],k[1],k[2],k[3],v.__name__) for k,v in self.key_dispatch.items()]
         bindings.sort()
         for key in bindings:
             out.append(tablepat%(key))
@@ -206,7 +207,7 @@ class BaseMode(object):
                     completions.append(r)
                 else:
                     pass
-            log('text completions=<%s>' % map(ensure_unicode, completions))
+            log('text completions=<%s>' % list(map(ensure_unicode, completions)))
         if (self.complete_filesystem == "on") and not completions:
             # get the filename to complete
             while self.begidx > 0:
@@ -216,7 +217,7 @@ class BaseMode(object):
                     break
             text = ensure_str(''.join(buf[self.begidx:self.endidx]))
             log('file complete text="%s"' % ensure_unicode(text))
-            completions = map(ensure_unicode, glob.glob(os.path.expanduser(text) + '*'.encode('ascii')))
+            completions = list(map(ensure_unicode, glob.glob(os.path.expanduser(text) + '*'.encode('ascii'))))
             if self.mark_directories == 'on':
                 mc = []
                 for f in completions:
@@ -225,7 +226,7 @@ class BaseMode(object):
                     else:
                         mc.append(f)
                 completions = mc
-            log('fnames=<%s>' % map(ensure_unicode, completions))
+            log('fnames=<%s>' % list(map(ensure_unicode, completions)))
         return completions
 
 
@@ -486,7 +487,7 @@ class BaseMode(object):
         if self.enable_win32_clipboard:
                 txt=clipboard.get_clipboard_text_and_convert(False)
                 txt=txt.split("\n")[0].strip("\r").strip("\n")
-                log("paste: >%s<"%map(ord,txt))
+                log("paste: >%s<"%list(map(ord,txt)))
                 self.insert_text(txt)
         self.finalize()
 
