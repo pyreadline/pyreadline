@@ -50,7 +50,7 @@ def make_list_of_list(txt):
     flag = False
     for rad in [x for x in txt.split("\r\n") if x != ""]:
         raden=[make_num(x) for x in rad.split("\t")]
-        if str in map(type,raden):
+        if str in list(map(type,raden)):
             flag = True
         ut.append(raden)
     return ut, flag
