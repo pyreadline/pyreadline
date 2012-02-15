@@ -2,3 +2,4 @@ build
 dist
 pyreadline.egg-info/
 __pycache__/
+*.bak
