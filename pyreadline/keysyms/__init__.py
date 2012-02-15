@@ -8,15 +8,15 @@ from . import winconstants
 
 if in_ironpython:
     try:
-        from ironpython_keysyms import *
+        from .ironpython_keysyms import *
         success = True
-    except ImportError, x:
+    except ImportError as x:
         raise
 else:
     try:
         from .keysyms import *
         success = True
-    except ImportError, x:
+    except ImportError as x:
         pass
     
 if not success:

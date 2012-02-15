@@ -8,7 +8,7 @@
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
 import System
-from common import validkey, KeyPress, make_KeyPress_from_keydescr
+from .common import validkey, KeyPress, make_KeyPress_from_keydescr
 
 c32 = System.ConsoleKey
 Shift = System.ConsoleModifiers.Shift
@@ -105,7 +105,7 @@ def make_keysym(keycode):
     return sym
 
 sym2code_map = {}
-for code,sym in code2sym_map.iteritems():
+for code,sym in code2sym_map.items():
     sym2code_map[sym.lower()] = code
 
 def key_text_to_keyinfo(keytext):
@@ -120,7 +120,7 @@ def char_to_keyinfo(char, control=False, meta=False, shift=False):
     vk = (ord(char))
     if vk & 0xffff == 0xffff:
         print('VkKeyScan("%s") = %x' % (char, vk))
-        raise ValueError, 'bad key'
+        raise ValueError('bad key')
     if vk & 0x100:
         shift = True
     if vk & 0x200:
