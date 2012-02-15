@@ -9,14 +9,18 @@ if sys.version_info[0] >= 3:
     
     def execfile(fname, glob, loc=None):
         loc = loc if (loc is not None) else glob
-        exec(compile(open(fname).read(), fname, 'exec'), glob, loc)
+        with open(fname) as fil:
+            txt = fil.read()
+        exec(compile(txt, fname, 'exec'), glob, loc)
 
     unicode = str
     bytes = bytes
-
+    from io import StringIO
 else:
     PY3 = False
     callable = callable
     execfile = execfile
     bytes = str
     unicode = unicode
+    
+    from StringIO import StringIO
