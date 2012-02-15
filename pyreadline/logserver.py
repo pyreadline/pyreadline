@@ -6,17 +6,16 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
-import cPickle
+
 import logging
 import logging.handlers
-import SocketServer
 import struct, socket
-
+from .unicode_helper import ensure_unicode
 try:
     import msvcrt
 except ImportError:
     msvcrt = None
-    print "problem"
+    print("problem")
 
 
 port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
@@ -26,8 +25,8 @@ def check_key():
     if msvcrt is None:
         return False
     else:
-        if msvcrt.kbhit() != 0:
-            q = msvcrt.getch()
+        if msvcrt.kbhit():
+            q = ensure_unicode(msvcrt.getch())
             return q
     return ""
 
@@ -35,9 +34,9 @@ def check_key():
 singleline=False
 
 def main():
-    print "Starting TCP logserver on port:", port
-    print "Press q to quit logserver", port
-    print "Press c to clear screen", port
+    print("Starting TCP logserver on port:", port)
+    print("Press q to quit logserver", port)
+    print("Press c to clear screen", port)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     s.bind(("", port))
@@ -45,14 +44,14 @@ def main():
     while 1:
         try:
             data, addr = s.recvfrom(100000)
-            print data,
+            print(data, end="")
         except socket.timeout:
             key = check_key().lower()
             if "q" == key:
-                print "Quitting logserver"
+                print("Quitting logserver")
                 break
             elif "c" == key:
-                print "\n" * 100            
+                print("\n" * 100)  
 
 if __name__ == "__main__":
     main()

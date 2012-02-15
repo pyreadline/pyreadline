@@ -1,7 +1,8 @@
 from __future__ import print_function, unicode_literals, absolute_import
 import sys, textwrap
+from .py3k_compat import callable
 
-rlmain = sys.modules["pyreadline.rlmain"]
+rlmain = sys.modules["readline"]
 rl = rlmain.rl
 
 def get_doc(rl):

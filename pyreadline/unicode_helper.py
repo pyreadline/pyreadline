@@ -5,8 +5,9 @@
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
-from __future__ import print_function, unicode_literals, absolute_import
 import sys
+
+from .py3k_compat import unicode, bytes
 
 try:
     pyreadline_codepage = sys.stdout.encoding
@@ -31,6 +32,7 @@ def ensure_unicode(text):
         except (LookupError, TypeError):
             return text.decode("ascii", "replace")
     return text
+
 
 def ensure_str(text):
     """Convert unicode to str using pyreadline_codepage"""

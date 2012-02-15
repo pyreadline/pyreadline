@@ -12,6 +12,7 @@ import sys,os,re,time
 from glob import glob
 
 from . import release
+from .py3k_compat import callable, execfile
 
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
@@ -404,7 +405,7 @@ class BaseReadline(object):
         if os.path.isfile(inputrcpath): 
             try:
                 execfile(inputrcpath, loc, loc)
-            except Exception,x:
+            except Exception as x:
                 raise
                 import traceback
                 print("Error reading .pyinputrc", file=sys.stderr)
