@@ -60,7 +60,7 @@ MENU_EVENT = 0x0008
 VK_SHIFT = 0x10
 VK_CONTROL = 0x11
 VK_MENU = 0x12
-GENERIC_READ = int(0x80000000L)
+GENERIC_READ = int(0x80000000)
 GENERIC_WRITE = 0x40000000
 
 # Windows structures we'll need later
@@ -356,8 +356,8 @@ class Console(object):
         n, res= self.ansiwriter.write_color(text, attr)
         junk = DWORD(0)
         for attr,chunk in res:
-            log("console.attr:%s"%unicode(attr))
-            log("console.chunk:%s"%unicode(chunk))
+            log("console.attr:%s"%(attr))
+            log("console.chunk:%s"%(chunk))
             self.SetConsoleTextAttribute(self.hout, attr.winattr)
             for short_chunk in split_block(chunk):
                 self.WriteConsoleW(self.hout, short_chunk, 
@@ -379,7 +379,7 @@ class Console(object):
 
     #This function must be used to ensure functioning with EMACS
     #Emacs sets the EMACS environment variable
-    if os.environ.has_key("EMACS"):
+    if "EMACS" in os.environ:
         def write_color(self, text, attr=None):
             text = ensure_str(text)
             junk = DWORD(0)
@@ -767,7 +767,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
         res = ensure_str(readline_hook(prompt))
         # make sure it returned the right sort of thing
         if res and not isinstance(res, bytes):
-            raise TypeError, 'readline must return a string.'
+            raise TypeError('readline must return a string.')
     except KeyboardInterrupt:
         # GNU readline returns 0 on keyboard interrupt
         return 0
@@ -791,7 +791,7 @@ def hook_wrapper(prompt):
         res = ensure_str(readline_hook(prompt))
         # make sure it returned the right sort of thing
         if res and not isinstance(res, bytes):
-            raise TypeError, 'readline must return a string.'
+            raise TypeError('readline must return a string.')
     except KeyboardInterrupt:
         # GNU readline returns 0 on keyboard interrupt
         return 0

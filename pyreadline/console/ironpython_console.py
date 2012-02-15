@@ -36,7 +36,7 @@ import os
 
 import System
 
-from event import Event
+from .event import Event
 from pyreadline.logger import log
 
 from pyreadline.keysyms import \
@@ -233,7 +233,7 @@ class Console(object):
         self.WriteConsoleA(self.hout, text, len(text), byref(n), None)
         return len(text)
         
-    if os.environ.has_key("EMACS"):
+    if "EMACS" in os.environ:
         def write_color(self, text, attr=None):
             junk = c_int(0)
             self.WriteFile(self.hout, text, len(text), byref(junk), None)
@@ -386,7 +386,7 @@ def install_readline(hook):
     def hook_wrap():
         try:
             res = hook()
-        except KeyboardInterrupt,x:   #this exception does not seem to be caught
+        except KeyboardInterrupt as x:   #this exception does not seem to be caught
             res = ""
         except EOFError:
             return None
