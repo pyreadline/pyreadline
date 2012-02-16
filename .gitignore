@@ -3,3 +3,4 @@ dist
 pyreadline.egg-info/
 __pycache__/
 *.bak
+MANIFEST

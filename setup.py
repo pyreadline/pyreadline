@@ -11,29 +11,12 @@
 import os
 import sys
 import glob
+from distutils.core import setup
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 #
-
-extra = {}
-_distribute = False
-
-try:
-    import setuptools
-    setup = setuptools.setup
-    _distribute = getattr(setuptools, '_distribute', False)
-except ImportError:
-    from distutils.core import setup
-
-if sys.version_info >= (3, 0):
-    if _distribute == False:
-        raise RuntimeError('You must installed `distribute` to setup pyreadline with Python3')
-
-    extra.update(
-        use_2to3=True
-    )
 
 exec(compile(open('pyreadline/release.py').read(), 'pyreadline/release.py', 'exec'))
 
@@ -67,7 +50,6 @@ setup(name=name,
       packages         = packages,
       package_data     = {'pyreadline':['configuration/*']},
       data_files       = [],
-      cmdclass = cmd_class,
-      **extra
+      cmdclass = cmd_class
       )
 
