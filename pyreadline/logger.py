@@ -17,7 +17,7 @@ port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
 pyreadline_logger = logging.getLogger('PYREADLINE')
 pyreadline_logger.setLevel(logging.DEBUG)
 pyreadline_logger.propagate = False
-formatter = logging.Formatter('%(message)s')
+formatter = logging.Formatter(str('%(message)s'))
 file_handler = None
 
 class NULLHandler(logging.Handler):
