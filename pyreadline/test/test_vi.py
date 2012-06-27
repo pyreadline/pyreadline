@@ -7,7 +7,7 @@
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
 
-import sys, unittest,pdb
+import sys, unittest
 sys.path.insert(0, '../..')
 from pyreadline.modes.vi import *
 from pyreadline import keysyms

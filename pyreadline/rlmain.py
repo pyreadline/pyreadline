@@ -32,7 +32,6 @@ if in_ironpython:#ironpython does not provide a prompt string to readline
     default_prompt = ">>> "
 else:
     default_prompt = ""
-    import pdb
 
 
 class MockConsoleError(Exception):

@@ -249,7 +249,6 @@ class LineHistory(object):
         return q
 
 if __name__ == "__main__":
-    import pdb
     q = LineHistory()
     r = LineHistory()
     s = LineHistory()

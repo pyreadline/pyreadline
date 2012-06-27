@@ -9,7 +9,6 @@
 from __future__ import print_function, unicode_literals, absolute_import
 
 import sys, unittest
-import pdb
 sys.path.insert(0, '../..')
 from pyreadline.modes.emacs import *
 from pyreadline import keysyms
