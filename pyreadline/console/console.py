@@ -293,7 +293,7 @@ class Console(object):
 
     # This pattern should match all characters that change the cursor position differently
     # than a normal character.
-    motion_char_re = re.compile('([\n\r\t\010\007])'.encode('ascii'))
+    motion_char_re = re.compile('([\n\r\t\010\007])')
 
     def write_scrolling(self, text, attr=None):
         '''write text at current cursor position while watching for scrolling.
@@ -309,11 +309,12 @@ class Console(object):
         returns the number of lines that the buffer scrolled.
 
         '''
+        text = ensure_unicode(text)
         x, y = self.pos()
         w, h = self.size()
         scroll = 0 # the result
         # split the string into ordinary characters and funny characters
-        chunks = self.motion_char_re.split(ensure_str(text))
+        chunks = self.motion_char_re.split(text)
         for chunk in chunks:
             n = self.write_color(chunk, attr)
             if len(chunk) == 1: # the funny characters will be alone
