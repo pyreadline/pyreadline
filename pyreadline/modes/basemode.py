@@ -31,7 +31,7 @@ class BaseMode(object):
         self.l_buffer=lineobj.ReadLineTextBuffer("")
         self._history=history.LineHistory()
         self.completer_delims = " \t\n\"\\'`@$><=;|&{("
-        self.show_all_if_ambiguous = 'off'
+        self.show_all_if_ambiguous = 'on'
         self.mark_directories = 'on'
         self.complete_filesystem = 'off'
         self.completer = None
