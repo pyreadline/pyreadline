@@ -65,6 +65,7 @@ class ViMode(basemode.BaseMode):
         self._vi_undo_cursor = -1
         self._vi_current = None
         self._vi_search_text = ''
+        self._vi_search_position = 0
         self.vi_save_line ()
         self.vi_set_insert_mode (True)
         # make ' ' to ~ self insert
@@ -148,6 +149,8 @@ class ViMode(basemode.BaseMode):
         self._vi_undo_stack = []
         self._vi_undo_cursor = -1
         self._vi_current = None
+        if self.l_buffer.line_buffer:
+            self.add_history(self.l_buffer.copy())
         return self.accept_line (e)
 
     def vi_eof (self, e):
@@ -214,6 +217,7 @@ class ViMode(basemode.BaseMode):
             line_history = self._history.history [i]
             pos = line_history.get_line_text().find (self._vi_search_text)
             if pos >= 0:
+                self._vi_search_position = i
                 self._history.history_cursor = i
                 self.l_buffer.line_buffer = list (line_history.line_buffer)
                 self.l_buffer.point = pos
@@ -226,22 +230,22 @@ class ViMode(basemode.BaseMode):
         text = ''.join (self.l_buffer.line_buffer [1:])
         if text:
             self._vi_search_text = text
-            position = len (self._history.history) - 1
+            self._vi_search_position = len (self._history.history) - 1
         elif self._vi_search_text:
-            position = self._history.history_cursor - 1
+            self._vi_search_position -= 1
         else:
             self.vi_error ()
             self.vi_undo ()
             return
-        if not self.vi_search (list(range(position, -1, -1))):
+        if not self.vi_search (list(range(self._vi_search_position, -1, -1))):
             # Here: search text not found
             self.vi_undo ()
 
     def vi_search_again_backward (self):
-        self.vi_search (list(range(self._history.history_cursor-1, -1, -1)))
+        self.vi_search (list(range(self._vi_search_position-1, -1, -1)))
 
     def vi_search_again_forward (self):
-        self.vi_search (list(range(self._history.history_cursor+1, len(self._history.history))))
+        self.vi_search (list(range(self._vi_search_position+1, len(self._history.history))))
 
     def vi_up (self, e):
         if self._history.history_cursor == len(self._history.history):

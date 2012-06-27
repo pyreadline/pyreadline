@@ -135,6 +135,18 @@ class Tests (unittest.TestCase):
         r.input ('"^"')
         self.assertEqual (0, r.line_cursor)
 
+    def test_history_add (self):
+        r = ViModeTest ()
+        r.input ('"abc"')
+        r.input ('Return')
+        r.input ('"def"')
+        r.input ('Return')
+        r.input ('Escape')
+        r.input ('"k"')
+        self.assertEqual ('def', r.line)
+        r.input ('"k"')
+        self.assertEqual ('abc', r.line)
+
     def test_history_alpha (self):
         r = ViModeTest ()
         r.add_history ('abc')
