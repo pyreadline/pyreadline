@@ -10,7 +10,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 import logging
 import logging.handlers
 import struct, socket
-from .unicode_helper import ensure_unicode
+from pyreadline.unicode_helper import ensure_unicode
 try:
     import msvcrt
 except ImportError:
