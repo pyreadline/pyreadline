@@ -11,25 +11,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 '''Cursor control and color for the .NET console.
 '''
 
-#
-# Ironpython requires a patch to work do:
-#
-# In file PythonCommandLine.cs patch line:     
-#    class PythonCommandLine
-#    {
-
-# to:
-#    public class PythonCommandLine
-#    {
-#
-#
-#
-# primitive debug printing that won't interfere with the screen
-
-import clr,sys
-clr.AddReferenceToFileAndPath(sys.executable)
-import IronPythonConsole
-
+import clr
 import sys
 import re
 import os
@@ -83,7 +65,7 @@ class Console(object):
         on exit.
         '''
         self.serial = 0
-        self.attr = System.Console.ForegroundColor
+        self.attr = int(System.Console.ForegroundColor)
         self.saveattr = winattr[str(System.Console.ForegroundColor).lower()]
         self.savebg = System.Console.BackgroundColor
         log('initial attr=%s' % self.attr)
@@ -383,27 +365,9 @@ def make_event_from_keydescr(keydescr):
 CTRL_C_EVENT=make_event_from_keydescr("Control-c")
 
 def install_readline(hook):
-    def hook_wrap():
-        try:
-            res = hook()
-        except KeyboardInterrupt as x:   #this exception does not seem to be caught
-            res = ""
-        except EOFError:
-            return None
-        if res[-1:] == "\n":
-            return res[:-1]
-        else:
-            return res
-    class IronPythonWrapper(IronPythonConsole.IConsole):
-        def ReadLine(self, autoIndentSize): 
-            return hook_wrap()
-        def Write(self, text, style):
-            System.Console.Write(text)
-        def WriteLine(self, text, style): 
-            System.Console.WriteLine(text)
-    IronPythonConsole.PythonCommandLine.MyConsole = IronPythonWrapper()
-
-
+    # ironpython recognizes itself presence of readline module
+    # and redirects raw_input to readline
+    pass
 
 if __name__ == '__main__':
     import time, sys
@@ -420,7 +384,8 @@ if __name__ == '__main__':
     print('  some printed output')
     for i in range(10):
         e = c.getkeypress()
-        print(e.Key, chr(e.KeyChar), ord(e.KeyChar), e.Modifiers)
+        print(type(e))
+        print(e.keycode, e.char, ord(e.char), e.state)
     del c
 
     System.Console.Clear()

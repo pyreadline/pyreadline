@@ -293,7 +293,7 @@ class Console(object):
 
     # This pattern should match all characters that change the cursor position differently
     # than a normal character.
-    motion_char_re = re.compile('([\n\r\t\010\007])')
+    motion_char_re = re.compile('([\n\r\t\010\007])'.encode('ascii'))
 
     def write_scrolling(self, text, attr=None):
         '''write text at current cursor position while watching for scrolling.
