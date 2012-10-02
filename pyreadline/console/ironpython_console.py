@@ -65,7 +65,7 @@ class Console(object):
         on exit.
         '''
         self.serial = 0
-        self.attr = int(System.Console.ForegroundColor)
+        self.attr = System.Console.ForegroundColor
         self.saveattr = winattr[str(System.Console.ForegroundColor).lower()]
         self.savebg = System.Console.BackgroundColor
         log('initial attr=%s' % self.attr)
@@ -184,25 +184,28 @@ class Console(object):
         log('write_color("%s", %s)' % (text, attr))
         chunks = self.terminal_escape.split(text)
         log('chunks=%s' % repr(chunks))
-        bg = self.savebg
         n = 0 # count the characters we actually write, omitting the escapes
-        if attr is None:#use attribute from initial console
+        bg = self.savebg
+        if attr is None: #use attribute from initial console
             attr = self.attr
-        try:
-            fg = self.trtable[(0x000f&attr)]
-            bg = self.trtable[(0x00f0&attr)>>4]
-        except TypeError:
-            fg = attr
+        fg = attr
             
         for chunk in chunks:
             m = self.escape_parts.match(chunk)
             if m:
-                log(m.group(1))
-                attr = ansicolor.get(m.group(1), self.attr)
-            n += len(chunk)
-            System.Console.ForegroundColor = fg
-            System.Console.BackgroundColor = bg
-            System.Console.Write(chunk)
+                code=m.group(1)
+                if code=="0":
+                    log("terminal reset")
+                    fg = self.attr
+                    bg = self.savebg
+                else:
+                    log("ipy match group %s"%code)
+                    fg = ansicolor.get(code, self.attr)
+            else:
+                n += len(chunk)
+                System.Console.ForegroundColor = fg
+                System.Console.BackgroundColor = bg
+                System.Console.Write(chunk)
         return n
 
     def write_plain(self, text, attr=None):
