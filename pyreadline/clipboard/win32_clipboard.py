@@ -34,7 +34,7 @@
 from __future__ import print_function, unicode_literals, absolute_import
 
 from ctypes import *
-from pyreadline.keysyms.winconstants import CF_TEXT, GHND
+from pyreadline.keysyms.winconstants import CF_UNICODETEXT, GHND
 from pyreadline.unicode_helper import ensure_unicode,ensure_str
 
 OpenClipboard = windll.user32.OpenClipboard
@@ -83,16 +83,16 @@ def getformatname(format):
 def GetClipboardText():
     text = ""
     if OpenClipboard(0):
-        hClipMem = GetClipboardData(CF_TEXT)
+        hClipMem = GetClipboardData(CF_UNICODETEXT)
         if hClipMem:        
-            GlobalLock.restype = c_char_p
+            GlobalLock.restype = c_wchar_p
             text = GlobalLock(hClipMem)
             GlobalUnlock(hClipMem)
         CloseClipboard()
     return ensure_unicode(text)
 
 def SetClipboardText(text):
-    buffer = c_buffer(ensure_str(text))
+    buffer = create_unicode_buffer(ensure_unicode(text))
     bufferSize = sizeof(buffer)
     hGlobalMem = GlobalAlloc(c_int(GHND), c_int(bufferSize))
     GlobalLock.restype = c_void_p
@@ -101,7 +101,7 @@ def SetClipboardText(text):
     GlobalUnlock(c_int(hGlobalMem))
     if OpenClipboard(0):
         EmptyClipboard()
-        SetClipboardData(c_int(CF_TEXT), c_int(hGlobalMem))
+        SetClipboardData(c_int(CF_UNICODETEXT), c_int(hGlobalMem))
         CloseClipboard()
 
 if __name__ == '__main__':
