@@ -21,7 +21,7 @@ import pyreadline.console as console
 import pyreadline.logger as logger 
 
 from pyreadline.keysyms.common import make_KeyPress_from_keydescr
-from pyreadline.unicode_helper import ensure_unicode
+from pyreadline.unicode_helper import ensure_unicode, ensure_str
 from .logger import log
 from .modes import editingmodes
 from .error import ReadlineError, GetSetError
@@ -278,7 +278,7 @@ class BaseReadline(object):
             self.callback(line)
 
     def read_inputrc(self, #in 2.4 we cannot call expanduser with unicode string
-                     inputrcpath=os.path.expanduser("~/pyreadlineconfig.ini")):
+                     inputrcpath=os.path.expanduser(ensure_str("~/pyreadlineconfig.ini"))):
         modes = dict([(x.mode,x) for x in self.editingmodes])
         mode = self.editingmodes[0].mode
 
@@ -312,7 +312,7 @@ class BaseReadline(object):
             pyreadline.lineeditor.lineobj.kill_ring_to_clipboard = killring
 
         def sethistoryfilename(filename):
-            self.mode._history.history_filename=os.path.expanduser(filename)
+            self.mode._history.history_filename = os.path.expanduser(ensure_str(filename))
 
         def setbellstyle(mode):
             self.bell_style = mode

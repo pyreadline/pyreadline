@@ -11,18 +11,7 @@ like python library can also be useful when implementing commandline like
 interfaces in GUIs. The use of pyreadline for anything but the windows 
 console is still under development.
 
-The pyreadline module support also Python 3.x.
-
-Version 1.7 will be the last release with compatibility with 2.4 and 2.5. The next
-major release will target 2.6, 2.7 and 3.x. The 1.7 series will only receive bugfixes
-from now on.
-
-
-Dependencies
-------------
-
-    * ctypes
-
+The pyreadline module supports Python versions 2.6, 2.7, and >3.2.
 
 Conflicts
 ---------
