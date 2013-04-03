@@ -10,17 +10,17 @@ Current release version
 -----------------------
 
 Get the installer for the current installer at
-https://launchpad.net/pyreadline/+download.
+https://pypi.python.org/pypi/pyreadline/
 
 Follow the instructions for configuration below.
 
 Development version
 -------------------
 
-The devopment is hosted at https://launchpad.net/pyreadline
+The devopment is hosted at https://github.com/pyreadline/pyreadline
 
-The current trunk version can be pulled with bzr, :command:`bzr branch
-lp:pyreadline`.
+The current trunk version can be cloned with git, :command:`git clone
+https://github.com/pyreadline/pyreadline.git`.
 
 Install with the usual :command:`python setup.py install` from the pyreadline
 folder.

@@ -127,8 +127,9 @@ swedish systems). This means the filenames containing internationl characters
 entered on interactive prompt will not work. The workaround here is to change
 the codepage of your terminal to a more suitable one using the :command:`chcp`
 command. For swedish systems :command:`chcp 1252` does the trick but you also
-have to change the terminal font to `lucida console` using the properties
-dialog for the console.
+have to change the terminal font to a font compatible with the wanted code page
+in the case of a swedish system that would be e.g. `lucida console`, or
+`consolas` using the properties dialog for the console.
 
 
 

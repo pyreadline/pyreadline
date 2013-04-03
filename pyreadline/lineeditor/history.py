@@ -27,7 +27,7 @@ class LineHistory(object):
         self.history = []
         self._history_length = 100
         self._history_cursor = 0
-        self.history_filename = os.path.expanduser('~/.history') #Cannot expand unicode strings correctly on python2.4
+        self.history_filename = os.path.expanduser(ensure_str('~/.history')) #Cannot expand unicode strings correctly on python2.4
         self.lastcommand = None
         self.query = ""
         self.last_search_for = ""

@@ -5,7 +5,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 $Id$"""
 
 #*****************************************************************************
-#       Copyright (C) 2006  Jorgen Stenarson. <jorgen.stenarson@bostream.nu>
+#       Copyright (C) 2006  Jorgen Stenarson. <jorgen.stenarson@kroywen.se>
 #
 #
 #  Distributed under the terms of the BSD License.  The full license is in
@@ -23,9 +23,7 @@ name = 'pyreadline'
 
 branch = ''
 
-version = '2.0-dev1'
-
-revision = '$Revision$'
+version = '2.0'
 
 description = "A python implmementation of GNU readline."
 
@@ -51,20 +49,18 @@ Features:
  The latest development version is always available at the IPython subversion
  repository_.
 
-.. _repository:
+.. _repository: https://github.com/pyreadline/pyreadline.git
  """
 
 license = 'BSD'
 
-authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@bostream.nu'),
+authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@kroywen.se'),
            'Gary':    ('Gary Bishop', ''),         
            'Jack':    ('Jack Trainor', ''),         
            }
 
 url = 'http://http://ipython.org/pyreadline.html'
-
-download_url = 'https://launchpad.net/pyreadline/+download'
-
+download_url = 'https://pypi.python.org/pypi/pyreadline/'
 platforms = ['Windows XP/2000/NT',
              'Windows 95/98/ME']
 
@@ -78,4 +74,5 @@ classifiers = ['Development Status :: 5 - Production/Stable',
                'Programming Language :: Python :: 2.6',
                'Programming Language :: Python :: 2.7',
                'Programming Language :: Python :: 3.2',
+               'Programming Language :: Python :: 3.3',
                ]
