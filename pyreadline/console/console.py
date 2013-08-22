@@ -217,8 +217,10 @@ class Console(object):
         self.softspace = 0 # this is for using it as a file-like object
         self.serial = 0
 
+        # set dll_suffix to '_d' in case of debug python build
+        dll_suffix = '_d' if hasattr(sys, 'gettotalrefcount') else ''
         self.pythondll = \
-            CDLL('python%s%s' % (sys.version[0], sys.version[2]))
+            CDLL('python%s%s%s' % (sys.version[0], sys.version[2], dll_suffix))
         self.pythondll.PyMem_Malloc.restype = c_size_t
         self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
         self.inputHookPtr = \
