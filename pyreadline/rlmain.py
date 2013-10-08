@@ -157,6 +157,14 @@ class BaseReadline(object):
         '''Clear readline history'''
         self.mode._history.clear_history()
 
+    def replace_history_item(self, index, line):
+        '''Replace the history item at index with line.'''
+        self.mode._history.replace_history_item(index, line)
+
+    def remove_history_item(self, index):
+        '''Remove the history item located at index.'''
+        self.mode._history.remove_history_item(index)
+
     def read_history_file(self, filename=None): 
         '''Load a readline history file. The default filename is ~/.history.'''
         if filename is None:

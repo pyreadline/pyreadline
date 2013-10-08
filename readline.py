@@ -27,7 +27,9 @@ __all__ = [ 'parse_and_bind',
             'add_history',
             'callback_handler_install',
             'callback_handler_remove',
-            'callback_read_char',] #Some other objects are added below
+            'callback_read_char',
+            'replace_history_item',
+            'remove_history_item',] #Some other objects are added below
 
 
 # create a Readline object to contain the state
@@ -55,6 +57,9 @@ else:
 
     write_history_file = rl.write_history_file
     read_history_file = rl.read_history_file
+
+    replace_history_item = rl.replace_history_item
+    remove_history_item = rl.remove_history_item
 
     get_completer_delims = rl.get_completer_delims
     get_current_history_length = rl.get_current_history_length

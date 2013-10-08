@@ -95,6 +95,18 @@ class LineHistory(object):
             fp.write('\n'.encode('ascii'))
         fp.close()
 
+    def replace_history_item(self, index, item):
+        '''Replace the item at index with item.'''
+        if index > len(self.history):
+            raise IndexError("history index out of range")
+
+        self.history[index - 1] = item
+
+    def remove_history_item(self, index):
+        '''Remove history item at index.'''
+        if index > len(self.history):
+            raise IndexError("history index out of range")
+        del self.history[index - 1]
 
     def add_history(self, line):
         '''Append a line to the history buffer, as if it was the last line typed.'''
