@@ -1,4 +1,11 @@
 ==========
+Missing readline methods
+==========
+
+This fork adds two missing readline methods: ``replace_history_item(index, item)``
+and ``remove_history_item(index)``. Below is the original readme for the project.
+
+==========
 pyreadline
 ==========
 
