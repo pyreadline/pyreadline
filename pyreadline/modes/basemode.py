@@ -200,6 +200,8 @@ class BaseMode(object):
                     r = self.completer(ensure_unicode(text), i)
                 except IndexError:
                     break
+                except TypeError:
+                    break
                 i += 1
                 if r is None:
                     break
