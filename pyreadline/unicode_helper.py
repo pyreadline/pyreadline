@@ -29,7 +29,7 @@ def ensure_unicode(text):
     if isinstance(text, bytes):
         try:
             return text.decode(pyreadline_codepage, "replace")
-        except (LookupError, TypeError):
+        except (LookupError, TypeError, UnicodeEncodeError):
             return text.decode("ascii", "replace")
     return text
 

@@ -23,7 +23,7 @@ name = 'pyreadline'
 
 branch = ''
 
-version = '2.0-ameily'
+version = '2.0-0.1'
 
 description = "A python implmementation of GNU readline."
 
