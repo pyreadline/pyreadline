@@ -30,7 +30,8 @@ __all__ = [ 'parse_and_bind',
             'callback_read_char',
             'replace_history_item',
             'remove_history_item',
-            'parse_history_from_string',] #Some other objects are added below
+            'parse_history_from_string',
+            'write_history_file_overwrite',] #Some other objects are added below
 
 
 # create a Readline object to contain the state
@@ -57,6 +58,7 @@ else:
     insert_text = rl.insert_text
 
     write_history_file = rl.write_history_file
+    write_history_file_overwrite = rl.write_history_file_overwrite
     read_history_file = rl.read_history_file
 
     replace_history_item = rl.replace_history_item

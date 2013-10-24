@@ -101,7 +101,7 @@ class LineHistory(object):
         for line in self.history[-self.history_length:]:
             fp.write(ensure_str(line.get_line_text()))
             fp.write('\n'.encode('ascii'))
-        fp.close()
+        fp.close()        
 
     def replace_history_item(self, index, item):
         '''Replace the item at index with item.'''
