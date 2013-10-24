@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 #this file is needed in site-packages to emulate readline
 #necessary for rlcompleter since it relies on the existance
 #of a readline module
@@ -29,7 +29,8 @@ __all__ = [ 'parse_and_bind',
             'callback_handler_remove',
             'callback_read_char',
             'replace_history_item',
-            'remove_history_item',] #Some other objects are added below
+            'remove_history_item',
+            'parse_history_from_string',] #Some other objects are added below
 
 
 # create a Readline object to contain the state

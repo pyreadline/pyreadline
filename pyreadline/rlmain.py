@@ -165,6 +165,11 @@ class BaseReadline(object):
         '''Remove the history item located at index.'''
         self.mode._history.remove_history_item(index)
 
+    def parse_history_from_string(self, string):
+        '''Create a readline history from a string.
+        Each history item is separated by a newline character (\n)'''
+        self.mode._history.parse_history_from_string(ensure_unicode(string))
+
     def read_history_file(self, filename=None): 
         '''Load a readline history file. The default filename is ~/.history.'''
         if filename is None:

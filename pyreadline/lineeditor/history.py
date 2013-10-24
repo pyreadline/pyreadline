@@ -74,6 +74,14 @@ class LineHistory(object):
         self.history[:] = []
         self.history_cursor = 0
 
+    def parse_history_from_string(self, string=None):
+        '''Create a readline history from a string.
+        Each history item must be separated by a newline character (\n)'''
+        if not string:
+            return
+        for line in string.split("\n"):
+            self.add_history(ensure_unicode(line.rstrip))
+
     def read_history_file(self, filename=None): 
         '''Load a readline history file.'''
         if filename is None:
