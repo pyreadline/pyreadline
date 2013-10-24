@@ -80,7 +80,7 @@ class LineHistory(object):
         if not string:
             return
         for line in string.split("\n"):
-            self.add_history(ensure_unicode(line.rstrip))
+            self.add_history(ensure_unicode(line.rstrip()))
 
     def read_history_file(self, filename=None): 
         '''Load a readline history file.'''
