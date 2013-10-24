@@ -61,6 +61,7 @@ else:
 
     replace_history_item = rl.replace_history_item
     remove_history_item = rl.remove_history_item
+    parse_history_from_string = rl.parse_history_from_string
 
     get_completer_delims = rl.get_completer_delims
     get_current_history_length = rl.get_current_history_length
