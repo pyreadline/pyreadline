@@ -23,7 +23,7 @@ name = 'pyreadline'
 
 branch = ''
 
-version = '2.0-0.1'
+version = '2.0-AIS-0.1'
 
 description = "A python implmementation of GNU readline."
 
@@ -57,6 +57,8 @@ license = 'BSD'
 authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@kroywen.se'),
            'Gary':    ('Gary Bishop', ''),
            'Jack':    ('Jack Trainor', ''),
+           'Jonathan':('Jonathan Einstoss','einstossj@ainfosec.com'),
+           'Adam':    ('Adam Meily','meilya@ainfosec.com'),
            }
 
 url = 'http://ipython.org/pyreadline.html'
