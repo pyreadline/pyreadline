@@ -115,6 +115,10 @@ class LineHistory(object):
         if index > len(self.history):
             raise IndexError("history index out of range")
         del self.history[index - 1]
+        if self._history_cursor >= len(self.history):
+            self._history_cursor = len(self.history)
+        elif self._history_cursor >= index:
+            self._history_cursor -= 1
 
     def add_history(self, line):
         '''Append a line to the history buffer, as if it was the last line typed.'''
