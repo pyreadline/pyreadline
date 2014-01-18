@@ -130,6 +130,9 @@ class Console(object):
         w, h = self.size()
         scroll = 0 # the result
 
+        if isinstance(text, bytes):
+            text = text.decode('iso-8859-1')
+
         # split the string into ordinary characters and funny characters
         chunks = self.motion_char_re.split(text)
         for chunk in chunks:
