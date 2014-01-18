@@ -11,25 +11,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 '''Cursor control and color for the .NET console.
 '''
 
-#
-# Ironpython requires a patch to work do:
-#
-# In file PythonCommandLine.cs patch line:     
-#    class PythonCommandLine
-#    {
-
-# to:
-#    public class PythonCommandLine
-#    {
-#
-#
-#
-# primitive debug printing that won't interfere with the screen
-
-import clr,sys
-clr.AddReferenceToFileAndPath(sys.executable)
-import IronPythonConsole
-
+import clr
 import sys
 import re
 import os
@@ -148,6 +130,9 @@ class Console(object):
         w, h = self.size()
         scroll = 0 # the result
 
+        if isinstance(text, bytes):
+            text = text.decode('iso-8859-1')
+
         # split the string into ordinary characters and funny characters
         chunks = self.motion_char_re.split(text)
         for chunk in chunks:
@@ -202,25 +187,28 @@ class Console(object):
         log('write_color("%s", %s)' % (text, attr))
         chunks = self.terminal_escape.split(text)
         log('chunks=%s' % repr(chunks))
-        bg = self.savebg
         n = 0 # count the characters we actually write, omitting the escapes
-        if attr is None:#use attribute from initial console
+        bg = self.savebg
+        if attr is None: #use attribute from initial console
             attr = self.attr
-        try:
-            fg = self.trtable[(0x000f&attr)]
-            bg = self.trtable[(0x00f0&attr)>>4]
-        except TypeError:
-            fg = attr
+        fg = attr
             
         for chunk in chunks:
             m = self.escape_parts.match(chunk)
             if m:
-                log(m.group(1))
-                attr = ansicolor.get(m.group(1), self.attr)
-            n += len(chunk)
-            System.Console.ForegroundColor = fg
-            System.Console.BackgroundColor = bg
-            System.Console.Write(chunk)
+                code=m.group(1)
+                if code=="0":
+                    log("terminal reset")
+                    fg = self.attr
+                    bg = self.savebg
+                else:
+                    log("ipy match group %s"%code)
+                    fg = ansicolor.get(code, self.attr)
+            else:
+                n += len(chunk)
+                System.Console.ForegroundColor = fg
+                System.Console.BackgroundColor = bg
+                System.Console.Write(chunk)
         return n
 
     def write_plain(self, text, attr=None):
@@ -383,27 +371,9 @@ def make_event_from_keydescr(keydescr):
 CTRL_C_EVENT=make_event_from_keydescr("Control-c")
 
 def install_readline(hook):
-    def hook_wrap():
-        try:
-            res = hook()
-        except KeyboardInterrupt as x:   #this exception does not seem to be caught
-            res = ""
-        except EOFError:
-            return None
-        if res[-1:] == "\n":
-            return res[:-1]
-        else:
-            return res
-    class IronPythonWrapper(IronPythonConsole.IConsole):
-        def ReadLine(self, autoIndentSize): 
-            return hook_wrap()
-        def Write(self, text, style):
-            System.Console.Write(text)
-        def WriteLine(self, text, style): 
-            System.Console.WriteLine(text)
-    IronPythonConsole.PythonCommandLine.MyConsole = IronPythonWrapper()
-
-
+    # ironpython recognizes itself presence of readline module
+    # and redirects raw_input to readline
+    pass
 
 if __name__ == '__main__':
     import time, sys
@@ -420,7 +390,8 @@ if __name__ == '__main__':
     print('  some printed output')
     for i in range(10):
         e = c.getkeypress()
-        print(e.Key, chr(e.KeyChar), ord(e.KeyChar), e.Modifiers)
+        print(type(e))
+        print(e.keycode, e.char, ord(e.char), e.state)
     del c
 
     System.Console.Clear()
