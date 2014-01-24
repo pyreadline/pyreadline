@@ -21,9 +21,9 @@ name = 'pyreadline'
 # because bdist_rpm does not accept dashes (an RPM) convention, and
 # bdist_deb does not accept underscores (a Debian convention).
 
-branch = ''
+branch = 'ainfosec'
 
-version = '2.0-AIS-0.3'
+version = '2.0.3'
 
 description = "A python implmementation of GNU readline."
 
