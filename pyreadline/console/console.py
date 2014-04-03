@@ -60,59 +60,60 @@ MENU_EVENT = 0x0008
 VK_SHIFT = 0x10
 VK_CONTROL = 0x11
 VK_MENU = 0x12
-GENERIC_READ = int(0x80000000)
+GENERIC_READ = 0x80000000
 GENERIC_WRITE = 0x40000000
 
-# Windows structures we'll need later
-class COORD(Structure):
-    _fields_ = [("X", c_short),
-                ("Y", c_short)]
-
-class SMALL_RECT(Structure):
-    _fields_ = [("Left", c_short),
-                ("Top", c_short),
-                ("Right", c_short),
-                ("Bottom", c_short)]
+# Define Windows data types that we'll need later.  Where possible, use things
+# that are already defined in ctypes or ctypes.wintypes.  Also, use c_void_p
+# for pointer arguments instead of using POINTER() to define a new type so as
+# to be less restrictive.  Using POINTER() clashes with other projects that
+# make use of the kernel32 functions via ctypes since, when used with
+# .argtypes, it forces the new type for the particular argument.  Play nicely!
+COORD = _COORD
+CHAR = c_char
+FARPROC = c_void_p
+LPDWORD = c_void_p
+PSMALL_RECT = c_void_p
 
 class CONSOLE_SCREEN_BUFFER_INFO(Structure):
     _fields_ = [("dwSize", COORD),
                 ("dwCursorPosition", COORD),
-                ("wAttributes", c_short),
+                ("wAttributes", WORD),
                 ("srWindow", SMALL_RECT),
                 ("dwMaximumWindowSize", COORD)]
+PCONSOLE_SCREEN_BUFFER_INFO = c_void_p
 
 class CHAR_UNION(Union):
-    _fields_ = [("UnicodeChar", c_wchar),
-                ("AsciiChar", c_char)]
+    _fields_ = [("UnicodeChar", WCHAR),
+                ("AsciiChar", CHAR)]
 
 class CHAR_INFO(Structure):
     _fields_ = [("Char", CHAR_UNION),
-                ("Attributes", c_short)]
+                ("Attributes", WORD)]
+PCHAR_INFO = c_void_p
 
 class KEY_EVENT_RECORD(Structure):
-    _fields_ = [("bKeyDown", c_byte),
-                ("pad2", c_byte),
-                ('pad1', c_short),
-                ("wRepeatCount", c_short),
-                ("wVirtualKeyCode", c_short),
-                ("wVirtualScanCode", c_short),
+    _fields_ = [("bKeyDown", BOOL),
+                ("wRepeatCount", WORD),
+                ("wVirtualKeyCode", WORD),
+                ("wVirtualScanCode", WORD),
                 ("uChar", CHAR_UNION),
-                ("dwControlKeyState", c_int)]
+                ("dwControlKeyState", DWORD)]
 
 class MOUSE_EVENT_RECORD(Structure):
     _fields_ = [("dwMousePosition", COORD),
-                ("dwButtonState", c_int),
-                ("dwControlKeyState", c_int),
-                ("dwEventFlags", c_int)]
+                ("dwButtonState", DWORD),
+                ("dwControlKeyState", DWORD),
+                ("dwEventFlags", DWORD)]
 
 class WINDOW_BUFFER_SIZE_RECORD(Structure):
     _fields_ = [("dwSize", COORD)]
 
 class MENU_EVENT_RECORD(Structure):
-    _fields_ = [("dwCommandId", c_uint)]
+    _fields_ = [("dwCommandId", UINT)]
 
 class FOCUS_EVENT_RECORD(Structure):
-    _fields_ = [("bSetFocus", c_byte)]
+    _fields_ = [("bSetFocus", BOOL)]
 
 class INPUT_UNION(Union):
     _fields_ = [("KeyEvent", KEY_EVENT_RECORD),
@@ -122,44 +123,90 @@ class INPUT_UNION(Union):
                 ("FocusEvent", FOCUS_EVENT_RECORD)]
 
 class INPUT_RECORD(Structure):
-    _fields_ = [("EventType", c_short),
+    _fields_ = [("EventType", WORD),
                 ("Event", INPUT_UNION)]
+PINPUT_RECORD = c_void_p
 
 class CONSOLE_CURSOR_INFO(Structure):
-    _fields_ = [("dwSize", c_int),
-                ("bVisible", c_byte)]
+    _fields_ = [("dwSize", DWORD),
+                ("bVisible", BOOL)]
+PCONSOLE_CURSOR_INFO = c_void_p
 
+_L = locals()
+for func in '''
+        CreateConsoleScreenBuffer
+        FillConsoleOutputAttribute
+        FillConsoleOutputCharacterW
+        GetConsoleCursorInfo
+        GetConsoleMode
+        GetConsoleScreenBufferInfo
+        GetConsoleTitleW
+        GetProcAddress
+        GetStdHandle
+        PeekConsoleInputW
+        ReadConsoleInputW
+        ScrollConsoleScreenBufferW
+        SetConsoleActiveScreenBuffer
+        SetConsoleCursorInfo
+        SetConsoleCursorPosition
+        SetConsoleMode
+        SetConsoleScreenBufferSize
+        SetConsoleTextAttribute
+        SetConsoleTitleW
+        SetConsoleWindowInfo
+        WriteConsoleW
+        WriteConsoleOutputCharacterW
+        WriteFile
+        '''.split():
+    _L[func] = getattr(windll.kernel32, func)
+del _L, func
 
-# I didn't want to have to individually import these so I made a list, they are
-# added to the Console class later in this file.
-
-funcs = [
-    'AllocConsole',
-    'CreateConsoleScreenBuffer',
-    'FillConsoleOutputAttribute',
-    'FillConsoleOutputCharacterW',
-    'FreeConsole',
-    'GetConsoleCursorInfo',
-    'GetConsoleMode',
-    'GetConsoleScreenBufferInfo',
-    'GetConsoleTitleW',
-    'GetProcAddress',
-    'GetStdHandle',
-    'PeekConsoleInputW',
-    'ReadConsoleInputW',
-    'ScrollConsoleScreenBufferW',
-    'SetConsoleActiveScreenBuffer',
-    'SetConsoleCursorInfo',
-    'SetConsoleCursorPosition',
-    'SetConsoleMode',
-    'SetConsoleScreenBufferSize',
-    'SetConsoleTextAttribute',
-    'SetConsoleTitleW',
-    'SetConsoleWindowInfo',
-    'WriteConsoleW',
-    'WriteConsoleOutputCharacterW',
-    'WriteFile',
-    ]
+CreateConsoleScreenBuffer.restype = HANDLE
+CreateConsoleScreenBuffer.argtypes = [DWORD, DWORD, c_void_p, DWORD, LPVOID]
+FillConsoleOutputAttribute.restype = BOOL
+FillConsoleOutputAttribute.argtypes = [HANDLE, WORD, DWORD, COORD, LPDWORD]
+FillConsoleOutputCharacterW.restype = BOOL
+FillConsoleOutputCharacterW.argtypes = [HANDLE, c_wchar, DWORD, COORD, LPDWORD]
+GetConsoleCursorInfo.restype = BOOL
+GetConsoleCursorInfo.argtypes = [HANDLE, PCONSOLE_CURSOR_INFO]
+GetConsoleMode.restype = BOOL
+GetConsoleMode.argtypes = [HANDLE, LPDWORD]
+GetConsoleScreenBufferInfo.restype = BOOL
+GetConsoleScreenBufferInfo.argtypes = [HANDLE, PCONSOLE_SCREEN_BUFFER_INFO]
+GetConsoleTitleW.restype = DWORD
+GetConsoleTitleW.argtypes = [LPWSTR, DWORD]
+GetProcAddress.restype = FARPROC
+GetProcAddress.argtypes = [HMODULE, LPCSTR]
+GetStdHandle.restype = HANDLE
+GetStdHandle.argtypes = [DWORD]
+PeekConsoleInputW.restype = BOOL
+PeekConsoleInputW.argtypes = [HANDLE, PINPUT_RECORD, DWORD, LPDWORD]
+ReadConsoleInputW.restype = BOOL
+ReadConsoleInputW.argtypes = [HANDLE, PINPUT_RECORD, DWORD, LPDWORD]
+ScrollConsoleScreenBufferW.restype = BOOL
+ScrollConsoleScreenBufferW.argtypes = [HANDLE, PSMALL_RECT, PSMALL_RECT, COORD, PCHAR_INFO]
+SetConsoleActiveScreenBuffer.restype = BOOL
+SetConsoleActiveScreenBuffer.argtypes = [HANDLE]
+SetConsoleCursorInfo.restype = BOOL
+SetConsoleCursorInfo.argtypes = [HANDLE, PCONSOLE_CURSOR_INFO]
+SetConsoleCursorPosition.restype = BOOL
+SetConsoleCursorPosition.argtypes = [HANDLE, COORD]
+SetConsoleMode.restype = BOOL
+SetConsoleMode.argtypes = [HANDLE, DWORD]
+SetConsoleScreenBufferSize.restype = BOOL
+SetConsoleScreenBufferSize.argtypes = [HANDLE, COORD]
+SetConsoleTextAttribute.restype = BOOL
+SetConsoleTextAttribute.argtypes = [HANDLE, WORD]
+SetConsoleTitleW.restype = BOOL
+SetConsoleTitleW.argtypes = [LPCWSTR]
+SetConsoleWindowInfo.restype = BOOL
+SetConsoleWindowInfo.argtypes = [HANDLE, BOOL, PSMALL_RECT]
+WriteConsoleW.restype = BOOL
+WriteConsoleW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD, LPVOID]
+WriteConsoleOutputCharacterW.restype = BOOL
+WriteConsoleOutputCharacterW.argtypes = [HANDLE, LPCWSTR, DWORD, COORD, LPDWORD]
+WriteFile.restype = BOOL
+WriteFile.argtypes = [HANDLE, LPCVOID, DWORD, LPDWORD, c_void_p]
 
 # I don't want events for these keys, they are just a bother for my application
 key_modifiers = { VK_SHIFT : 1,
@@ -184,25 +231,20 @@ class Console(object):
         newbuffer=1 will allocate a new buffer so the old content will be restored
         on exit.
         '''
-        #Do I need the following line? It causes a console to be created whenever
-        #readline is imported into a pythonw application which seems wrong. Things
-        #seem to work without it...
-        #self.AllocConsole()
 
         if newbuffer:
-            self.hout = self.CreateConsoleScreenBuffer(
-                             GENERIC_READ | GENERIC_WRITE,
-                             0, None, 1, None)
-            self.SetConsoleActiveScreenBuffer(self.hout)
+            self.hout = CreateConsoleScreenBuffer(
+                GENERIC_READ | GENERIC_WRITE, 0, None, 1, None)
+            SetConsoleActiveScreenBuffer(self.hout)
         else:
-            self.hout = self.GetStdHandle(STD_OUTPUT_HANDLE)
+            self.hout = GetStdHandle(STD_OUTPUT_HANDLE)
 
-        self.hin = self.GetStdHandle(STD_INPUT_HANDLE)
+        self.hin = GetStdHandle(STD_INPUT_HANDLE)
         self.inmode = DWORD(0)
-        self.GetConsoleMode(self.hin, byref(self.inmode))
-        self.SetConsoleMode(self.hin, 0xf)
+        GetConsoleMode(self.hin, byref(self.inmode))
+        SetConsoleMode(self.hin, 0xf)
         info = CONSOLE_SCREEN_BUFFER_INFO()
-        self.GetConsoleScreenBufferInfo(self.hout, byref(info))
+        GetConsoleScreenBufferInfo(self.hout, byref(info))
         self.attr = info.wAttributes
         self.saveattr = info.wAttributes # remember the initial colors
         self.defaultstate = AnsiState()
@@ -228,41 +270,36 @@ class Console(object):
     def __del__(self):
         '''Cleanup the console when finished.'''
         # I don't think this ever gets called
-        self.SetConsoleTextAttribute(self.hout, self.saveattr)
-        self.SetConsoleMode(self.hin, self.inmode)
-        self.FreeConsole()
+        SetConsoleTextAttribute(self.hout, self.saveattr)
+        SetConsoleMode(self.hin, self.inmode)
 
     def _get_top_bot(self):
         info = CONSOLE_SCREEN_BUFFER_INFO()
-        self.GetConsoleScreenBufferInfo(self.hout, byref(info))
+        GetConsoleScreenBufferInfo(self.hout, byref(info))
         rect = info.srWindow
         top = rect.Top 
         bot = rect.Bottom 
         return top,bot
 
     def fixcoord(self, x, y):
-        '''Return a long with x and y packed inside, 
-        also handle negative x and y.'''
+        '''Return a COORD with x and y but also handle negative x and y.'''
         if x < 0 or y < 0:
             info = CONSOLE_SCREEN_BUFFER_INFO()
-            self.GetConsoleScreenBufferInfo(self.hout, byref(info))
+            GetConsoleScreenBufferInfo(self.hout, byref(info))
             if x < 0:
                 x = info.srWindow.Right - x
                 y = info.srWindow.Bottom + y
 
-        # this is a hack! ctypes won't pass structures but COORD is 
-        # just like a long, so this works.
-        return c_int(y << 16 | x)
+        return COORD(x, y)
 
     def pos(self, x=None, y=None):
         '''Move or query the window cursor.'''
         if x is None:
             info = CONSOLE_SCREEN_BUFFER_INFO()
-            self.GetConsoleScreenBufferInfo(self.hout, byref(info))
+            GetConsoleScreenBufferInfo(self.hout, byref(info))
             return (info.dwCursorPosition.X, info.dwCursorPosition.Y)
         else:
-            return self.SetConsoleCursorPosition(self.hout, 
-                                                 self.fixcoord(x, y))
+            return SetConsoleCursorPosition(self.hout, self.fixcoord(x, y))
 
     def home(self):
         '''Move to home.'''
@@ -359,9 +396,9 @@ class Console(object):
         for attr,chunk in res:
             log("console.attr:%s"%(attr))
             log("console.chunk:%s"%(chunk))
-            self.SetConsoleTextAttribute(self.hout, attr.winattr)
+            SetConsoleTextAttribute(self.hout, attr.winattr)
             for short_chunk in split_block(chunk):
-                self.WriteConsoleW(self.hout, short_chunk, 
+                WriteConsoleW(self.hout, short_chunk, 
                                    len(short_chunk), byref(junk), None)
         return n
 
@@ -372,9 +409,9 @@ class Console(object):
         if attr is None:
             attr = self.attr
         junk = DWORD(0)
-        self.SetConsoleTextAttribute(self.hout, attr)
+        SetConsoleTextAttribute(self.hout, attr)
         for short_chunk in split_block(chunk):
-            self.WriteConsoleW(self.hout, ensure_unicode(short_chunk), 
+            WriteConsoleW(self.hout, ensure_unicode(short_chunk), 
                                len(short_chunk), byref(junk), None)
         return len(text)
 
@@ -384,7 +421,7 @@ class Console(object):
         def write_color(self, text, attr=None):
             text = ensure_str(text)
             junk = DWORD(0)
-            self.WriteFile(self.hout, text, len(text), byref(junk), None)
+            WriteFile(self.hout, text, len(text), byref(junk), None)
             return len(text)
         write_plain = write_color
 
@@ -409,17 +446,17 @@ class Console(object):
         if len(fill) != 1:
             raise ValueError
         info = CONSOLE_SCREEN_BUFFER_INFO()
-        self.GetConsoleScreenBufferInfo(self.hout, byref(info))
+        GetConsoleScreenBufferInfo(self.hout, byref(info))
         if info.dwCursorPosition.X != 0 or info.dwCursorPosition.Y != 0:
-            self.SetConsoleCursorPosition(self.hout, self.fixcoord(0, 0))
+            SetConsoleCursorPosition(self.hout, self.fixcoord(0, 0))
 
         w = info.dwSize.X
         n = DWORD(0)
         for y in range(info.dwSize.Y):
-            self.FillConsoleOutputAttribute(self.hout, attr, 
-                                            w, self.fixcoord(0, y), byref(n))
-            self.FillConsoleOutputCharacterW(self.hout, ord(fill[0]), 
-                                             w, self.fixcoord(0, y), byref(n))
+            FillConsoleOutputAttribute(
+                self.hout, attr, w, self.fixcoord(0, y), byref(n))
+            FillConsoleOutputCharacterW(
+                self.hout, c_wchar(fill[0]), w, self.fixcoord(0, y), byref(n))
 
         self.attr = attr
 
@@ -430,9 +467,8 @@ class Console(object):
 
         pos = self.fixcoord(x, y)
         n = DWORD(0)
-        self.WriteConsoleOutputCharacterW(self.hout, text, 
-                                          len(text), pos, byref(n))
-        self.FillConsoleOutputAttribute(self.hout, attr, n, pos, byref(n))
+        WriteConsoleOutputCharacterW(self.hout, text, len(text), pos, byref(n))
+        FillConsoleOutputAttribute(self.hout, attr, n, pos, byref(n))
 
     def clear_to_end_of_window(self):
         top, bot = self._get_top_bot()
@@ -450,10 +486,9 @@ class Console(object):
             attr = self.attr
         for y in range(y0, y1):
             pos = self.fixcoord(x0, y)
-            self.FillConsoleOutputAttribute(self.hout, attr, x1 - x0, 
-                                            pos, byref(n))
-            self.FillConsoleOutputCharacterW(self.hout, ord(fill[0]), x1 - x0,
-                                             pos, byref(n))
+            FillConsoleOutputAttribute(self.hout, attr, x1 - x0, pos, byref(n))
+            FillConsoleOutputCharacterW(
+                self.hout, c_wchar(fill[0]), x1 - x0, pos, byref(n))
 
     def scroll(self, rect, dx, dy, attr=None, fill=' '):
         '''Scroll a rectangle.'''
@@ -466,13 +501,13 @@ class Console(object):
         style.Char.AsciiChar = ensure_str(fill[0])
         style.Attributes = attr
 
-        return self.ScrollConsoleScreenBufferW(self.hout, byref(source), 
+        return ScrollConsoleScreenBufferW(self.hout, byref(source), 
                                           byref(source), dest, byref(style))
 
     def scroll_window(self, lines):
         '''Scroll the window by the indicated number of lines.'''
         info = CONSOLE_SCREEN_BUFFER_INFO()
-        self.GetConsoleScreenBufferInfo(self.hout, byref(info))
+        GetConsoleScreenBufferInfo(self.hout, byref(info))
         rect = info.srWindow
         log('sw: rtop=%d rbot=%d' % (rect.Top, rect.Bottom))
         top = rect.Top + lines
@@ -492,7 +527,7 @@ class Console(object):
         nrect.Left = rect.Left
         nrect.Right = rect.Right
         log('sn: top=%d bot=%d' % (top, bot))
-        r=self.SetConsoleWindowInfo(self.hout, True, byref(nrect))
+        r = SetConsoleWindowInfo(self.hout, True, byref(nrect))
         log('r=%d' % r)
 
     def get(self):
@@ -504,8 +539,7 @@ class Console(object):
         while 1:
             if inputHookFunc:
                 call_function(inputHookFunc, ())
-            status = self.ReadConsoleInputW(self.hin, 
-                                        byref(Cevent), 1, byref(count))
+            status = ReadConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
             if status and count.value == 1:
                 e = event(self, Cevent)
                 return e
@@ -534,8 +568,7 @@ class Console(object):
         Cevent = INPUT_RECORD()
         count = DWORD(0)
         while 1:
-            status = self.ReadConsoleInputW(self.hin, 
-                                            byref(Cevent), 1, byref(count))
+            status = ReadConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
             if (status and 
                 (count.value == 1) and 
                 (Cevent.EventType == 1) and
@@ -549,25 +582,24 @@ class Console(object):
         '''Check event queue.'''
         Cevent = INPUT_RECORD()
         count = DWORD(0)
-        status = self.PeekConsoleInputW(self.hin, 
-                                byref(Cevent), 1, byref(count))
+        status = PeekConsoleInputW(self.hin, byref(Cevent), 1, byref(count))
         if status and count == 1:
             return event(self, Cevent)
 
     def title(self, txt=None):
         '''Set/get title.'''
         if txt:
-            self.SetConsoleTitleW(txt)
+            SetConsoleTitleW(txt)
         else:
             buffer = create_unicode_buffer(200)
-            n = self.GetConsoleTitleW(buffer, 200)
+            n = GetConsoleTitleW(buffer, 200)
             if n > 0:
                 return buffer.value[:n]
 
     def size(self, width=None, height=None):
         '''Set/get window size.'''
         info = CONSOLE_SCREEN_BUFFER_INFO()
-        status = self.GetConsoleScreenBufferInfo(self.hout, byref(info))
+        status = GetConsoleScreenBufferInfo(self.hout, byref(info))
         if not status:
             return None
         if width is not None and height is not None:
@@ -577,20 +609,19 @@ class Console(object):
             width = max(width, wmin)
             height = max(height, hmin)
             #print width, height
-            self.SetConsoleScreenBufferSize(self.hout, 
-                                            self.fixcoord(width, height))
+            SetConsoleScreenBufferSize(self.hout, self.fixcoord(width, height))
         else:
             return (info.dwSize.X, info.dwSize.Y)
 
     def cursor(self, visible=None, size=None):
         '''Set cursor on or off.'''
         info = CONSOLE_CURSOR_INFO()
-        if self.GetConsoleCursorInfo(self.hout, byref(info)):
+        if GetConsoleCursorInfo(self.hout, byref(info)):
             if visible is not None:
                 info.bVisible = visible
             if size is not None:
                 info.dwSize = size
-            self.SetConsoleCursorInfo(self.hout, byref(info))
+            SetConsoleCursorInfo(self.hout, byref(info))
 
     def bell(self):
         self.write('\007')
@@ -600,79 +631,18 @@ class Console(object):
         self.serial += 1
         return self.serial
 
-# add the functions from the dll to the class
-for func in funcs:
-    setattr(Console, func, getattr(windll.kernel32, func))
-
 if sys.version_info[:2] < (2, 6):
     msvcrt = cdll.msvcrt
 else:
     msvcrt = cdll.LoadLibrary(ctypes.util.find_msvcrt())
 
 _strncpy = msvcrt.strncpy
-if sys.version [:1] == 2:  #Bad fix for crash on python3
+if sys.version_info < (3, 0, 0):  #Bad fix for crash on python3
     _strncpy.restype = c_char_p
     _strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
 _strdup = msvcrt._strdup
 _strdup.restype = c_char_p
 _strdup.argtypes = [c_char_p]
-
-LPVOID = c_void_p
-LPCVOID = c_void_p
-FARPROC = c_void_p
-LPDWORD = POINTER(DWORD)
-
-Console.AllocConsole.restype = BOOL
-Console.AllocConsole.argtypes = [] #void
-Console.CreateConsoleScreenBuffer.restype = HANDLE
-Console.CreateConsoleScreenBuffer.argtypes = [DWORD, DWORD, c_void_p, DWORD, LPVOID] #DWORD, DWORD, SECURITY_ATTRIBUTES*, DWORD, LPVOID  
-Console.FillConsoleOutputAttribute.restype = BOOL 
-Console.FillConsoleOutputAttribute.argtypes = [HANDLE, WORD, DWORD, c_int, LPDWORD] #HANDLE, WORD, DWORD, COORD, LPDWORD
-Console.FillConsoleOutputCharacterW.restype = BOOL
-Console.FillConsoleOutputCharacterW.argtypes = [HANDLE, c_ushort, DWORD, c_int, LPDWORD] #HANDLE, TCHAR, DWORD, COORD, LPDWORD
-Console.FreeConsole.restype = BOOL
-Console.FreeConsole.argtypes = [] #void
-Console.GetConsoleCursorInfo.restype = BOOL
-Console.GetConsoleCursorInfo.argtypes = [HANDLE, c_void_p] #HANDLE, PCONSOLE_CURSOR_INFO  
-Console.GetConsoleMode.restype = BOOL
-Console.GetConsoleMode.argtypes = [HANDLE, LPDWORD] #HANDLE, LPDWORD  
-Console.GetConsoleScreenBufferInfo.restype = BOOL
-Console.GetConsoleScreenBufferInfo.argtypes = [HANDLE, c_void_p] #HANDLE, PCONSOLE_SCREEN_BUFFER_INFO 
-Console.GetConsoleTitleW.restype = DWORD
-Console.GetConsoleTitleW.argtypes = [c_wchar_p, DWORD] #LPTSTR , DWORD
-Console.GetProcAddress.restype = FARPROC
-Console.GetProcAddress.argtypes = [HMODULE, c_char_p] #HMODULE , LPCSTR 
-Console.GetStdHandle.restype = HANDLE
-Console.GetStdHandle.argtypes = [DWORD]
-Console.PeekConsoleInputW.restype = BOOL
-Console.PeekConsoleInputW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
-Console.ReadConsoleInputW.restype = BOOL
-Console.ReadConsoleInputW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD] #HANDLE, PINPUT_RECORD, DWORD, LPDWORD
-Console.ScrollConsoleScreenBufferW.restype = BOOL
-Console.ScrollConsoleScreenBufferW.argtypes = [HANDLE, c_void_p, c_void_p, c_int, c_void_p] #HANDLE, SMALL_RECT*, SMALL_RECT*, COORD, LPDWORD
-Console.SetConsoleActiveScreenBuffer.restype = BOOL
-Console.SetConsoleActiveScreenBuffer.argtypes = [HANDLE] #HANDLE
-Console.SetConsoleCursorInfo.restype = BOOL
-Console.SetConsoleCursorInfo.argtypes = [HANDLE, c_void_p] #HANDLE, CONSOLE_CURSOR_INFO* 
-Console.SetConsoleCursorPosition.restype = BOOL
-Console.SetConsoleCursorPosition.argtypes = [HANDLE, c_int] #HANDLE, COORD 
-Console.SetConsoleMode.restype = BOOL
-Console.SetConsoleMode.argtypes = [HANDLE, DWORD] #HANDLE, DWORD
-Console.SetConsoleScreenBufferSize.restype = BOOL
-Console.SetConsoleScreenBufferSize.argtypes = [HANDLE, c_int] #HANDLE, COORD 
-Console.SetConsoleTextAttribute.restype = BOOL
-Console.SetConsoleTextAttribute.argtypes = [HANDLE, WORD] #HANDLE, WORD 
-Console.SetConsoleTitleW.restype = BOOL
-Console.SetConsoleTitleW.argtypes = [c_wchar_p] #LPCTSTR
-Console.SetConsoleWindowInfo.restype = BOOL
-Console.SetConsoleWindowInfo.argtypes = [HANDLE, BOOL, c_void_p] #HANDLE, BOOL, SMALL_RECT*
-Console.WriteConsoleW.restype = BOOL
-Console.WriteConsoleW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD, LPVOID] #HANDLE, VOID*, DWORD, LPDWORD, LPVOID
-Console.WriteConsoleOutputCharacterW.restype = BOOL
-Console.WriteConsoleOutputCharacterW.argtypes = [HANDLE, c_wchar_p, DWORD, c_int, LPDWORD] #HANDLE, LPCTSTR, DWORD, COORD, LPDWORD
-Console.WriteFile.restype = BOOL
-Console.WriteFile.argtypes = [HANDLE, LPCVOID, DWORD, LPDWORD, c_void_p] #HANDLE, LPCVOID , DWORD, LPDWORD , LPOVERLAPPED 
-
 
 
 from .event import Event
@@ -814,7 +784,7 @@ def install_readline(hook):
     # save the hook so the wrapper can call it
     readline_hook = hook
     # get the address of PyOS_ReadlineFunctionPointer so we can update it
-    PyOS_RFP = c_void_p.from_address(Console.GetProcAddress(sys.dllhandle,
+    PyOS_RFP = c_void_p.from_address(GetProcAddress(sys.dllhandle,
                            "PyOS_ReadlineFunctionPointer".encode('ascii')))
     # save a reference to the generated C-callable so it doesn't go away
     if sys.version < '2.3':
