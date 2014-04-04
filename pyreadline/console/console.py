@@ -64,16 +64,15 @@ GENERIC_READ = 0x80000000
 GENERIC_WRITE = 0x40000000
 
 # Define Windows data types that we'll need later.  Where possible, use things
-# that are already defined in ctypes or ctypes.wintypes.  Also, use c_void_p
-# for pointer arguments instead of using POINTER() to define a new type so as
-# to be less restrictive.  Using POINTER() clashes with other projects that
-# make use of the kernel32 functions via ctypes since, when used with
-# .argtypes, it forces the new type for the particular argument.  Play nicely!
+# that are already defined in ctypes or ctypes.wintypes.  Also, use a local
+# handle to the kernel32 DLL to avoid problems from setting .restype and
+# .argtypes below that could result from sharing windll.kernel32 with other
+# projects.
 COORD = _COORD
 CHAR = c_char
 FARPROC = c_void_p
-LPDWORD = c_void_p
-PSMALL_RECT = c_void_p
+LPDWORD = POINTER(DWORD)
+PSMALL_RECT = POINTER(SMALL_RECT)
 
 class CONSOLE_SCREEN_BUFFER_INFO(Structure):
     _fields_ = [("dwSize", COORD),
@@ -81,7 +80,7 @@ class CONSOLE_SCREEN_BUFFER_INFO(Structure):
                 ("wAttributes", WORD),
                 ("srWindow", SMALL_RECT),
                 ("dwMaximumWindowSize", COORD)]
-PCONSOLE_SCREEN_BUFFER_INFO = c_void_p
+PCONSOLE_SCREEN_BUFFER_INFO = POINTER(CONSOLE_SCREEN_BUFFER_INFO)
 
 class CHAR_UNION(Union):
     _fields_ = [("UnicodeChar", WCHAR),
@@ -90,7 +89,7 @@ class CHAR_UNION(Union):
 class CHAR_INFO(Structure):
     _fields_ = [("Char", CHAR_UNION),
                 ("Attributes", WORD)]
-PCHAR_INFO = c_void_p
+PCHAR_INFO = POINTER(CHAR_INFO)
 
 class KEY_EVENT_RECORD(Structure):
     _fields_ = [("bKeyDown", BOOL),
@@ -125,15 +124,15 @@ class INPUT_UNION(Union):
 class INPUT_RECORD(Structure):
     _fields_ = [("EventType", WORD),
                 ("Event", INPUT_UNION)]
-PINPUT_RECORD = c_void_p
+PINPUT_RECORD = POINTER(INPUT_RECORD)
 
 class CONSOLE_CURSOR_INFO(Structure):
     _fields_ = [("dwSize", DWORD),
                 ("bVisible", BOOL)]
-PCONSOLE_CURSOR_INFO = c_void_p
+PCONSOLE_CURSOR_INFO = POINTER(CONSOLE_CURSOR_INFO)
 
 L = locals()
-k32 = windll.kernel32
+k32 = WinDLL('kernel32')
 for line in '''
         CreateConsoleScreenBuffer,HANDLE,DWORD,DWORD,c_void_p,DWORD,LPVOID
         FillConsoleOutputAttribute,BOOL,HANDLE,WORD,DWORD,COORD,LPDWORD
