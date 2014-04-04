@@ -132,81 +132,40 @@ class CONSOLE_CURSOR_INFO(Structure):
                 ("bVisible", BOOL)]
 PCONSOLE_CURSOR_INFO = c_void_p
 
-_L = locals()
-for func in '''
-        CreateConsoleScreenBuffer
-        FillConsoleOutputAttribute
-        FillConsoleOutputCharacterW
-        GetConsoleCursorInfo
-        GetConsoleMode
-        GetConsoleScreenBufferInfo
-        GetConsoleTitleW
-        GetProcAddress
-        GetStdHandle
-        PeekConsoleInputW
-        ReadConsoleInputW
-        ScrollConsoleScreenBufferW
-        SetConsoleActiveScreenBuffer
-        SetConsoleCursorInfo
-        SetConsoleCursorPosition
-        SetConsoleMode
-        SetConsoleScreenBufferSize
-        SetConsoleTextAttribute
-        SetConsoleTitleW
-        SetConsoleWindowInfo
-        WriteConsoleW
-        WriteConsoleOutputCharacterW
-        WriteFile
+L = locals()
+k32 = windll.kernel32
+for line in '''
+        CreateConsoleScreenBuffer,HANDLE,DWORD,DWORD,c_void_p,DWORD,LPVOID
+        FillConsoleOutputAttribute,BOOL,HANDLE,WORD,DWORD,COORD,LPDWORD
+        FillConsoleOutputCharacterW,BOOL,HANDLE,c_wchar,DWORD,COORD,LPDWORD
+        GetConsoleCursorInfo,BOOL,HANDLE,PCONSOLE_CURSOR_INFO
+        GetConsoleMode,BOOL,HANDLE,LPDWORD
+        GetConsoleScreenBufferInfo,BOOL,HANDLE,PCONSOLE_SCREEN_BUFFER_INFO
+        GetConsoleTitleW,DWORD,LPWSTR,DWORD
+        GetProcAddress,FARPROC,HMODULE,LPCSTR
+        GetStdHandle,HANDLE,DWORD
+        PeekConsoleInputW,BOOL,HANDLE,PINPUT_RECORD,DWORD,LPDWORD
+        ReadConsoleInputW,BOOL,HANDLE,PINPUT_RECORD,DWORD,LPDWORD
+        ScrollConsoleScreenBufferW,BOOL,HANDLE,PSMALL_RECT,PSMALL_RECT,COORD,PCHAR_INFO
+        SetConsoleActiveScreenBuffer,BOOL,HANDLE
+        SetConsoleCursorInfo,BOOL,HANDLE,PCONSOLE_CURSOR_INFO
+        SetConsoleCursorPosition,BOOL,HANDLE,COORD
+        SetConsoleMode,BOOL,HANDLE,DWORD
+        SetConsoleScreenBufferSize,BOOL,HANDLE,COORD
+        SetConsoleTextAttribute,BOOL,HANDLE,WORD
+        SetConsoleTitleW,BOOL,LPCWSTR
+        SetConsoleWindowInfo,BOOL,HANDLE,BOOL,PSMALL_RECT
+        WriteConsoleW,BOOL,HANDLE,c_void_p,DWORD,LPDWORD,LPVOID
+        WriteConsoleOutputCharacterW,BOOL,HANDLE,LPCWSTR,DWORD,COORD,LPDWORD
+        WriteFile,BOOL,HANDLE,LPCVOID,DWORD,LPDWORD,c_void_p
         '''.split():
-    _L[func] = getattr(windll.kernel32, func)
-del _L, func
-
-CreateConsoleScreenBuffer.restype = HANDLE
-CreateConsoleScreenBuffer.argtypes = [DWORD, DWORD, c_void_p, DWORD, LPVOID]
-FillConsoleOutputAttribute.restype = BOOL
-FillConsoleOutputAttribute.argtypes = [HANDLE, WORD, DWORD, COORD, LPDWORD]
-FillConsoleOutputCharacterW.restype = BOOL
-FillConsoleOutputCharacterW.argtypes = [HANDLE, c_wchar, DWORD, COORD, LPDWORD]
-GetConsoleCursorInfo.restype = BOOL
-GetConsoleCursorInfo.argtypes = [HANDLE, PCONSOLE_CURSOR_INFO]
-GetConsoleMode.restype = BOOL
-GetConsoleMode.argtypes = [HANDLE, LPDWORD]
-GetConsoleScreenBufferInfo.restype = BOOL
-GetConsoleScreenBufferInfo.argtypes = [HANDLE, PCONSOLE_SCREEN_BUFFER_INFO]
-GetConsoleTitleW.restype = DWORD
-GetConsoleTitleW.argtypes = [LPWSTR, DWORD]
-GetProcAddress.restype = FARPROC
-GetProcAddress.argtypes = [HMODULE, LPCSTR]
-GetStdHandle.restype = HANDLE
-GetStdHandle.argtypes = [DWORD]
-PeekConsoleInputW.restype = BOOL
-PeekConsoleInputW.argtypes = [HANDLE, PINPUT_RECORD, DWORD, LPDWORD]
-ReadConsoleInputW.restype = BOOL
-ReadConsoleInputW.argtypes = [HANDLE, PINPUT_RECORD, DWORD, LPDWORD]
-ScrollConsoleScreenBufferW.restype = BOOL
-ScrollConsoleScreenBufferW.argtypes = [HANDLE, PSMALL_RECT, PSMALL_RECT, COORD, PCHAR_INFO]
-SetConsoleActiveScreenBuffer.restype = BOOL
-SetConsoleActiveScreenBuffer.argtypes = [HANDLE]
-SetConsoleCursorInfo.restype = BOOL
-SetConsoleCursorInfo.argtypes = [HANDLE, PCONSOLE_CURSOR_INFO]
-SetConsoleCursorPosition.restype = BOOL
-SetConsoleCursorPosition.argtypes = [HANDLE, COORD]
-SetConsoleMode.restype = BOOL
-SetConsoleMode.argtypes = [HANDLE, DWORD]
-SetConsoleScreenBufferSize.restype = BOOL
-SetConsoleScreenBufferSize.argtypes = [HANDLE, COORD]
-SetConsoleTextAttribute.restype = BOOL
-SetConsoleTextAttribute.argtypes = [HANDLE, WORD]
-SetConsoleTitleW.restype = BOOL
-SetConsoleTitleW.argtypes = [LPCWSTR]
-SetConsoleWindowInfo.restype = BOOL
-SetConsoleWindowInfo.argtypes = [HANDLE, BOOL, PSMALL_RECT]
-WriteConsoleW.restype = BOOL
-WriteConsoleW.argtypes = [HANDLE, c_void_p, DWORD, LPDWORD, LPVOID]
-WriteConsoleOutputCharacterW.restype = BOOL
-WriteConsoleOutputCharacterW.argtypes = [HANDLE, LPCWSTR, DWORD, COORD, LPDWORD]
-WriteFile.restype = BOOL
-WriteFile.argtypes = [HANDLE, LPCVOID, DWORD, LPDWORD, c_void_p]
+    args = line.split(',')
+    name = args.pop(0)
+    for i in range(len(args)): args[i] = L[args[i]]
+    L[name] = func = getattr(k32, name)
+    func.restype = args.pop(0)
+    func.argtypes = args
+del L, k32, line, args, name, i, func
 
 # I don't want events for these keys, they are just a bother for my application
 key_modifiers = { VK_SHIFT : 1,
