@@ -59,6 +59,8 @@ class IncrementalSearchPromptMode(object):
             self._history.history_cursor = len(self._history.history)
             if keyinfo.keyname == 'escape':
                 self.l_buffer.set_line(self.subsearch_old_line)
+            if keyinfo.keyname == 'return':
+                return False
             return True
         elif keyinfo.keyname:
             pass
