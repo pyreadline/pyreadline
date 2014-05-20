@@ -60,7 +60,7 @@ class IncrementalSearchPromptMode(object):
             if keyinfo.keyname == 'escape':
                 self.l_buffer.set_line(self.subsearch_old_line)
             return True
-        elif keyinfo.keyname:
+        elif keyinfo.keyname and keyinfo.keyname not in [ 'space' ]:
             pass
         elif keytuple in revtuples:
             self.subsearch_fun = self._history.reverse_search_history
