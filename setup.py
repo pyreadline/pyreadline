@@ -11,7 +11,8 @@
 import os
 import sys
 import glob
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.

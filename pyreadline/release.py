@@ -25,7 +25,7 @@ branch = 'ainfosec'
 
 version = '2.0.3'
 
-description = "A python implmementation of GNU readline."
+description = "A more complete python implmementation of GNU readline."
 
 long_description = \
 """
