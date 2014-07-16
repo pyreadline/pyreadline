@@ -30,4 +30,4 @@ Features:
  The latest development version is always available at the IPython git 
  repository_.
 
-.. _repository: https://github.com/pyreadline/pyreadline.git
+.. _repository: https://github.com/ainfosec/pyreadline.git
