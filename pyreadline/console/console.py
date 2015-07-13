@@ -217,14 +217,22 @@ class Console(object):
         self.softspace = 0 # this is for using it as a file-like object
         self.serial = 0
 
-        self.pythondll = \
-            CDLL('python%s%s' % (sys.version[0], sys.version[2]))
-        self.pythondll.PyMem_Malloc.restype = c_size_t
-        self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
+        self.pythondll = ctypes.pythonapi
         self.inputHookPtr = \
             c_void_p.from_address(addressof(self.pythondll.PyOS_InputHook)).value
-        setattr(Console, 'PyMem_Malloc', self.pythondll.PyMem_Malloc)
 
+        if sys.version_info[:2] > (3, 4): 
+            self.pythondll.PyMem_RawMalloc.restype = c_size_t
+            self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
+            setattr(Console, 'PyMem_Malloc', self.pythondll.PyMem_RawMalloc)
+        else:
+            self.pythondll.PyMem_Malloc.restype = c_size_t
+            self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
+            setattr(Console, 'PyMem_Malloc', self.pythondll.PyMem_Malloc)
+
+
+
+        
     def __del__(self):
         '''Cleanup the console when finished.'''
         # I don't think this ever gets called
@@ -604,18 +612,11 @@ class Console(object):
 for func in funcs:
     setattr(Console, func, getattr(windll.kernel32, func))
 
-if sys.version_info[:2] < (2, 6):
-    msvcrt = cdll.msvcrt
-else:
-    msvcrt = cdll.LoadLibrary(ctypes.util.find_msvcrt())
 
-_strncpy = msvcrt.strncpy
-if sys.version [:1] == 2:  #Bad fix for crash on python3
-    _strncpy.restype = c_char_p
-    _strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
-_strdup = msvcrt._strdup
-_strdup.restype = c_char_p
-_strdup.argtypes = [c_char_p]
+_strncpy = ctypes.windll.kernel32.lstrcpynA
+_strncpy.restype = c_char_p
+_strncpy.argtypes = [c_char_p, c_char_p, c_size_t]
+
 
 LPVOID = c_void_p
 LPCVOID = c_void_p
@@ -755,7 +756,6 @@ def getconsole(buffer=1):
 # handles the exceptions and gets the result into the right form.
 
 # the type for our C-callable wrapper
-HOOKFUNC22 = CFUNCTYPE(c_char_p, c_char_p)
 HOOKFUNC23 = CFUNCTYPE(c_char_p, c_void_p, c_void_p, c_char_p)
 
 readline_hook = None # the python hook goes here
@@ -774,38 +774,17 @@ def hook_wrapper_23(stdin, stdout, prompt):
         return 0
     except EOFError:
         # It returns an empty string on EOF
-        res = ''
+        res = ensure_str('')
     except:
         print('Readline internal error', file=sys.stderr)
         traceback.print_exc()
-        res = '\n'
+        res = ensure_str('\n')
     # we have to make a copy because the caller expects to free the result
     n = len(res)
     p = Console.PyMem_Malloc(n + 1)
     _strncpy(cast(p, c_char_p), res, n + 1)
     return p
 
-def hook_wrapper(prompt):
-    '''Wrap a Python readline so it behaves like GNU readline.'''
-    try:
-        # call the Python hook
-        res = ensure_str(readline_hook(prompt))
-        # make sure it returned the right sort of thing
-        if res and not isinstance(res, bytes):
-            raise TypeError('readline must return a string.')
-    except KeyboardInterrupt:
-        # GNU readline returns 0 on keyboard interrupt
-        return 0
-    except EOFError:
-        # It returns an empty string on EOF
-        res = ''
-    except:
-        print('Readline internal error', file=sys.stderr)
-        traceback.print_exc()
-        res = '\n'
-    # we have to make a copy because the caller expects to free the result
-    p = _strdup(res)
-    return p
 
 def install_readline(hook):
     '''Set up things for the interpreter to call 
@@ -817,14 +796,12 @@ def install_readline(hook):
     PyOS_RFP = c_void_p.from_address(Console.GetProcAddress(sys.dllhandle,
                            "PyOS_ReadlineFunctionPointer".encode('ascii')))
     # save a reference to the generated C-callable so it doesn't go away
-    if sys.version < '2.3':
-        readline_ref = HOOKFUNC22(hook_wrapper)
-    else:
-        readline_ref = HOOKFUNC23(hook_wrapper_23)
+    readline_ref = HOOKFUNC23(hook_wrapper_23)
     # get the address of the function
     func_start = c_void_p.from_address(addressof(readline_ref)).value
     # write the function address into PyOS_ReadlineFunctionPointer
     PyOS_RFP.value = func_start
+
 
 if __name__ == '__main__':
     import time, sys
