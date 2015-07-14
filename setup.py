@@ -12,6 +12,11 @@ import os
 import sys
 import glob
 from distutils.core import setup
+from platform import system
+
+_S = system()
+if 'windows' != _S.lower():
+    raise RuntimeError('pyreadline is for Windows only, not {}.'.format(_S))
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
