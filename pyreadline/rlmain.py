@@ -348,6 +348,11 @@ class BaseReadline(object):
         def enable_ipython_paste_for_paths(boolean):
             self.mode.enable_ipython_paste_for_paths = boolean
 
+        # stephengithub:
+        # Hook for enable/disable via configuration file.
+        def enable_save_prompt_position(mode):
+            self.mode.enable_save_prompt_position = mode
+
         def debug_output(on, filename="pyreadline_debug_log.txt"): #Not implemented yet
             if on in ["on", "on_nologfile"]:
                 self.debug=True
@@ -400,6 +405,7 @@ class BaseReadline(object):
                "ctrl_c_tap_time_interval":ctrl_c_tap_time_interval,
                "kill_ring_to_clipboard":setkill_ring_to_clipboard,
                "enable_ipython_paste_for_paths":enable_ipython_paste_for_paths,
+               "enable_save_prompt_position":enable_save_prompt_position, #stephengithub
               }
         if os.path.isfile(inputrcpath): 
             try:
@@ -461,6 +467,22 @@ class Readline(BaseReadline):
             yc += 1
         c.pos(xc, yc)
 
+    # stephengithub:
+    # Calculate the expected cursor position if the line was printed from the
+    # current cursor position.
+    # Note: This returns the position of the last character, not where the 
+    # cursor will be put after printing the last character.
+    def _calc_expected_end_pos(self):
+        c = self.console
+        xc, yc = self.prompt_end_pos
+        w, h = c.size()
+        xc += self.mode.l_buffer.visible_line_width() - 1
+        while(xc >= w):
+            xc -= w
+            yc += 1
+
+        return xc, yc
+
     def _print_prompt(self):
         c = self.console
         x, y = c.pos()
@@ -481,8 +503,36 @@ class Readline(BaseReadline):
         c = self.console
         l_buffer = self.mode.l_buffer
         c.cursor(0)         #Hide cursor avoiding flicking
+        
+        # stephengithub: If not using a saved prompt position behavior,
+        # if the current cursor y position is not the same as the
+        # remembered y position, update the remembered position to
+        # the current position.
+        if hasattr(self.mode, "enable_save_prompt_position") and not self.mode.enable_save_prompt_position == 'on':
+            curx, cury = c.pos()
+            expectedx, expectedy = self._calc_expected_end_pos()
+            if cury != expectedy:
+                # One problem remains: Pressing ESC moves the prompt to the
+                # next line if the input spans multiple lines (i.e., the input
+                # prompt is not erased). That's because I'm updating the
+                # beginning remembered position.  This may be the price to pay
+                # for disabling the saved cursor position.
+
+                # Without the following line, if asynchronous text doesn't end
+                # with a newline, that last line of output is erased when
+                # printing the prompt.
+                if curx != 0:
+                    cury += 1
+                bx, by = self.prompt_begin_pos
+                by = cury
+                self.prompt_begin_pos = (bx, by)
+
         c.pos(*self.prompt_begin_pos)
+
+        # stephengithub: This will also update the remembered position.
         self._print_prompt()
+
+        # Print the input buffer, scrolling as necessary.
         ltext = l_buffer.quoted_text()
         if l_buffer.enable_selection and (l_buffer.selection_mark >= 0):
             start = len(l_buffer[:l_buffer.selection_mark].quoted_text())
@@ -502,6 +552,7 @@ class Readline(BaseReadline):
             c.scroll((0, 0, w, h), 0, -1)
             n += 1
 
+        # stephengithub: Update the remembered position to account for scrolling.
         self._update_prompt_pos(n)
         if hasattr(c, "clear_to_end_of_window"): #Work around function for ironpython due 
             c.clear_to_end_of_window()          #to System.Console's lack of FillFunction
