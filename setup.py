@@ -23,7 +23,7 @@ if 'windows' != _S.lower():
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 #
 
-exec(compile(open('pyreadline/release.py').read(), 'pyreadline/release.py', 'exec'))
+exec(compile(open('pyreadline/release.py', 'rU').read(), 'pyreadline/release.py', 'exec'))
 
 try:
     import sphinx
