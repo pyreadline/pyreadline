@@ -20,7 +20,7 @@ Features:
  *  paste_mulitline_code pastes multi line code, removing any empty lines.
  
  
- The latest development version is always available at the IPython git 
+ The latest development version is always available at the pyreadline git 
  repository_.
 
 .. _repository: https://github.com/pyreadline/pyreadline.git
