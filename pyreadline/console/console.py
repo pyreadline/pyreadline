@@ -760,6 +760,7 @@ HOOKFUNC23 = CFUNCTYPE(c_char_p, c_void_p, c_void_p, c_char_p)
 
 readline_hook = None # the python hook goes here
 readline_ref = None  # reference to the c-callable to keep it alive
+PyOS_RFP = None      # PyOS_ReadlineFunctionPointer
 
 def hook_wrapper_23(stdin, stdout, prompt):
     '''Wrap a Python readline so it behaves like GNU readline.'''
@@ -779,6 +780,7 @@ def hook_wrapper_23(stdin, stdout, prompt):
         print('Readline internal error', file=sys.stderr)
         traceback.print_exc()
         res = ensure_str('\n')
+        uninstall_readline()
     # we have to make a copy because the caller expects to free the result
     n = len(res)
     p = Console.PyMem_Malloc(n + 1)
@@ -787,9 +789,9 @@ def hook_wrapper_23(stdin, stdout, prompt):
 
 
 def install_readline(hook):
-    '''Set up things for the interpreter to call 
+    '''Set up things for the interpreter to call
     our function like GNU readline.'''
-    global readline_hook, readline_ref
+    global readline_hook, readline_ref, PyOS_RFP
     # save the hook so the wrapper can call it
     readline_hook = hook
     # get the address of PyOS_ReadlineFunctionPointer so we can update it
@@ -803,10 +805,15 @@ def install_readline(hook):
     PyOS_RFP.value = func_start
 
 
+def uninstall_readline():
+    if PyOS_RFP is not None:
+        PyOS_RFP.value = 0x0
+
+
 if __name__ == '__main__':
     import time, sys
 
-    
+
     def p(char):
         return chr(VkKeyScan(ord(char)) & 0xff)
 
