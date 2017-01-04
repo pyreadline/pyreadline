@@ -223,7 +223,7 @@ class Console(object):
 
         if sys.version_info[:2] > (3, 4): 
             self.pythondll.PyMem_RawMalloc.restype = c_size_t
-            self.pythondll.PyMem_Malloc.argtypes = [c_size_t]
+            self.pythondll.PyMem_RawMalloc.argtypes = [c_size_t]
             setattr(Console, 'PyMem_Malloc', self.pythondll.PyMem_RawMalloc)
         else:
             self.pythondll.PyMem_Malloc.restype = c_size_t
