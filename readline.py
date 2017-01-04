@@ -66,6 +66,8 @@ else:
     get_begidx = rl.get_begidx
     get_endidx = rl.get_endidx
 
+    redisplay = rl.redisplay
+
     set_completer_delims = rl.set_completer_delims
     set_history_length = rl.set_history_length
     set_pre_input_hook = rl.set_pre_input_hook
