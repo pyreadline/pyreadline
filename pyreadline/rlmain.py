@@ -243,6 +243,9 @@ class BaseReadline(object):
     def readline(self, prompt=''):
         raise NotImplementedError
 
+    def redisplay(self):
+        raise NotImplementedError
+
 #
 # Callback interface
 #
@@ -592,3 +595,6 @@ class Readline(BaseReadline):
             raise KeyboardInterrupt
         return event
 
+    def redisplay(self):
+        self._print_prompt()
+        self._update_line()
