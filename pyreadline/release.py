@@ -14,21 +14,24 @@ $Id$"""
 
 # Name of the package for release purposes.  This is the name which labels
 # the tarballs and RPMs made by distutils, so it's best to lowercase it.
-name = 'pyreadline'
+name = 'pyreadline-ais'
 
 # For versions with substrings (like 0.6.16.svn), use an extra . to separate
 # the new substring.  We have to avoid using either dashes or underscores,
 # because bdist_rpm does not accept dashes (an RPM) convention, and
 # bdist_deb does not accept underscores (a Debian convention).
 
-branch = ''
+branch = 'ainfosec'
 
-version = '2.0'
+version = '2.0.3'
 
-description = "A python implmementation of GNU readline."
+description = "A more complete python implmementation of GNU readline."
 
 long_description = \
 """
+This a branch of the pyreadline project. This branch implements several
+functions that were missing in the mainline version of pyreadline.
+
 The pyreadline package is a python implementation of GNU readline functionality
 it is based on the ctypes based UNC readline package by Gary Bishop.
 It is not complete. It has been tested for use with windows 2000 and windows xp.
@@ -49,7 +52,7 @@ Features:
  The latest development version is always available at the IPython github
  repository_.
 
-.. _repository: https://github.com/pyreadline/pyreadline.git
+.. _repository: https://github.com/ainfosec/pyreadline.git
  """
 
 license = 'BSD'
@@ -57,10 +60,12 @@ license = 'BSD'
 authors = {'Jorgen' : ('Jorgen Stenarson','jorgen.stenarson@kroywen.se'),
            'Gary':    ('Gary Bishop', ''),
            'Jack':    ('Jack Trainor', ''),
+           'Jonathan':('Jonathan Einstoss','einstossj@ainfosec.com'),
+           'Adam':    ('Adam Meily','meilya@ainfosec.com'),
            }
 
-url = 'http://ipython.org/pyreadline.html'
-download_url = 'https://pypi.python.org/pypi/pyreadline/'
+url = 'https://github.com/ainfosec/pyreadline'
+download_url = 'https://pypi.python.org/pypi/pyreadline-ais/'
 platforms = ['Windows XP/2000/NT',
              'Windows 95/98/ME']
 

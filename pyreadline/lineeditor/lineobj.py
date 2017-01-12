@@ -649,11 +649,11 @@ class ReadLineTextBuffer(TextLine):
 ############ Kill
 
     def kill_line(self):
-        self.add_to_kill_ring(self[self.point:])
+        self.add_to_kill_ring(self[self.point:].get_line_text())
         del self.line_buffer[self.point:]
     
     def kill_whole_line(self):
-        self.add_to_kill_ring(self[:])
+        self.add_to_kill_ring(self[:].get_line_text())
         del self[:]
     
     def backward_kill_line(self):

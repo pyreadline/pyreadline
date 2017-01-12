@@ -42,6 +42,7 @@ class BaseMode(object):
         self.pre_input_hook = None
         self.first_prompt = True
         self.cursor_size=25
+        self.prompt_completion_locked = False
         
         self.prompt = ">>> "
         
@@ -90,6 +91,10 @@ class BaseMode(object):
     console=property(_g("console"))
     prompt_begin_pos=property(_g("prompt_begin_pos"))
     prompt_end_pos=property(_g("prompt_end_pos"))
+    readline = property(_g("readline"))
+    _get_prompt = property(_g("_get_prompt"))
+    _set_prompt = property(_g("_set_prompt"))
+    get_line_buffer = property(_g("get_line_buffer"))
 
 #used in completer _completions
 #    completer_delims=property(*_gs("completer_delims"))
@@ -200,6 +205,8 @@ class BaseMode(object):
                     r = self.completer(ensure_unicode(text), i)
                 except IndexError:
                     break
+                except TypeError:
+                    break
                 i += 1
                 if r is None:
                     break
@@ -233,7 +240,35 @@ class BaseMode(object):
     def _display_completions(self, completions):
         if not completions:
             return
+        
+        if self.prompt_completion_locked:
+            return
+            
         self.console.write('\n')
+    
+        # If more than 100 items are to be displayed,
+        # ask the user whether to display or not.
+        if len(completions) > 100:
+            
+            
+            old_prompt = self._get_prompt()
+            old_line_buffer = self.get_line_buffer()            
+            answer = self.readline(
+                "%d possibilities found. Display? (y/n): " % len(completions))
+            self._set_prompt(old_prompt)
+            self.l_buffer.reset_line()
+            self.insert_text(old_line_buffer)
+            
+            self.prompt_completion_locked = False
+            
+            if answer.strip().lower() in ["n", "no"]:
+                self._print_prompt()
+                return
+            elif not answer.strip().lower() in ["y", "yes"]:
+                self.console.write("Invalid answer\n")
+                self._print_prompt()
+                return
+                
         wmax = max(map(len, completions))
         w, h = self.console.size()
         cols = max(1, int((w-1) / (wmax+1)))
@@ -255,6 +290,7 @@ class BaseMode(object):
         actual completion performed is application-specific. The default is
         filename completion."""
         completions = self._get_completions()
+        
         if completions:
             cprefix = commonprefix(completions)
             if len(cprefix) > 0:

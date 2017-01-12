@@ -157,6 +157,19 @@ class BaseReadline(object):
         '''Clear readline history'''
         self.mode._history.clear_history()
 
+    def replace_history_item(self, index, line):
+        '''Replace the history item at index with line.'''
+        self.mode._history.replace_history_item(index, line)
+
+    def remove_history_item(self, index):
+        '''Remove the history item located at index.'''
+        self.mode._history.remove_history_item(index)
+
+    def parse_history_from_string(self, string):
+        '''Create a readline history from a string.
+        Each history item is separated by a newline character (\n)'''
+        self.mode._history.parse_history_from_string(ensure_unicode(string))
+
     def read_history_file(self, filename=None): 
         '''Load a readline history file. The default filename is ~/.history.'''
         if filename is None:
@@ -167,6 +180,12 @@ class BaseReadline(object):
     def write_history_file(self, filename=None): 
         '''Save a readline history file. The default filename is ~/.history.'''
         self.mode._history.write_history_file(filename)
+        
+    def write_history_file_overwrite(self, filename=None, overwrite=True): 
+        '''Save a readline history file. The default filename is ~/.history.
+        The user is warned if a file will be overwritten when overwrite 
+        is false.'''
+        self.write_history_file(filename)
 
     #Completer functions
 
@@ -591,4 +610,26 @@ class Readline(BaseReadline):
         else:
             raise KeyboardInterrupt
         return event
+    
+    def write_history_file_overwrite(self, filename=None, overwrite=True):
+        '''Save a readline history file. The default filename is ~/.history.
+        The user is warned if a file will be overwritten when overwrite 
+        is false.
+        
+        Returns 1 if the user decided not to overwrite a file or
+        an invalid answer was input. 0 is returned otherwise.'''
+        if not overwrite and os.path.exists(filename):
+            old_prompt = self._get_prompt()
+            old_line_buffer = self.get_line_buffer()
+            answer = self.readline("Overwrite file %s? (y/n): " % filename)
+            self._set_prompt(old_prompt)
+            self.mode.l_buffer.reset_line()
+            if answer.strip().lower() in ["n","no"]:
+                return 1
+            elif not answer.strip().lower() in ["y","yes"]:
+                self.console.write("Invalid answer\n")
+                return 1
+                
+        self.mode._history.write_history_file(filename)
+        return 0
 

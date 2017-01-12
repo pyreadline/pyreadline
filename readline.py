@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 #this file is needed in site-packages to emulate readline
 #necessary for rlcompleter since it relies on the existance
 #of a readline module
@@ -27,7 +27,11 @@ __all__ = [ 'parse_and_bind',
             'add_history',
             'callback_handler_install',
             'callback_handler_remove',
-            'callback_read_char',] #Some other objects are added below
+            'callback_read_char',
+            'replace_history_item',
+            'remove_history_item',
+            'parse_history_from_string',
+            'write_history_file_overwrite',] #Some other objects are added below
 
 
 # create a Readline object to contain the state
@@ -54,7 +58,12 @@ else:
     insert_text = rl.insert_text
 
     write_history_file = rl.write_history_file
+    write_history_file_overwrite = rl.write_history_file_overwrite
     read_history_file = rl.read_history_file
+
+    replace_history_item = rl.replace_history_item
+    remove_history_item = rl.remove_history_item
+    parse_history_from_string = rl.parse_history_from_string
 
     get_completer_delims = rl.get_completer_delims
     get_current_history_length = rl.get_current_history_length

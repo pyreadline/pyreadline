@@ -1,4 +1,11 @@
 ==========
+Missing readline methods
+==========
+
+This fork adds two missing readline methods: ``replace_history_item(index, item)``
+and ``remove_history_item(index)``. Below is the original readme for the project.
+
+==========
 pyreadline
 ==========
 
@@ -23,4 +30,4 @@ Features:
  The latest development version is always available at the IPython git 
  repository_.
 
-.. _repository: https://github.com/pyreadline/pyreadline.git
+.. _repository: https://github.com/ainfosec/pyreadline.git
