@@ -18,7 +18,7 @@ import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
 import pyreadline.console as console
-import pyreadline.logger as logger 
+import pyreadline.logger as logger
 
 from pyreadline.keysyms.common import make_KeyPress_from_keydescr
 from pyreadline.unicode_helper import ensure_unicode, ensure_str
@@ -28,7 +28,7 @@ from .error import ReadlineError, GetSetError
 
 in_ironpython = "IronPython" in sys.version
 if in_ironpython:#ironpython does not provide a prompt string to readline
-    import System    
+    import System
     default_prompt = ">>> "
 else:
     default_prompt = ""
@@ -104,10 +104,10 @@ class BaseReadline(object):
 
     def _set_prompt(self, prompt):
         self.mode.prompt = prompt
-        
+
     def _get_prompt(self):
         return self.mode.prompt
-    
+
     prompt = property(_get_prompt, _set_prompt)
 
 
@@ -118,20 +118,20 @@ class BaseReadline(object):
     def insert_text(self, string):
         '''Insert text into the command line.'''
         self.mode.insert_text(string)
-        
-    def read_init_file(self, filename=None): 
+
+    def read_init_file(self, filename=None):
         '''Parse a readline initialization file. The default filename is the last filename used.'''
         log('read_init_file("%s")' % filename)
 
     #History file book keeping methods (non-bindable)
-    
+
     def add_history(self, line):
         '''Append a line to the history buffer, as if it was the last line typed.'''
         self.mode._history.add_history(line)
 
     def get_current_history_length(self ):
         '''Return the number of lines currently in the history.
-        (This is different from get_history_length(), which returns 
+        (This is different from get_history_length(), which returns
         the maximum number of lines that will be written to a history file.)'''
         return self.mode._history.get_current_history_length()
 
@@ -141,7 +141,7 @@ class BaseReadline(object):
         Negative values imply unlimited history file size.'''
         return self.mode._history.get_history_length()
 
-    def set_history_length(self, length): 
+    def set_history_length(self, length):
         '''Set the number of lines to save in the history file.
 
         write_history_file() uses this value to truncate the history file
@@ -149,7 +149,7 @@ class BaseReadline(object):
         '''
         self.mode._history.set_history_length(length)
 
-    def get_history_item(self, index): 
+    def get_history_item(self, index):
         '''Return the current contents of history item at index.'''
         return self.mode._history.get_history_item(index)
 
@@ -157,20 +157,20 @@ class BaseReadline(object):
         '''Clear readline history'''
         self.mode._history.clear_history()
 
-    def read_history_file(self, filename=None): 
+    def read_history_file(self, filename=None):
         '''Load a readline history file. The default filename is ~/.history.'''
         if filename is None:
             filename = self.mode._history.history_filename
         log("read_history_file from %s"%ensure_unicode(filename))
         self.mode._history.read_history_file(filename)
 
-    def write_history_file(self, filename=None): 
+    def write_history_file(self, filename=None):
         '''Save a readline history file. The default filename is ~/.history.'''
         self.mode._history.write_history_file(filename)
 
     #Completer functions
 
-    def set_completer(self, function=None): 
+    def set_completer(self, function=None):
         '''Set or remove the completer function.
 
         If function is specified, it will be used as the new completer
@@ -183,8 +183,8 @@ class BaseReadline(object):
         log('set_completer')
         self.mode.completer = function
 
-    def get_completer(self): 
-        '''Get the completer function. 
+    def get_completer(self):
+        '''Get the completer function.
         '''
         log('get_completer')
         return self.mode.completer
@@ -204,11 +204,11 @@ class BaseReadline(object):
     def get_completer_delims(self):
         '''Get the readline word delimiters for tab-completion.'''
         if sys.version_info[0] < 3:
-            return self.mode.completer_delims.encode("ascii") 
+            return self.mode.completer_delims.encode("ascii")
         else:
             return self.mode.completer_delims
 
-    def set_startup_hook(self, function=None): 
+    def set_startup_hook(self, function=None):
         '''Set or remove the startup_hook function.
 
         If function is specified, it will be used as the new startup_hook
@@ -239,8 +239,11 @@ class BaseReadline(object):
 #
 # Standard call, not available for all implementations
 #
-    
+
     def readline(self, prompt=''):
+        raise NotImplementedError
+
+    def redisplay(self):
         raise NotImplementedError
 
 #
@@ -248,7 +251,7 @@ class BaseReadline(object):
 #
     def process_keyevent(self, keyinfo):
         return self.mode.process_keyevent(keyinfo)
-        
+
     def readline_setup(self, prompt=""):
         return self.mode.readline_setup(prompt)
 
@@ -301,14 +304,14 @@ class BaseReadline(object):
 
         def bind_exit_key(key):
             modes[mode]._bind_exit_key(key)
-            
+
         def un_bind_exit_key(key):
             keyinfo = make_KeyPress_from_keydescr(key).tuple()
             if keyinfo in modes[mode].exit_dispatch:
                 del modes[mode].exit_dispatch[keyinfo]
 
         def setkill_ring_to_clipboard(killring):
-            import pyreadline.lineeditor.lineobj 
+            import pyreadline.lineeditor.lineobj
             pyreadline.lineeditor.lineobj.kill_ring_to_clipboard = killring
 
         def sethistoryfilename(filename):
@@ -326,22 +329,22 @@ class BaseReadline(object):
         def allow_ctrl_c(mode):
             log("allow_ctrl_c:%s:%s"%(self.allow_ctrl_c, mode))
             self.allow_ctrl_c = mode
- 
+
         def setbellstyle(mode):
             self.bell_style = mode
- 
+
         def show_all_if_ambiguous(mode):
             self.mode.show_all_if_ambiguous = mode
-        
+
         def ctrl_c_tap_time_interval(mode):
             self.ctrl_c_tap_time_interval = mode
-        
+
         def mark_directories(mode):
             self.mode.mark_directories = mode
-        
+
         def completer_delims(delims):
             self.mode.completer_delims = delims
-        
+
         def complete_filesystem(delims):
             self.mode.complete_filesystem = delims.lower()
 
@@ -363,18 +366,18 @@ class BaseReadline(object):
                 logger.log("STOPING LOG")
                 logger.stop_file_log()
                 logger.stop_socket_log()
-        
-        _color_trtable={"black":0,      "darkred":4,  "darkgreen":2, 
+
+        _color_trtable={"black":0,      "darkred":4,  "darkgreen":2,
                         "darkyellow":6, "darkblue":1, "darkmagenta":5,
                         "darkcyan":3,   "gray":7,     "red":4+8,
                         "green":2+8,    "yellow":6+8, "blue":1+8,
                         "magenta":5+8,  "cyan":3+8,   "white":7+8}
-        
+
         def set_prompt_color(color):
-            self.prompt_color = self._color_trtable.get(color.lower(),7)            
-            
+            self.prompt_color = self._color_trtable.get(color.lower(),7)
+
         def set_input_color(color):
-            self.command_color=self._color_trtable.get(color.lower(),7)            
+            self.command_color=self._color_trtable.get(color.lower(),7)
 
         loc = {"branch":release.branch,
                "version":release.version,
@@ -401,7 +404,7 @@ class BaseReadline(object):
                "kill_ring_to_clipboard":setkill_ring_to_clipboard,
                "enable_ipython_paste_for_paths":enable_ipython_paste_for_paths,
               }
-        if os.path.isfile(inputrcpath): 
+        if os.path.isfile(inputrcpath):
             try:
                 execfile(inputrcpath, loc, loc)
             except Exception as x:
@@ -464,7 +467,7 @@ class Readline(BaseReadline):
     def _print_prompt(self):
         c = self.console
         x, y = c.pos()
-        
+
         n = c.write_scrolling(self.prompt, self.prompt_color)
         self.prompt_begin_pos = (x, y - n)
         self.prompt_end_pos = c.pos()
@@ -503,13 +506,13 @@ class Readline(BaseReadline):
             n += 1
 
         self._update_prompt_pos(n)
-        if hasattr(c, "clear_to_end_of_window"): #Work around function for ironpython due 
+        if hasattr(c, "clear_to_end_of_window"): #Work around function for ironpython due
             c.clear_to_end_of_window()          #to System.Console's lack of FillFunction
         else:
             self._clear_after()
-        
+
         #Show cursor, set size vi mode changes size in insert/overwrite mode
-        c.cursor(1, size=self.mode.cursor_size)  
+        c.cursor(1, size=self.mode.cursor_size)
         self._set_cursor()
 
 
@@ -530,7 +533,7 @@ class Readline(BaseReadline):
     def event_available(self):
         return self.console.peek() or (len(self.paste_line_buffer) > 0)
 
-        
+
     def _readline_from_keyboard(self):
         while 1:
             if self._readline_from_keyboard_poll():
@@ -579,7 +582,7 @@ class Readline(BaseReadline):
         log("KBDIRQ")
         event = Event(0,0)
         event.char = "c"
-        event.keyinfo = KeyPress("c", shift=False, control=True, 
+        event.keyinfo = KeyPress("c", shift=False, control=True,
                                  meta=False, keyname=None)
         if self.allow_ctrl_c:
             now = time.time()
@@ -592,3 +595,5 @@ class Readline(BaseReadline):
             raise KeyboardInterrupt
         return event
 
+    def redisplay(self):
+        self._update_line()

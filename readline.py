@@ -22,6 +22,7 @@ __all__ = [ 'parse_and_bind',
             'get_completer',
             'get_begidx',
             'get_endidx',
+            'redisplay',
             'set_completer_delims',
             'get_completer_delims',
             'add_history',
@@ -65,6 +66,8 @@ else:
     get_completer = rl.get_completer
     get_begidx = rl.get_begidx
     get_endidx = rl.get_endidx
+
+    redisplay = rl.redisplay
 
     set_completer_delims = rl.set_completer_delims
     set_history_length = rl.set_history_length
