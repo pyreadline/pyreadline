@@ -6,7 +6,7 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
-import re, operator, string, sys, os
+import re, operator, string, sys, os, io
 
 from pyreadline.unicode_helper import ensure_unicode, ensure_str
 if "pyreadline" in sys.modules:
@@ -79,7 +79,7 @@ class LineHistory(object):
         if filename is None:
             filename = self.history_filename
         try:
-            for line in open(filename, 'r'):
+            for line in io.open(filename, 'r', encoding='utf-8'):
                 self.add_history(lineobj.ReadLineTextBuffer(ensure_unicode(line.rstrip())))
         except IOError:
             self.history = []
@@ -89,7 +89,7 @@ class LineHistory(object):
         '''Save a readline history file.'''
         if filename is None:
             filename = self.history_filename
-        fp = open(filename, 'wb')
+        fp = io.open(filename, 'wb', encoding='utf-8')
         for line in self.history[-self.history_length:]:
             fp.write(ensure_str(line.get_line_text()))
             fp.write('\n'.encode('ascii'))
