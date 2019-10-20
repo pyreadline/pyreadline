@@ -89,10 +89,10 @@ class LineHistory(object):
         '''Save a readline history file.'''
         if filename is None:
             filename = self.history_filename
-        fp = io.open(filename, 'wb', encoding='utf-8')
+        fp = io.open(filename, 'w', encoding='utf-8')
         for line in self.history[-self.history_length:]:
-            fp.write(ensure_str(line.get_line_text()))
-            fp.write('\n'.encode('ascii'))
+            fp.write(line.get_line_text())
+            fp.write('\n')
         fp.close()
 
 
