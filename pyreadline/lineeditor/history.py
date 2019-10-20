@@ -91,7 +91,7 @@ class LineHistory(object):
             filename = self.history_filename
         fp = io.open(filename, 'w', encoding='utf-8')
         for line in self.history[-self.history_length:]:
-            fp.write(line.get_line_text())
+            fp.write(ensure_unicode(line.get_line_text()))
             fp.write('\n')
         fp.close()
 
