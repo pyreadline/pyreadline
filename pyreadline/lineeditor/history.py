@@ -79,7 +79,7 @@ class LineHistory(object):
         if filename is None:
             filename = self.history_filename
         try:
-            for line in open(filename, 'r'):
+            for line in open(filename, 'r', encoding='UTF-8'):
                 self.add_history(lineobj.ReadLineTextBuffer(ensure_unicode(line.rstrip())))
         except IOError:
             self.history = []
