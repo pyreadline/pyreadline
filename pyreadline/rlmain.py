@@ -85,7 +85,7 @@ class BaseReadline(object):
                 else:
                     log('bad set "%s"' % string)
                 return
-            m = re.compile(r'\s*(.+)\s*:\s*([-a-zA-Z]+)\s*$').match(string)
+            m = re.compile(r'\s*(\S+)\s*:\s*([-a-zA-Z]+)\s*$').match(string)
             if m:
                 key = m.group(1)
                 func_name = m.group(2)
