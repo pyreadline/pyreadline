@@ -4,8 +4,12 @@ import sys
 if sys.version_info[0] >= 3:
     import collections
     PY3 = True
-    def callable(x):
-        return isinstance(x, collections.Callable)
+    if hasattr(collections, 'abc') and hasattr(collections.abc, 'Callable') and not hasattr(collections, 'Callable'):
+        def callable(x):
+            return isinstance(x, collections.abc.Callable)
+    else:
+        def callable(x):
+            return isinstance(x, collections.Callable)
     
     def execfile(fname, glob, loc=None):
         loc = loc if (loc is not None) else glob
