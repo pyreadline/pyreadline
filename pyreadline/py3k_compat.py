@@ -4,7 +4,7 @@ import sys
 if sys.version_info[0] >= 3:
     import collections
     PY3 = True
-    if sys.version_info[1] >= 10:
+    if hasattr(collections, 'abc') and hasattr(collections.abc, 'Callable') and not hasattr(collections, 'Callable'):
         def callable(x):
             return isinstance(x, collections.abc.Callable)
     else:
